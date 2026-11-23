@@ -176,12 +176,26 @@ def _parent_edges(skeleton: Skeleton) -> set[tuple[str, str]]:
     return {(a, b) for a, b in skeleton.edges}
 
 
-def vertical_consistency(skeleton: Skeleton) -> tuple[float, int]:
-    """D3：n_vertical == 0 时取 0，不取 1，也不除零。"""
+def vertical_consistency(
+    skeleton: Skeleton, candidate: GestaltReconstruction | None = None
+) -> tuple[float, int]:
+    """D3：n_vertical == 0 时取 0，不取 1，也不除零。
+
+    给了 candidate 就按候选实际保留的深度算：候选没报某个垂直移动按 0 计，
+    缺得越多分数越低；不给则退回只看骨架声明（兼容旧调用）。
+    """
     vertical = [m for m in skeleton.moves if m.vertical]
     if not vertical:
         return 0.0, 0
-    deltas = [abs(m.declared_depth - m.preserved_depth) for m in vertical]
+    reported: dict[str, float] = {}
+    if candidate is not None:
+        for move in candidate.content.get("vertical_moves", []) or []:
+            if isinstance(move, dict) and "node" in move:
+                reported[str(move["node"])] = float(move.get("preserved_depth", 0.0))
+    deltas = []
+    for m in vertical:
+        preserved = m.preserved_depth if candidate is None else reported.get(m.node, 0.0)
+        deltas.append(abs(m.declared_depth - preserved))
     return 1.0 - sum(deltas) / len(deltas), len(vertical)
 
 
@@ -220,7 +234,7 @@ def score_candidate(
     changed = [c for c in changed if c in nodes]
     update = len(changed) / max(len(nodes), 1)
 
-    vc, n_vertical = vertical_consistency(skeleton)
+    vc, n_vertical = vertical_consistency(skeleton, candidate)
     covered = len({c for c in candidate.coverage.covered if c in set(skeleton.required_items)})
     coverage = covered / len(skeleton.required_items)
 

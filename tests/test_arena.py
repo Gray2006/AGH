@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -184,10 +185,11 @@ def test_dissent_rejected_for_low_score(cfg: ArenaConfig) -> None:
         self_confidence=0.0,
         content={"edges": [], "changed_nodes": ["M0", "P1", "C1", "C2"]},
     )
-    low = score_candidate(cand, skeleton(), cfg, verifier_score=0.0, parent_signature=PARENT)
-    assert low.score < cfg.dissent_score_floor
+    strict = replace(cfg, dissent_score_floor=0.5)
+    low = score_candidate(cand, skeleton(), strict, verifier_score=0.0, parent_signature=PARENT)
+    assert low.score < strict.dissent_score_floor
     decision = evaluate_dissent(
-        cand, low, pool=[PARENT.features], abstractions=[], cfg=cfg
+        cand, low, pool=[PARENT.features], abstractions=[], cfg=strict
     )
     assert not decision.admitted
     assert decision.reason == "score_below_floor"
@@ -250,3 +252,21 @@ def test_dissent_marks_contested_and_influence(cfg: ArenaConfig) -> None:
     assert result.winner == "a"
     influence = dissent_causal_influence([cand_a, cand_b], seed=7, cfg=cfg)
     assert influence["b"]["contested_removed"] is True
+
+
+def test_vertical_consistency_uses_candidate_depths() -> None:
+    from agh.arena import vertical_consistency
+
+    sk = skeleton()
+    moves = [
+        {"node": m.node, "preserved_depth": m.declared_depth}
+        for m in sk.moves
+        if m.vertical
+    ]
+    good = recon().model_copy(update={"content": {"edges": [], "vertical_moves": moves}})
+    good_vc, n = vertical_consistency(sk, good)
+    assert n == 2
+    assert good_vc == pytest.approx(1.0)
+    missing = recon().model_copy(update={"content": {"edges": [], "vertical_moves": []}})
+    missing_vc, _ = vertical_consistency(sk, missing)
+    assert missing_vc < good_vc

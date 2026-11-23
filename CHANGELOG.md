@@ -2,6 +2,29 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [0.14.1] - 2026-11-24
+
+修垂直一致性只由骨架决定的缺陷。
+
+### Fixed
+
+- `vertical_consistency` 现在按候选实际上报的 `content.vertical_moves` 计算；缺报按 0 计，不再让所有候选吃同一份骨架加分
+- 冻结权重写回后重跑：M0 胜者仍为 `child-faithful`，分数 0.55092，异议 0.43320
+- 测试 181 → 182
+
+## [0.14.0] - 2026-11-24
+
+把进化收敛出的权重写回冻结层。
+
+### Changed
+
+- `config/frozen/thresholds.json` 的 arena 权重改为进化结果（归一化后）：confidence 0.1818、structural 0.1818、update 0.0、vertical 0.3182、coverage 0.3182
+- 锚点已重建；M0 胜者不变（`child-faithful`），分数 0.62025 → 0.77366，异议 0.476 → 0.65594
+
+### Found
+
+- `vertical_consistency` 目前只由骨架决定、与候选无关，高权重下会把所有候选的分数一起抬高。这是下一处要修的评分缺陷。
+
 ## [0.13.0] - 2026-11-23
 
 参数层退火步长 + 多参数变异，combined 模式开始真正爬坡。

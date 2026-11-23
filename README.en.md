@@ -4,7 +4,7 @@
 
 **Agent Gestalt Hierarchy** — an M0 vertical slice of a multi-agent "gestalt reconstruction" framework. A parent issues a skeleton and a contract; children reconstruct the whole rather than reassembling parts; every submission is signed and provenance-checked. Gate, arena, arbitration, governance, budget ledger and a hash-chained log form one runnable, testable, replayable pipeline.
 
-> Status: M0 (v0.13.0). Children are **rule-based reconstructors**, not LLMs. Every number below is reproducible locally.
+> Status: M0 (v0.14.1). Children are **rule-based reconstructors**, not LLMs. Every number below is reproducible locally.
 
 ```
 Parent M0
@@ -64,7 +64,7 @@ Expected output (excerpt):
 {
   "winner": "child-faithful",
   "contested": true,
-  "scores": {"child-faithful": 0.62025, "child-dissent": 0.476},
+  "scores": {"child-faithful": 0.55092, "child-dissent": 0.43320},
   "rejected": [
     "child-forged:rejected:payload_hash_mismatch",
     "child-shallow:hard_filter:missing required parts: ['C2']"
@@ -251,8 +251,8 @@ With annealed step sizes (0.1 early, 0.02 late) and up to two weight changes per
 
 | Check | Result |
 |---|---|
-| Winner | `child-faithful`, 0.62025 |
-| Dissent | `child-dissent` 0.476, novelty 1.0, marked `contested` |
+| Winner | `child-faithful`, 0.55092 |
+| Dissent | `child-dissent` 0.43320, novelty 1.0, marked `contested` |
 | Forged provenance | rejected: `payload_hash_mismatch` |
 | Shallow reconstruction | rejected by hard filter: missing C2 |
 | Diversity | 3 clusters, min pairwise distance 0.6 |

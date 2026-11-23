@@ -2,11 +2,11 @@
   "schema_version": "agh-3.1",
   "arena": {
     "weights": {
-      "confidence": 0.3,
-      "structural": 0.2,
-      "update": 0.1,
-      "vertical": 0.25,
-      "coverage": 0.15
+      "confidence": 0.1818,
+      "structural": 0.1818,
+      "update": 0.0,
+      "vertical": 0.3182,
+      "coverage": 0.3182
     },
     "dissent_tau": 0.3,
     "dissent_score_floor": 0.05,
@@ -18,10 +18,26 @@
   },
   "calibration": {
     "bins": [
-      [0.0, 0.5, 0.2],
-      [0.5, 0.7, 0.45],
-      [0.7, 0.85, 0.68],
-      [0.85, 1.01, 0.82]
+      [
+        0.0,
+        0.5,
+        0.2
+      ],
+      [
+        0.5,
+        0.7,
+        0.45
+      ],
+      [
+        0.7,
+        0.85,
+        0.68
+      ],
+      [
+        0.85,
+        1.01,
+        0.82
+      ]
     ],
     "verifier_weight": 0.75,
     "self_report_weight": 0.25
