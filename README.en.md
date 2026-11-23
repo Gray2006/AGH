@@ -4,7 +4,7 @@
 
 **Agent Gestalt Hierarchy** — an M0 vertical slice of a multi-agent "gestalt reconstruction" framework. A parent issues a skeleton and a contract; children reconstruct the whole rather than reassembling parts; every submission is signed and provenance-checked. Gate, arena, arbitration, governance, budget ledger and a hash-chained log form one runnable, testable, replayable pipeline.
 
-> Status: M0 (v0.12.0). Children are **rule-based reconstructors**, not LLMs. Every number below is reproducible locally.
+> Status: M0 (v0.13.0). Children are **rule-based reconstructors**, not LLMs. Every number below is reproducible locally.
 
 ```
 Parent M0
@@ -244,6 +244,8 @@ agh evolve --benchmarks 10 --mode combined   # sharded elites + global parameter
 ```
 
 Measured on 10 benchmarks, 3 generations × 3 individuals: sharded 0.29863 vs single 0.22972, paired delta +0.0689 (CI 0.0167–0.1162, n=10).
+
+With annealed step sizes (0.1 early, 0.02 late) and up to two weight changes per mutation, four rounds lift the mean to 0.55807, converging to `update=0, vertical=0.35, coverage=0.35, confidence=0.2`.
 
 ## M0 results
 

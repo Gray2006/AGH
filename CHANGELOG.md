@@ -2,6 +2,17 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [0.13.0] - 2026-11-23
+
+参数层退火步长 + 多参数变异，combined 模式开始真正爬坡。
+
+### Changed
+
+- `mutate_params` 支持 `scale`，并可一次改 1–2 个权重
+- `combined_evolve` 前半程步长 0.1、后半程 0.02（`anneal_scale`）
+- 实测 10 基准 4 轮：均值 0.29863 → 0.55807，权重收敛到 `update=0, vertical=0.35, coverage=0.35`
+- 测试 179 → 181
+
 ## [0.12.0] - 2026-11-23
 
 结合两条路线：分片精英 + 全局参数进化。

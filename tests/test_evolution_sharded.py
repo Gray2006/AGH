@@ -9,6 +9,7 @@ from agh.benchmarks import generate_benchmarks
 from agh.evolution import EvolutionConfig
 from agh.evolution_sharded import (
     ParamGenome,
+    anneal_scale,
     combined_evolve,
     mutate_params,
     seed_for,
@@ -71,3 +72,22 @@ def test_param_genome_config_roundtrip(cfg: ArenaConfig) -> None:
     new_cfg = genome.config(cfg)
     assert new_cfg.weights == cfg.weights
     assert new_cfg.dissent_tau == cfg.dissent_tau
+
+
+def test_anneal_schedule() -> None:
+    assert anneal_scale(0, 4) == 0.1
+    assert anneal_scale(1, 4) == 0.1
+    assert anneal_scale(2, 4) == 0.02
+    assert anneal_scale(3, 4) == 0.02
+
+
+def test_mutation_step_respects_scale(cfg: ArenaConfig) -> None:
+    import random
+
+    genome = ParamGenome.from_config(cfg)
+    rng = random.Random(2)
+    for _ in range(20):
+        candidate = mutate_params(genome, rng, scale=0.02)
+        for key, value in candidate.weights.items():
+            assert abs(value - genome.weights[key]) <= 0.02 + 1e-9
+        genome = candidate

@@ -62,13 +62,30 @@ class ParamGenome:
         }
 
 
-def mutate_params(parent: ParamGenome, rng: random.Random) -> ParamGenome:
+def mutate_params(
+    parent: ParamGenome,
+    rng: random.Random,
+    *,
+    scale: float = 0.05,
+) -> ParamGenome:
+    """变异 1–2 个权重；τ 以一半概率微调。scale 由退火调度给出。"""
     weights = dict(parent.weights)
-    key = rng.choice(sorted(weights))
-    lo, hi = PARAM_BOUNDS.get(key, (0.0, 1.0))
-    weights[key] = min(hi, max(lo, weights[key] + rng.choice([-0.05, 0.05])))
-    tau = min(0.9, max(0.05, parent.dissent_tau + rng.choice([-0.05, 0.0, 0.05])))
-    return ParamGenome(weights=weights, dissent_tau=round(tau, 3))
+    keys = rng.sample(sorted(weights), k=min(2, len(weights)) if rng.random() < 0.3 else 1)
+    for key in keys:
+        lo, hi = PARAM_BOUNDS.get(key, (0.0, 1.0))
+        delta = scale * rng.choice([-1.0, 1.0])
+        weights[key] = round(min(hi, max(lo, weights[key] + delta)), 4)
+    tau = parent.dissent_tau
+    if rng.random() < 0.5:
+        tau = round(min(0.9, max(0.05, parent.dissent_tau + scale * rng.choice([-1.0, 1.0]))), 3)
+    return ParamGenome(weights=weights, dissent_tau=tau)
+
+
+def anneal_scale(round_index: int, rounds: int) -> float:
+    """前半程粗搜（0.1），后半程细搜（0.02）。"""
+    if rounds <= 1:
+        return 0.05
+    return 0.1 if round_index < max(1, rounds // 2) else 0.02
 
 
 def seed_for(bench: Benchmark) -> Strategy:
@@ -202,8 +219,9 @@ def combined_evolve(
 
     for _round in range(rounds):
         improved = False
+        scale = anneal_scale(_round, rounds)
         for _ in range(params_per_round):
-            candidate = mutate_params(params, rng)
+            candidate = mutate_params(params, rng, scale=scale)
             candidate_sharded = sharded_evolve(benchmarks, candidate.config(cfg), config)
             if candidate_sharded.mean_fitness > best_mean:
                 params = candidate
