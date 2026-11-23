@@ -81,5 +81,9 @@ def test_compare_search_reports(cfg: ArenaConfig) -> None:
     )
     data = comparison.as_dict()
     assert data["runs"] == 2
-    assert data["delta"]["lo"] <= data["delta"]["mean"] <= data["delta"]["hi"]
-    assert 0.0 <= data["p_value"] <= 1.0
+    assert set(data["baselines"]) == {"random", "hill"}
+    assert len(data["rows"]) == 2
+    for row in data["rows"]:
+        assert row["delta"]["lo"] <= row["delta"]["mean"] <= row["delta"]["hi"]
+        assert 0.0 <= row["p_value"] <= 1.0
+        assert row["holm_threshold"] > 0

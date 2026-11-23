@@ -17,7 +17,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from .arena import ArenaConfig
-from .evalstats import Interval, bootstrap_pvalue, paired_bootstrap_ci
+from .evalstats import Interval, bootstrap_pvalue, holm, paired_bootstrap_ci
 from .evolution import (
     Benchmark,
     EvolutionConfig,
@@ -118,25 +118,44 @@ def random_search(
 
 
 @dataclass
+class BaselineRow:
+    baseline: str
+    delta: Interval
+    p_value: float
+    holm_threshold: float
+    significant: bool
+
+
+@dataclass
 class SearchComparison:
     runs: int
     evolution_scores: list[float]
-    random_scores: list[float]
-    delta: Interval
-    p_value: float
+    baseline_scores: dict[str, list[float]]
+    rows: list[BaselineRow]
 
     def as_dict(self) -> dict[str, Any]:
         return {
             "runs": self.runs,
             "evolution_mean": round(sum(self.evolution_scores) / len(self.evolution_scores), 5),
-            "random_mean": round(sum(self.random_scores) / len(self.random_scores), 5),
-            "delta": {
-                "mean": round(self.delta.mean, 5),
-                "lo": round(self.delta.lo, 5),
-                "hi": round(self.delta.hi, 5),
-                "n": self.delta.n,
+            "baselines": {
+                name: round(sum(scores) / len(scores), 5)
+                for name, scores in self.baseline_scores.items()
             },
-            "p_value": round(self.p_value, 4),
+            "rows": [
+                {
+                    "baseline": row.baseline,
+                    "delta": {
+                        "mean": round(row.delta.mean, 5),
+                        "lo": round(row.delta.lo, 5),
+                        "hi": round(row.delta.hi, 5),
+                        "n": row.delta.n,
+                    },
+                    "p_value": round(row.p_value, 4),
+                    "holm_threshold": round(row.holm_threshold, 4),
+                    "significant": row.significant,
+                }
+                for row in self.rows
+            ],
         }
 
     def write(self, path: str | Any) -> Any:
@@ -148,6 +167,32 @@ class SearchComparison:
         return target
 
 
+def hill_climb(
+    seed_strategy: Strategy,
+    benchmarks: Sequence[Benchmark],
+    cfg: ArenaConfig,
+    *,
+    seed: int,
+    evaluations: int,
+) -> float:
+    """贪心爬山：只接受比当前更好的变异，不留档案。"""
+    from .evolution import evaluate_strategy
+
+    feature_pool = sorted({f for b in benchmarks for f in b.parent.features})
+    node_pool = sorted({n for b in benchmarks for n in b.skeleton.nodes})
+    rng = random.Random(seed)
+    mutator = StrategyMutator(feature_pool, node_pool)
+    current = seed_strategy
+    best = evaluate_strategy(current, benchmarks, cfg).fitness
+    for i in range(evaluations):
+        candidate = mutator.mutate(current, rng, f"hc-{i}")
+        result = evaluate_strategy(candidate, benchmarks, cfg)
+        if result.passed and result.fitness > best:
+            best = result.fitness
+            current = candidate
+    return best
+
+
 def compare_search(
     seed_strategy: Strategy,
     benchmarks: Sequence[Benchmark],
@@ -156,12 +201,14 @@ def compare_search(
     *,
     runs: int = 5,
     resamples: int = 500,
+    baselines: Sequence[str] = ("random", "hill"),
+    alpha: float = 0.05,
 ) -> SearchComparison:
-    """每轮：进化取最优 vs 随机搜索取最优（同评估预算）。"""
+    """每轮：进化取最优 vs 各基线取最优（同评估预算），Holm 校正多重比较。"""
     settings = config or EvolutionConfig()
     evaluations = settings.generations * settings.population
     evolution_scores: list[float] = []
-    random_scores: list[float] = []
+    baseline_scores: dict[str, list[float]] = {name: [] for name in baselines}
     for run in range(runs):
         report = evolve(
             seed_strategy,
@@ -178,23 +225,50 @@ def compare_search(
             ),
         )
         evolution_scores.append(report.best.fitness if report.best else 0.0)
-        random_scores.append(random_search(benchmarks, cfg, seed=run, evaluations=evaluations))
-    diffs = [e - r for e, r in zip(evolution_scores, random_scores, strict=False)]
-    delta = paired_bootstrap_ci(diffs, resamples=resamples, seed=0)
-    p = bootstrap_pvalue(diffs, resamples=resamples, seed=0)
+        for name in baselines:
+            if name == "random":
+                score = random_search(benchmarks, cfg, seed=run, evaluations=evaluations)
+            elif name == "hill":
+                score = hill_climb(
+                    seed_strategy, benchmarks, cfg, seed=run, evaluations=evaluations
+                )
+            else:
+                raise ValueError(f"未知基线: {name}")
+            baseline_scores[name].append(score)
+
+    pending: list[tuple[str, Interval, float]] = []
+    for name in baselines:
+        diffs = [e - b for e, b in zip(evolution_scores, baseline_scores[name], strict=False)]
+        ci = paired_bootstrap_ci(diffs, resamples=resamples, seed=0)
+        p = bootstrap_pvalue(diffs, resamples=resamples, seed=0)
+        pending.append((name, ci, p))
+
+    corrected = holm([p for *_, p in pending], alpha=alpha)
+    by_index = {idx: (threshold, reject) for idx, threshold, reject in corrected}
+    rows = [
+        BaselineRow(
+            baseline=name,
+            delta=ci,
+            p_value=p,
+            holm_threshold=by_index[i][0],
+            significant=by_index[i][1],
+        )
+        for i, (name, ci, p) in enumerate(pending)
+    ]
     return SearchComparison(
         runs=runs,
         evolution_scores=evolution_scores,
-        random_scores=random_scores,
-        delta=delta,
-        p_value=p,
+        baseline_scores=baseline_scores,
+        rows=rows,
     )
 
 
 __all__ = [
+    "BaselineRow",
     "LlmStrategyMutator",
     "SearchComparison",
     "compare_search",
+    "hill_climb",
     "random_search",
     "random_strategy",
 ]

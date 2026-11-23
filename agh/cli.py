@@ -18,6 +18,7 @@ from pathlib import Path
 
 from . import __version__
 from .crypto import KeyRing
+from .eventlog import EventLog
 from .evolution import EvolutionConfig, Strategy, default_benchmarks, evolve
 from .evolution_llm import compare_search
 from .frozen import FrozenLayer
@@ -116,6 +117,10 @@ def cmd_evolve(args: argparse.Namespace) -> int:
         confidence=seed_recon.self_confidence,
         depth=0.9,
     )
+    log_path = args.out.parent / "events.jsonl"
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    if log_path.exists():
+        log_path.unlink()
     report = evolve(
         seed,
         default_benchmarks(m0_skeleton(), PARENT_SIG.features),
@@ -126,10 +131,12 @@ def cmd_evolve(args: argparse.Namespace) -> int:
             budget_calls=args.budget,
             seed=args.seed,
         ),
+        log=EventLog(log_path),
     )
     target = report.write(args.out)
     print(json.dumps(report.as_dict(), ensure_ascii=False, indent=2))
     print(f"\n报告: {target}")
+    print(f"事件日志: {log_path}")
     if args.compare_runs > 0:
         comparison = compare_search(
             seed,

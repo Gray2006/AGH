@@ -2,6 +2,18 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [0.8.0] - 2026-11-23
+
+让进化过程可审计，让对照更严格。
+
+### Added
+
+- `evolve(..., log=EventLog)`：变异、接受、结束写入哈希链日志，报告带 `log_entries` / `log_ok`
+- `hill_climb` 基线：贪心爬山，不留档案
+- `compare_search` 支持多基线（random / hill），Holm 校正多重比较
+- CLI `agh evolve` 默认写 `runs/evolve/events.jsonl`
+- 测试 158 → 160
+
 ## [0.7.0] - 2026-11-23
 
 让自我迭代可被真模型驱动，也让它可被证伪。

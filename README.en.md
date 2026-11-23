@@ -4,7 +4,7 @@
 
 **Agent Gestalt Hierarchy** — an M0 vertical slice of a multi-agent "gestalt reconstruction" framework. A parent issues a skeleton and a contract; children reconstruct the whole rather than reassembling parts; every submission is signed and provenance-checked. Gate, arena, arbitration, governance, budget ledger and a hash-chained log form one runnable, testable, replayable pipeline.
 
-> Status: M0 (v0.7.0). Children are **rule-based reconstructors**, not LLMs. Every number below is reproducible locally.
+> Status: M0 (v0.8.0). Children are **rule-based reconstructors**, not LLMs. Every number below is reproducible locally.
 
 ```
 Parent M0
@@ -52,7 +52,7 @@ git clone https://github.com/Gray2006/AGH.git
 cd AGH
 pip install -e ".[dev]"
 
-python -m pytest -q          # 158 tests
+python -m pytest -q          # 160 tests
 python -m agh                # run M0, writes runs/m0/ (same as python scripts/run_m0.py)
 ```
 
@@ -211,7 +211,9 @@ Outputs are filtered to the pool and clamped; invalid replies fall back to rule 
 agh evolve --generations 5 --compare-runs 5   # paired comparison against random search
 ```
 
-The point is falsifiability: if random search does just as well, the archive and selection add nothing.
+The point is falsifiability: if random search does just as well, the archive and selection add nothing. Two baselines are included — random search and greedy hill climbing — with Holm correction across them.
+
+The evolution process itself is written to a hash-chained log (`runs/evolve/events.jsonl`): every mutation, acceptance and finish is recorded and can be verified with `agh verify`.
 
 ## M0 results
 
@@ -225,7 +227,7 @@ The point is falsifiability: if random search does just as well, the archive and
 | Governance | qualified dissent → T2, stops at `VERIFIED`; `RELEASED` after human approval |
 | Ledger | 0 violations |
 | Replay | L1 `bit_exact=true` |
-| Tests | 158 passed |
+| Tests | 160 passed |
 
 ## Design decisions
 

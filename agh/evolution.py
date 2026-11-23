@@ -31,6 +31,7 @@ from .contracts import (
     GestaltReconstruction,
     Skeleton,
 )
+from .eventlog import EventLog, LogTampered
 from .governance import GovernanceMachine
 from .ledger import BudgetExceeded, Ledger
 
@@ -233,6 +234,8 @@ class EvolutionReport:
     budget: dict[str, Any]
     governance_state: str
     notes: list[str] = field(default_factory=list)
+    log_entries: int = 0
+    log_ok: bool = True
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -251,6 +254,8 @@ class EvolutionReport:
             else None,
             "lineage": self.lineage,
             "notes": self.notes,
+            "log_entries": self.log_entries,
+            "log_ok": self.log_ok,
         }
 
     def write(self, path: str | Path) -> Path:
@@ -278,6 +283,7 @@ def evolve(
     benchmarks: Sequence[Benchmark],
     cfg: ArenaConfig,
     config: EvolutionConfig | None = None,
+    log: EventLog | None = None,
 ) -> EvolutionReport:
     """档案式进化主循环：变异 → 评估 → 接受/拒绝 → 入档。"""
     settings = config or EvolutionConfig()
@@ -296,7 +302,12 @@ def evolve(
     archive = Archive()
     notes: list[str] = []
 
+    def record(kind: str, payload: dict[str, Any]) -> None:
+        if log is not None:
+            log.append(kind, payload)
+
     seed_eval = evaluate_strategy(seed_strategy, benchmarks, cfg)
+    record("evolution.start", {"seed": seed_strategy.name, "fitness": seed_eval.fitness})
     seed_variant = Variant(
         variant_id="v0-seed",
         parent_id=None,
@@ -346,6 +357,16 @@ def evolve(
                     novelty=novelty,
                 )
                 archive.add(variant)
+                record(
+                    "evolution.mutation",
+                    {
+                        "id": variant.variant_id,
+                        "parent": parent.variant_id,
+                        "fitness": result.fitness,
+                        "accepted": accept,
+                        "novelty": novelty,
+                    },
+                )
                 lineage.append(
                     {
                         "id": variant.variant_id,
@@ -362,6 +383,15 @@ def evolve(
             curve.append(generation_best)
 
         best = archive.best()
+        record(
+            "evolution.end",
+            {
+                "accepted": accepted,
+                "archive_size": archive.size(),
+                "best": best.variant_id if best else None,
+                "best_fitness": best.fitness if best else 0.0,
+            },
+        )
         # 治理：最优变体进入 VERIFIED（T1，无需人工）
         governance.transition("VERIFIED", tier="T1", reason="进化接受")
         return EvolutionReport(
@@ -374,6 +404,8 @@ def evolve(
             budget=_budget_dict(ledger),
             governance_state=governance.state,
             notes=notes,
+            log_entries=len(log.read()) if log is not None else 0,
+            log_ok=_log_ok(log),
         )
     except BudgetExceeded as exc:
         notes.append(f"预算耗尽，提前停止：{exc}")
@@ -387,7 +419,19 @@ def evolve(
             budget=_budget_dict(ledger),
             governance_state=governance.state,
             notes=notes,
+            log_entries=len(log.read()) if log is not None else 0,
+            log_ok=_log_ok(log),
         )
+
+
+def _log_ok(log: EventLog | None) -> bool:
+    if log is None:
+        return True
+    try:
+        log.verify()
+        return True
+    except LogTampered:
+        return False
 
 
 def default_benchmarks(skeleton: Skeleton, parent_features: Sequence[str]) -> list[Benchmark]:

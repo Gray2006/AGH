@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 
 from agh.arena import ArenaConfig
+from agh.eventlog import EventLog
 from agh.evolution import (
     Benchmark,
     EvolutionConfig,
@@ -106,3 +107,25 @@ def test_lineage_parents_exist(cfg: ArenaConfig) -> None:
     for row in report.lineage:
         if row["parent"] is not None:
             assert row["parent"] in ids
+
+
+def test_evolution_log_is_verifiable(cfg: ArenaConfig, tmp_path: Path) -> None:
+    log_path = tmp_path / "events.jsonl"
+    report = evolve(
+        seed_strategy(),
+        benchmarks(),
+        cfg,
+        EvolutionConfig(generations=1, population=2),
+        log=EventLog(log_path),
+    )
+    assert report.log_ok
+    assert report.log_entries > 0
+    EventLog(log_path).verify()  # 不抛即通过
+
+
+def test_hill_climb_is_deterministic(cfg: ArenaConfig) -> None:
+    from agh.evolution_llm import hill_climb
+
+    first = hill_climb(seed_strategy(), benchmarks(), cfg, seed=4, evaluations=4)
+    second = hill_climb(seed_strategy(), benchmarks(), cfg, seed=4, evaluations=4)
+    assert first == second
