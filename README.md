@@ -4,7 +4,7 @@
 
 **Agent Gestalt Hierarchy**：多智能体「整体重构」框架的 M0 垂直切片。母体发骨架与契约，子级按整体重构而不是拼零件，回传带签名与出处；写入门、竞技场、仲裁、治理机、预算账本、哈希链日志串成一条可跑、可测、可重放的链路。
 
-> 状态：M0（v0.8.0），子级是**规则重构器**，不接 LLM。所有数字都能在本地复现。
+> 状态：M0（v0.9.0），子级是**规则重构器**，不接 LLM。所有数字都能在本地复现。
 
 ```
 母体 M0
@@ -52,7 +52,7 @@ git clone https://github.com/Gray2006/AGH.git
 cd AGH
 pip install -e ".[dev]"
 
-python -m pytest -q          # 160 条测试
+python -m pytest -q          # 162 条测试
 python -m agh                # 跑 M0，落盘 runs/m0/（等价 python scripts/run_m0.py）
 ```
 
@@ -211,7 +211,7 @@ mutator = LlmStrategyMutator(feature_pool, node_pool, complete=my_model)
 agh evolve --generations 5 --compare-runs 5   # 同预算下与随机搜索配对比较
 ```
 
-对照的意义是能证伪：如果随机搜索一样好，档案与选择就没有价值。基线有两条——随机搜索与贪心爬山，多重比较用 Holm 校正。
+对照的意义是能证伪：如果随机搜索一样好，档案与选择就没有价值。基线有两条——随机搜索与带重启的贪心爬山，多重比较用 Holm 校正；`--seeds-per-run` 让每轮在多个种子上取均值再配对，降方差。
 
 进化过程本身也写进哈希链日志（`runs/evolve/events.jsonl`）：每次变异、接受、结束都有记录，`agh verify` 可校验。
 
@@ -227,7 +227,7 @@ agh evolve --generations 5 --compare-runs 5   # 同预算下与随机搜索配�
 | 治理 | 有合格异议 → 升 T2 停在 `VERIFIED`；人工批准后 `RELEASED` |
 | 账本 | 违规 0 |
 | 重放 | L1 `bit_exact=true` |
-| 测试 | 160 passed |
+| 测试 | 162 passed |
 
 ## 设计取舍
 

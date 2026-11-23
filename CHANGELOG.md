@@ -2,6 +2,18 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [0.9.0] - 2026-11-23
+
+对照实验降方差、基线加强。
+
+### Added
+
+- `hill_climb` 支持 `restarts`，默认对照用 3 次重启
+- `compare_search` 支持 `seeds_per_run`：每轮多种子取均值再配对
+- CLI `agh evolve --seeds-per-run N`
+- 报告输出每轮进化与基线的逐项分数
+- 测试 160 → 162
+
 ## [0.8.0] - 2026-11-23
 
 让进化过程可审计，让对照更严格。

@@ -136,7 +136,11 @@ class SearchComparison:
     def as_dict(self) -> dict[str, Any]:
         return {
             "runs": self.runs,
+            "evolution_scores": [round(x, 5) for x in self.evolution_scores],
             "evolution_mean": round(sum(self.evolution_scores) / len(self.evolution_scores), 5),
+            "baseline_scores": {
+                name: [round(x, 5) for x in scores] for name, scores in self.baseline_scores.items()
+            },
             "baselines": {
                 name: round(sum(scores) / len(scores), 5)
                 for name, scores in self.baseline_scores.items()
@@ -174,22 +178,27 @@ def hill_climb(
     *,
     seed: int,
     evaluations: int,
+    restarts: int = 1,
 ) -> float:
-    """贪心爬山：只接受比当前更好的变异，不留档案。"""
+    """贪心爬山：只接受比当前更好的变异，不留档案；支持多次重启取最好。"""
     from .evolution import evaluate_strategy
 
     feature_pool = sorted({f for b in benchmarks for f in b.parent.features})
     node_pool = sorted({n for b in benchmarks for n in b.skeleton.nodes})
-    rng = random.Random(seed)
-    mutator = StrategyMutator(feature_pool, node_pool)
-    current = seed_strategy
-    best = evaluate_strategy(current, benchmarks, cfg).fitness
-    for i in range(evaluations):
-        candidate = mutator.mutate(current, rng, f"hc-{i}")
-        result = evaluate_strategy(candidate, benchmarks, cfg)
-        if result.passed and result.fitness > best:
-            best = result.fitness
-            current = candidate
+    best = 0.0
+    for restart in range(max(1, restarts)):
+        rng = random.Random(seed * 1000 + restart)
+        mutator = StrategyMutator(feature_pool, node_pool)
+        current = seed_strategy
+        current_score = evaluate_strategy(current, benchmarks, cfg).fitness
+        best = max(best, current_score)
+        for i in range(evaluations):
+            candidate = mutator.mutate(current, rng, f"hc-{restart}-{i}")
+            result = evaluate_strategy(candidate, benchmarks, cfg)
+            if result.passed and result.fitness > current_score:
+                current = candidate
+                current_score = result.fitness
+                best = max(best, current_score)
     return best
 
 
@@ -201,40 +210,56 @@ def compare_search(
     *,
     runs: int = 5,
     resamples: int = 500,
+    seeds_per_run: int = 1,
     baselines: Sequence[str] = ("random", "hill"),
     alpha: float = 0.05,
 ) -> SearchComparison:
-    """每轮：进化取最优 vs 各基线取最优（同评估预算），Holm 校正多重比较。"""
+    """每轮：进化 vs 各基线（同评估预算），Holm 校正多重比较。
+
+    seeds_per_run > 1 时，每轮在多个种子上取均值再配对，降低方差。
+    """
     settings = config or EvolutionConfig()
     evaluations = settings.generations * settings.population
     evolution_scores: list[float] = []
     baseline_scores: dict[str, list[float]] = {name: [] for name in baselines}
     for run in range(runs):
-        report = evolve(
-            seed_strategy,
-            benchmarks,
-            cfg,
-            EvolutionConfig(
-                generations=settings.generations,
-                population=settings.population,
-                budget_calls=settings.budget_calls,
-                min_delta=settings.min_delta,
-                seed=run,
-                resamples=settings.resamples,
-                alpha=settings.alpha,
-            ),
-        )
-        evolution_scores.append(report.best.fitness if report.best else 0.0)
+        run_evolution: list[float] = []
+        run_baselines: dict[str, list[float]] = {name: [] for name in baselines}
+        for sub in range(max(1, seeds_per_run)):
+            seed_value = run * 1000 + sub
+            report = evolve(
+                seed_strategy,
+                benchmarks,
+                cfg,
+                EvolutionConfig(
+                    generations=settings.generations,
+                    population=settings.population,
+                    budget_calls=settings.budget_calls,
+                    min_delta=settings.min_delta,
+                    seed=seed_value,
+                    resamples=settings.resamples,
+                    alpha=settings.alpha,
+                ),
+            )
+            run_evolution.append(report.best.fitness if report.best else 0.0)
+            for name in baselines:
+                if name == "random":
+                    score = random_search(benchmarks, cfg, seed=seed_value, evaluations=evaluations)
+                elif name == "hill":
+                    score = hill_climb(
+                        seed_strategy,
+                        benchmarks,
+                        cfg,
+                        seed=seed_value,
+                        evaluations=evaluations,
+                        restarts=3,
+                    )
+                else:
+                    raise ValueError(f"未知基线: {name}")
+                run_baselines[name].append(score)
+        evolution_scores.append(sum(run_evolution) / len(run_evolution))
         for name in baselines:
-            if name == "random":
-                score = random_search(benchmarks, cfg, seed=run, evaluations=evaluations)
-            elif name == "hill":
-                score = hill_climb(
-                    seed_strategy, benchmarks, cfg, seed=run, evaluations=evaluations
-                )
-            else:
-                raise ValueError(f"未知基线: {name}")
-            baseline_scores[name].append(score)
+            baseline_scores[name].append(sum(run_baselines[name]) / len(run_baselines[name]))
 
     pending: list[tuple[str, Interval, float]] = []
     for name in baselines:

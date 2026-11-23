@@ -11,6 +11,7 @@ from agh.evolution import EvolutionConfig, Strategy, default_benchmarks
 from agh.evolution_llm import (
     LlmStrategyMutator,
     compare_search,
+    hill_climb,
     random_search,
     random_strategy,
 )
@@ -87,3 +88,27 @@ def test_compare_search_reports(cfg: ArenaConfig) -> None:
         assert row["delta"]["lo"] <= row["delta"]["mean"] <= row["delta"]["hi"]
         assert 0.0 <= row["p_value"] <= 1.0
         assert row["holm_threshold"] > 0
+
+
+def test_hill_climb_restarts_deterministic(cfg: ArenaConfig) -> None:
+    benches = default_benchmarks(m0_skeleton(), PARENT_SIG.features)
+    first = hill_climb(seed(), benches, cfg, seed=2, evaluations=3, restarts=3)
+    second = hill_climb(seed(), benches, cfg, seed=2, evaluations=3, restarts=3)
+    assert first == second
+
+
+def test_compare_search_multi_seed(cfg: ArenaConfig) -> None:
+    benches = default_benchmarks(m0_skeleton(), PARENT_SIG.features)
+    comparison = compare_search(
+        seed(),
+        benches,
+        cfg,
+        EvolutionConfig(generations=1, population=2),
+        runs=2,
+        seeds_per_run=2,
+        resamples=100,
+    )
+    data = comparison.as_dict()
+    assert data["runs"] == 2
+    assert len(data["evolution_scores"]) == 2
+    assert len(data["rows"]) == 2

@@ -149,6 +149,7 @@ def cmd_evolve(args: argparse.Namespace) -> int:
                 seed=args.seed,
             ),
             runs=args.compare_runs,
+            seeds_per_run=args.seeds_per_run,
         )
         print("\n进化 vs 随机搜索：")
         print(json.dumps(comparison.as_dict(), ensure_ascii=False, indent=2))
@@ -198,7 +199,8 @@ def build_parser() -> argparse.ArgumentParser:
     evolve_cmd.add_argument("--budget", type=int, default=500)
     evolve_cmd.add_argument("--seed", type=int, default=7)
     evolve_cmd.add_argument("--out", type=Path, default=Path("runs") / "evolve" / "report.json")
-    evolve_cmd.add_argument("--compare-runs", type=int, default=0, help="跑进化 vs 随机搜索对照")
+    evolve_cmd.add_argument("--compare-runs", type=int, default=0, help="跑进化 vs 基线对照")
+    evolve_cmd.add_argument("--seeds-per-run", type=int, default=1, help="每轮取多个种子的均值")
     evolve_cmd.set_defaults(func=cmd_evolve)
 
     version = sub.add_parser("version", help="打印版本")
