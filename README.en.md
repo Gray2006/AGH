@@ -1,16 +1,10 @@
-﻿# AGH
+# AGH
 
 [English](README.en.md) · [简体中文](README.md) · MIT
 
 **Agent Gestalt Hierarchy** — an M0 vertical slice of a multi-agent "gestalt reconstruction" framework. A parent issues a skeleton and a contract; children reconstruct the whole rather than reassembling parts; every submission is signed and provenance-checked. Gate, arena, arbitration, governance, budget ledger and a hash-chained log form one runnable, testable, replayable pipeline.
 
 > Status: M0 (v0.2.0). Children are **rule-based reconstructors**, not LLMs. Every number below is reproducible locally.
-
-## Positioning
-
-AGH is not an orchestration framework; it is a **verification layer**. LangGraph-class tools answer "how do I get the task to run"; AGH answers "why should the output be trusted, and can it be replayed bit-for-bit". They sit on different layers and do not replace each other.
-
-A component-by-component comparison against orchestration frameworks, observability tools, audit ecosystems and provenance infrastructure — plus four near neighbours (Sovereign-OS, DOAgent, Bernstein; a fourth could not be verified and is not cited) and the honest gaps — is in [docs/positioning.md](docs/positioning.md).
 
 ```
 Parent M0
