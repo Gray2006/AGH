@@ -4,7 +4,7 @@
 
 **Agent Gestalt Hierarchy** — an M0 vertical slice of a multi-agent "gestalt reconstruction" framework. A parent issues a skeleton and a contract; children reconstruct the whole rather than reassembling parts; every submission is signed and provenance-checked. Gate, arena, arbitration, governance, budget ledger and a hash-chained log form one runnable, testable, replayable pipeline.
 
-> Status: M0 (v0.17.0). Children are **rule-based reconstructors**, not LLMs. Every number below is reproducible locally.
+> Status: M0 (v1.0.0). Children are **rule-based reconstructors**, not LLMs. Every number below is reproducible locally.
 
 ```
 Parent M0
@@ -103,6 +103,7 @@ Expected output (excerpt):
 | `agh/evolution_sharded.py` | Sharded elites plus global parameter evolution (combined mode) |
 | `agh/meta.py` | Meta-evolution: operator bandit plus curriculum (meta mode) |
 | `agh/selfmod.py` | Self-modification base: immutable artifacts, gates, atomic switch, rollback |
+| `agh/supervisor.py` | Independent supervisor process: the only role allowed to switch versions |
 | `agh/providers.py` | OpenAI-compatible model adapter (env key, JSON mode, retries) |
 | `agh/pipeline.py` | M0 orchestration, reducer, demo frozen layer |
 
@@ -269,6 +270,12 @@ With annealed step sizes (0.1 early, 0.02 late), up to two weight changes per mu
 
 The boundary: this assumes the **supervisor lives outside the code being changed**. If new code can rewrite the pointer, the gates or the supervisor, the gates are decoration.
 
+The supervisor is implemented (`agh/supervisor.py`): it owns the pointer, runs gates and manages the child process; switch requests arrive as a `request.json` file, and a failed start rolls back automatically.
+
+```bash
+python -m agh.supervisor --store runs/selfmod --gate "python -m pytest -q" -- python -m agh run
+```
+
 ## M0 results
 
 | Check | Result |
@@ -318,6 +325,12 @@ python -m pytest
 `
 
 Run lint and the full suite before committing. After changing frozen config, rebuild the anchor with `python -m agh --refresh-anchor` and state the reason. See [CONTRIBUTING.md](CONTRIBUTING.md).
+## Versioning and compatibility
+
+- **1.x**: public API is frozen (`agh.contracts`, `crypto`, `arena`, `experiment`, `evolution*`, `selfmod`, `supervisor`, `sdk`, CLI subcommands and JSON report fields); breaking changes go to 2.0
+- **1.x.y**: bug fixes and docs only, no signature changes, no field removals; new capabilities arrive as optional arguments or new modules
+- The 0.x line changed interfaces often; 1.0 is the reference
+
 ## License
 
 MIT, see [LICENSE](LICENSE).

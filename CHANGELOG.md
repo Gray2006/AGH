@@ -2,6 +2,20 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [1.0.0] - 2026-11-24
+
+第一个稳定版本：公开 API 冻结，自我改写闭环补齐。
+
+### Added
+
+- `agh/supervisor.py`：独立监督者进程，持有指针、跑 gate、管理子进程；`request.json` 投递切换请求，启动失败自动回滚
+- `python -m agh.supervisor` 入口
+- 测试 198 → 204
+
+### Compatibility
+
+- 1.x 冻结公开 API（见 README「版本与兼容」）；破坏性改动走 2.0
+
 ## [0.17.0] - 2026-11-24
 
 自我改写的安全底座，回答「能不能让 AGH 改自己代码」。

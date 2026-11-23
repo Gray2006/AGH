@@ -4,7 +4,7 @@
 
 **Agent Gestalt Hierarchy**：多智能体「整体重构」框架的 M0 垂直切片。母体发骨架与契约，子级按整体重构而不是拼零件，回传带签名与出处；写入门、竞技场、仲裁、治理机、预算账本、哈希链日志串成一条可跑、可测、可重放的链路。
 
-> 状态：M0（v0.17.0），子级是**规则重构器**，不接 LLM。所有数字都能在本地复现。
+> 状态：M0（v1.0.0），子级是**规则重构器**，不接 LLM。所有数字都能在本地复现。
 
 ```
 母体 M0
@@ -103,6 +103,7 @@ python -m agh                # 跑 M0，落盘 runs/m0/（等价 python scripts/
 | `agh/evolution_sharded.py` | 分片精英 + 全局参数进化（combined 模式） |
 | `agh/meta.py` | 元进化：算子老虎机 + 课程加难（meta 模式） |
 | `agh/selfmod.py` | 自我改写底座：不可变制品 + 门禁 + 原子切换 + 回滚 |
+| `agh/supervisor.py` | 独立监督者进程：唯一有权切换版本的角色 |
 | `agh/providers.py` | OpenAI 兼容模型适配器（环境变量取密钥，JSON 模式 + 重试） |
 | `agh/pipeline.py` | M0 编排、reducer、演示冻结层 |
 
@@ -278,6 +279,13 @@ promote(store, "v2", [CommandGate("pytest", ["python", "-m", "pytest", "-q"])])
 
 边界：这套设计假设**监督者在被改代码之外**。如果新代码能改指针、改 gate 或改监督者，门禁就是装饰；真正的自改需要独立进程、独立权限与人工批准。
 
+独立监督者已经实现（`agh/supervisor.py`）：它持有指针、跑 gate、管理子进程；切换请求通过 `request.json` 文件投递，
+新版本启动失败会自动回滚并恢复旧版本。
+
+```bash
+python -m agh.supervisor --store runs/selfmod --gate "python -m pytest -q" -- python -m agh run
+```
+
 ## M0 实测
 
 | 检查 | 结果 |
@@ -327,6 +335,12 @@ python -m pytest
 `
 
 提交前请跑 lint 与全量测试；改动冻结配置后用 `python -m agh --refresh-anchor` 重建锚点，并在提交说明里写清理由。详见 [CONTRIBUTING.md](CONTRIBUTING.md)。
+## 版本与兼容
+
+- **1.x**：公开 API 冻结（`agh.contracts`、`crypto`、`arena`、`experiment`、`evolution*`、`selfmod`、`supervisor`、`sdk`、CLI 子命令与 JSON 报告字段）；破坏性改动走 2.0
+- **1.x.y**：只修 bug 与文档，不改签名、不删字段；新增能力以可选参数/新模块形式加入
+- 0.x 期间接口多次变动，1.0 起以此为准
+
 ## 许可
 
 MIT，见 [LICENSE](LICENSE)。
