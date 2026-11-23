@@ -2,6 +2,18 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [0.7.0] - 2026-11-23
+
+让自我迭代可被真模型驱动，也让它可被证伪。
+
+### Added
+
+- `agh/evolution_llm.py`：`LlmStrategyMutator`（模型提议变异，池子过滤 + 边界钳制 + 失败退回规则变异）
+- `random_search` 基线：同评估预算的随机搜索
+- `compare_search`：进化 vs 随机搜索的配对 bootstrap 比较
+- CLI `agh evolve --compare-runs N`
+- 测试 152 → 158
+
 ## [0.6.0] - 2026-11-23
 
 加入档案式自我迭代，参考 DGM（2505.22954）、AlphaEvolve（2506.13131）、自进化智能体综述（2507.21046），并针对 misevolve 风险（2509.26354）设边界。

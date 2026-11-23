@@ -4,7 +4,7 @@
 
 **Agent Gestalt Hierarchy**：多智能体「整体重构」框架的 M0 垂直切片。母体发骨架与契约，子级按整体重构而不是拼零件，回传带签名与出处；写入门、竞技场、仲裁、治理机、预算账本、哈希链日志串成一条可跑、可测、可重放的链路。
 
-> 状态：M0（v0.6.0），子级是**规则重构器**，不接 LLM。所有数字都能在本地复现。
+> 状态：M0（v0.7.0），子级是**规则重构器**，不接 LLM。所有数字都能在本地复现。
 
 ```
 母体 M0
@@ -52,7 +52,7 @@ git clone https://github.com/Gray2006/AGH.git
 cd AGH
 pip install -e ".[dev]"
 
-python -m pytest -q          # 152 条测试
+python -m pytest -q          # 158 条测试
 python -m agh                # 跑 M0，落盘 runs/m0/（等价 python scripts/run_m0.py）
 ```
 
@@ -98,6 +98,7 @@ python -m agh                # 跑 M0，落盘 runs/m0/（等价 python scripts/
 | `agh/claims.py` | 跨组织声明：签名声明 + Merkle 透明日志 + 包含证明 |
 | `agh/sdk.py` | Python SDK：run / verify / replay / experiment / ablation |
 | `agh/evolution.py` | 档案式自我迭代：受限基因组、血统、治理门与预算 |
+| `agh/evolution_llm.py` | LLM 变异器 + 进化 vs 随机搜索对照 |
 | `agh/pipeline.py` | M0 编排、reducer、演示冻结层 |
 
 配置在 `config/frozen/`，阈值全部进冻结层，改配置会被锚点发现。文档在 [`docs/`](docs/)：实现报告、方案原文、两份引用/事实核验。
@@ -196,7 +197,21 @@ agh evolve --generations 5 --population 3
 - 适应度来自竞技场在多个骨架基准上的分数；接受要分数不倒退，再走治理机 `VALIDATING → VERIFIED`
 - 每次评估都走预算租约，预算耗尽提前停；失败模式「misevolve」（[arXiv 2509.26354](https://arxiv.org/abs/2509.26354)）的防线是基因组边界 + 冻结配置 + 治理门
 
-规则子级下的适应度只验证机制，不代表真实模型能力；接上 `LlmChild` 后同一个循环可以进化提示词策略。
+规则子级下的适应度只验证机制，不代表真实模型能力。接真模型后用 `LlmStrategyMutator` 让模型提议变异：
+
+```python
+from agh.evolution_llm import LlmStrategyMutator
+
+mutator = LlmStrategyMutator(feature_pool, node_pool, complete=my_model)
+```
+
+输出会被池子过滤与边界钳制，解析失败自动退回规则变异。对照实验：
+
+```bash
+agh evolve --generations 5 --compare-runs 5   # 同预算下与随机搜索配对比较
+```
+
+对照的意义是能证伪：如果随机搜索一样好，档案与选择就没有价值。
 
 ## M0 实测
 
@@ -210,7 +225,7 @@ agh evolve --generations 5 --population 3
 | 治理 | 有合格异议 → 升 T2 停在 `VERIFIED`；人工批准后 `RELEASED` |
 | 账本 | 违规 0 |
 | 重放 | L1 `bit_exact=true` |
-| 测试 | 152 passed |
+| 测试 | 158 passed |
 
 ## 设计取舍
 

@@ -19,6 +19,7 @@ from pathlib import Path
 from . import __version__
 from .crypto import KeyRing
 from .evolution import EvolutionConfig, Strategy, default_benchmarks, evolve
+from .evolution_llm import compare_search
 from .frozen import FrozenLayer
 from .pipeline import DEV_KID, DEV_SECRET, PARENT_SIG, faithful_child, m0_skeleton, run_m0
 from .sdk import AghClient, default_frozen_root
@@ -129,6 +130,21 @@ def cmd_evolve(args: argparse.Namespace) -> int:
     target = report.write(args.out)
     print(json.dumps(report.as_dict(), ensure_ascii=False, indent=2))
     print(f"\n报告: {target}")
+    if args.compare_runs > 0:
+        comparison = compare_search(
+            seed,
+            default_benchmarks(m0_skeleton(), PARENT_SIG.features),
+            cfg,
+            EvolutionConfig(
+                generations=args.generations,
+                population=args.population,
+                budget_calls=args.budget,
+                seed=args.seed,
+            ),
+            runs=args.compare_runs,
+        )
+        print("\n进化 vs 随机搜索：")
+        print(json.dumps(comparison.as_dict(), ensure_ascii=False, indent=2))
     return 0
 
 
@@ -175,6 +191,7 @@ def build_parser() -> argparse.ArgumentParser:
     evolve_cmd.add_argument("--budget", type=int, default=500)
     evolve_cmd.add_argument("--seed", type=int, default=7)
     evolve_cmd.add_argument("--out", type=Path, default=Path("runs") / "evolve" / "report.json")
+    evolve_cmd.add_argument("--compare-runs", type=int, default=0, help="跑进化 vs 随机搜索对照")
     evolve_cmd.set_defaults(func=cmd_evolve)
 
     version = sub.add_parser("version", help="打印版本")

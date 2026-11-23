@@ -4,7 +4,7 @@
 
 **Agent Gestalt Hierarchy** — an M0 vertical slice of a multi-agent "gestalt reconstruction" framework. A parent issues a skeleton and a contract; children reconstruct the whole rather than reassembling parts; every submission is signed and provenance-checked. Gate, arena, arbitration, governance, budget ledger and a hash-chained log form one runnable, testable, replayable pipeline.
 
-> Status: M0 (v0.6.0). Children are **rule-based reconstructors**, not LLMs. Every number below is reproducible locally.
+> Status: M0 (v0.7.0). Children are **rule-based reconstructors**, not LLMs. Every number below is reproducible locally.
 
 ```
 Parent M0
@@ -52,7 +52,7 @@ git clone https://github.com/Gray2006/AGH.git
 cd AGH
 pip install -e ".[dev]"
 
-python -m pytest -q          # 152 tests
+python -m pytest -q          # 158 tests
 python -m agh                # run M0, writes runs/m0/ (same as python scripts/run_m0.py)
 ```
 
@@ -98,6 +98,7 @@ Expected output (excerpt):
 | `agh/claims.py` | Cross-org statements: signed statements, Merkle transparency log, inclusion proofs |
 | `agh/sdk.py` | Python SDK: run / verify / replay / experiment / ablation |
 | `agh/evolution.py` | Archive-based self-iteration: bounded genome, lineage, governance gate, budget |
+| `agh/evolution_llm.py` | LLM mutator plus evolution-vs-random-search comparison |
 | `agh/pipeline.py` | M0 orchestration, reducer, demo frozen layer |
 
 Thresholds live in `config/frozen/` and are covered by the anchor. Docs in [`docs/`](docs/): implementation report, original plan, and two verification reports.
@@ -196,7 +197,21 @@ Following DGM ([arXiv 2505.22954](https://arxiv.org/abs/2505.22954)), AlphaEvolv
 - Fitness comes from the arena across several skeleton benchmarks; acceptance requires no regression and passes governance `VALIDATING → VERIFIED`
 - Every evaluation takes a budget lease; the run stops when the budget is exhausted. The misevolve failure mode ([arXiv 2509.26354](https://arxiv.org/abs/2509.26354)) is guarded by genome bounds, frozen config and the governance gate
 
-With rule children the fitness only validates the mechanism; swap in `LlmChild` to evolve prompt strategies for real.
+With rule children the fitness only validates the mechanism. With a real model, let it propose mutations:
+
+```python
+from agh.evolution_llm import LlmStrategyMutator
+
+mutator = LlmStrategyMutator(feature_pool, node_pool, complete=my_model)
+```
+
+Outputs are filtered to the pool and clamped; invalid replies fall back to rule mutation. Comparison run:
+
+```bash
+agh evolve --generations 5 --compare-runs 5   # paired comparison against random search
+```
+
+The point is falsifiability: if random search does just as well, the archive and selection add nothing.
 
 ## M0 results
 
@@ -210,7 +225,7 @@ With rule children the fitness only validates the mechanism; swap in `LlmChild` 
 | Governance | qualified dissent → T2, stops at `VERIFIED`; `RELEASED` after human approval |
 | Ledger | 0 violations |
 | Replay | L1 `bit_exact=true` |
-| Tests | 152 passed |
+| Tests | 158 passed |
 
 ## Design decisions
 
