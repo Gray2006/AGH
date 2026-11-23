@@ -1,0 +1,62 @@
+{
+  "schema_version": "agh-3.1",
+  "preregistration": {
+    "seeds": 10,
+    "alpha": 0.05,
+    "holm_family_size": 9,
+    "effect_size_min": 0.15,
+    "bootstrap_resamples": 10000,
+    "ci_level": 0.95,
+    "statistical_test": "paired_bootstrap"
+  },
+  "gates": [
+    {
+      "id": "G0-state-machine",
+      "metric": "l1_replay_bit_exact",
+      "rule": "eq",
+      "target": true,
+      "owner": "M1",
+      "blocking": true
+    },
+    {
+      "id": "G0-ledger",
+      "metric": "ledger_invariant_violations",
+      "rule": "eq",
+      "target": 0,
+      "owner": "M1",
+      "blocking": true
+    },
+    {
+      "id": "G0-gate",
+      "metric": "forged_provenance_rejected",
+      "rule": "eq",
+      "target": true,
+      "owner": "M1",
+      "blocking": true
+    },
+    {
+      "id": "G0-frozen",
+      "metric": "frozen_anchor_valid",
+      "rule": "eq",
+      "target": true,
+      "owner": "M1",
+      "blocking": true
+    },
+    {
+      "id": "G1-arena",
+      "metric": "architecture_minus_majority_vote_ci_lower",
+      "rule": "gt",
+      "target": 0.0,
+      "owner": "M5",
+      "blocking": true
+    },
+    {
+      "id": "G1-utility",
+      "metric": "no_attack_utility_drop",
+      "rule": "lt",
+      "target": 0.05,
+      "owner": "M5",
+      "blocking": true
+    }
+  ]
+}
