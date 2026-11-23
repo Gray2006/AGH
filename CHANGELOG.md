@@ -2,6 +2,21 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [1.2.0] - 2026-11-24
+
+提示消融：验证「给骨架不给答案」的代价。
+
+### Added
+
+- `build_prompt` / `LlmChild` 支持可选 `reference`；`run_llm_experiment.py --include-reference`
+- 测试 204 → 206
+
+### Measured
+
+- 不给参考（12 次）：均分 0.50315（0.474–0.511）
+- 给参考（12 次）：12/12 精确复刻基线 0.511
+- 结论：不给答案压低约 0.8 个点，模型无法自行发现 `pred:hierarchical` 这类结构标签
+
 ## [1.1.0] - 2026-11-24
 
 真模型契约通过率实验，并修掉截断导致的假失败。

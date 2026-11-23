@@ -4,7 +4,7 @@
 
 **Agent Gestalt Hierarchy** — an M0 vertical slice of a multi-agent "gestalt reconstruction" framework. A parent issues a skeleton and a contract; children reconstruct the whole rather than reassembling parts; every submission is signed and provenance-checked. Gate, arena, arbitration, governance, budget ledger and a hash-chained log form one runnable, testable, replayable pipeline.
 
-> Status: M0 (v1.1.0). Children are **rule-based reconstructors**, not LLMs. Every number below is reproducible locally.
+> Status: M0 (v1.2.0). Children are **rule-based reconstructors**, not LLMs. Every number below is reproducible locally.
 
 ```
 Parent M0
@@ -144,6 +144,8 @@ python scripts/run_llm_experiment.py --provider command-code --samples 8
 ```
 
 Measured with deepseek-v4.1-flash (30 samples): 30/30 passed the contract, mean score 0.49271 (0.425–0.511) vs the rule baseline 0.511, paired delta -0.01829 (CI -0.02635 to -0.01078) — the real model is consistently valid but significantly below the handcrafted rule child.
+
+Prompt ablation (12 samples each): without a reference the mean is 0.50315 (0.474–0.511); with one reference reconstruction, all 12 exactly reproduce the 0.511 baseline. Withholding the answer does cost points — the model cannot discover structural labels like `pred:hierarchical` on its own.
 
 ## G1 experiments
 

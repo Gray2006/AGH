@@ -99,3 +99,32 @@ def test_rule_child_adapter() -> None:
 def test_m0_skeleton_is_valid_for_llm_prompt() -> None:
     sk = m0_skeleton()
     assert sk.min_vertical_moves >= 1
+
+
+def test_prompt_includes_reference_when_given() -> None:
+    from agh.contracts import Contract
+
+    sk = skeleton()
+    contract = Contract(
+        contract_id="ct-llm", parent_id="p", skeleton=sk, budget_max_tokens=1, ttl_ms=1
+    )
+    reference = {"child_id": "ref", "parts": ["P1", "C1", "C2"]}
+    prompt = build_prompt(contract, None, reference)
+    assert "参考实现" in prompt
+    assert '"child_id": "ref"' in prompt
+
+
+def test_llm_child_passes_reference() -> None:
+    sk = skeleton()
+    payload = json.dumps(valid_payload(sk))
+    seen: list[str] = []
+
+    def complete(prompt: str) -> str:
+        seen.append(prompt)
+        return payload
+
+    child = LlmChild(
+        name="llm-child", complete=complete, skeleton=sk, reference={"child_id": "ref"}
+    )
+    child.reconstruct("ct-llm")
+    assert "参考实现" in seen[0]

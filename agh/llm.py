@@ -92,7 +92,11 @@ def extract_json(text: str) -> Any:
     raise ChildOutputError("JSON 括号不闭合", raw=text)
 
 
-def build_prompt(contract: Contract, parent_features: list[str] | None = None) -> str:
+def build_prompt(
+    contract: Contract,
+    parent_features: list[str] | None = None,
+    reference: dict | None = None,
+) -> str:
     """把骨架、必需项、垂直移动写成可执行的指令，不给答案。"""
     sk = contract.skeleton
     lines = [
@@ -115,6 +119,10 @@ def build_prompt(contract: Contract, parent_features: list[str] | None = None) -
         lines.append(f"- 至少 {sk.min_vertical_moves} 次垂直移动，写在 content.vertical_moves 里")
     if parent_features:
         lines.append(f"- 父级签名特征（用于判断你是否只是复读）：{', '.join(parent_features)}")
+    if reference is not None:
+        lines.append("")
+        lines.append("参考实现（一个合格样本，可照抄结构，但请自己判断是否要调整）：")
+        lines.append(json.dumps(reference, ensure_ascii=False))
     lines += [
         "",
         "只输出 JSON，字段：",
@@ -138,6 +146,7 @@ class LlmChild:
     complete: Completion
     skeleton: Skeleton
     parent_features: list[str] | None = None
+    reference: dict | None = None
 
     def reconstruct(self, contract_id: str) -> GestaltReconstruction:
         contract = Contract(
@@ -147,7 +156,7 @@ class LlmChild:
             budget_max_tokens=1,
             ttl_ms=1,
         )
-        prompt = build_prompt(contract, self.parent_features)
+        prompt = build_prompt(contract, self.parent_features, self.reference)
         raw = self.complete(prompt)
         data = extract_json(raw)
         if not isinstance(data, dict):
