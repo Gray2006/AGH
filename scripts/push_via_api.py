@@ -108,8 +108,14 @@ def main() -> None:
         for line in git("diff", "--name-status", remote_head, sha).splitlines():
             status, path = line.split("\t", 1)
             if status.startswith("D"):
+                entries.append({"path": path, "mode": "100644", "type": "blob", "sha": None})
                 continue
-            content = (ROOT / path).read_bytes()
+            content = subprocess.run(
+                ["git", "show", f"{sha}:{path}"],
+                cwd=ROOT,
+                capture_output=True,
+                check=True,
+            ).stdout
             blob = call(
                 "POST",
                 f"{api}/git/blobs",
