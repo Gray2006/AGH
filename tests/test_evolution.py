@@ -129,3 +129,27 @@ def test_hill_climb_is_deterministic(cfg: ArenaConfig) -> None:
     first = hill_climb(seed_strategy(), benchmarks(), cfg, seed=4, evaluations=4)
     second = hill_climb(seed_strategy(), benchmarks(), cfg, seed=4, evaluations=4)
     assert first == second
+
+
+def test_reference_rewards_completing_missing_edge(cfg: ArenaConfig) -> None:
+    """参照签名取自骨架：补全缺失的 P1-C3 应当加分，而不是被结构距离惩罚。"""
+    from agh.evolution import Strategy, evaluate_strategy
+
+    full = Strategy(
+        name="full",
+        features=("M0-P1", "P1-C1", "P1-C2", "P1-C3"),
+        parts=("M0", "P1", "C1", "C2", "C3"),
+        covered=("P1", "C1", "C2"),
+        confidence=0.8,
+        depth=0.9,
+    )
+    partial = Strategy(
+        name="partial",
+        features=("M0-P1", "P1-C1", "P1-C2"),
+        parts=("M0", "P1", "C1", "C2", "C3"),
+        covered=("P1", "C1", "C2"),
+        confidence=0.8,
+        depth=0.9,
+    )
+    benches = benchmarks()
+    assert evaluate_strategy(full, benches, cfg).fitness > evaluate_strategy(partial, benches, cfg).fitness

@@ -435,9 +435,21 @@ def _log_ok(log: EventLog | None) -> bool:
         return False
 
 
+def _reference(skeleton: Skeleton) -> AbstractSignature:
+    """参照签名取自骨架本身（边），而不是种子策略。
+
+    用种子当参照时，任何变异都会拉大与父代的结构距离、被评分惩罚，
+    进化在数学上就不可能赢；改成骨架参照后，补全缺失边才会加分。
+    """
+    return AbstractSignature(
+        signature_id=f"ref-{skeleton.skeleton_id}",
+        features=[f"{a}-{b}" for a, b in skeleton.edges],
+    )
+
+
 def default_benchmarks(skeleton: Skeleton, parent_features: Sequence[str]) -> list[Benchmark]:
-    """默认基准：原骨架 + 两个变体（少一条边 / 多一个必需项）。"""
-    base = Benchmark(skeleton=skeleton, parent=AbstractSignature(signature_id="p-base", features=list(parent_features)))
+    """默认基准：原骨架 + 两个变体（加深 / 加宽）。"""
+    base = Benchmark(skeleton=skeleton, parent=_reference(skeleton))
     deep = skeleton.model_copy(
         update={
             "skeleton_id": f"{skeleton.skeleton_id}-deep",
@@ -452,8 +464,8 @@ def default_benchmarks(skeleton: Skeleton, parent_features: Sequence[str]) -> li
     )
     return [
         base,
-        Benchmark(skeleton=deep, parent=base.parent),
-        Benchmark(skeleton=wide, parent=base.parent),
+        Benchmark(skeleton=deep, parent=_reference(deep)),
+        Benchmark(skeleton=wide, parent=_reference(wide)),
     ]
 
 
