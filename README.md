@@ -4,7 +4,7 @@
 
 **Agent Gestalt Hierarchy**：多智能体「整体重构」框架的 M0 垂直切片。母体发骨架与契约，子级按整体重构而不是拼零件，回传带签名与出处；写入门、竞技场、仲裁、治理机、预算账本、哈希链日志串成一条可跑、可测、可重放的链路。
 
-> 状态：M0（v0.16.0），子级是**规则重构器**，不接 LLM。所有数字都能在本地复现。
+> 状态：M0（v0.17.0），子级是**规则重构器**，不接 LLM。所有数字都能在本地复现。
 
 ```
 母体 M0
@@ -102,6 +102,7 @@ python -m agh                # 跑 M0，落盘 runs/m0/（等价 python scripts/
 | `agh/benchmarks.py` | 可配置基准生成器（节点固定、边/必需项随机） |
 | `agh/evolution_sharded.py` | 分片精英 + 全局参数进化（combined 模式） |
 | `agh/meta.py` | 元进化：算子老虎机 + 课程加难（meta 模式） |
+| `agh/selfmod.py` | 自我改写底座：不可变制品 + 门禁 + 原子切换 + 回滚 |
 | `agh/providers.py` | OpenAI 兼容模型适配器（环境变量取密钥，JSON 模式 + 重试） |
 | `agh/pipeline.py` | M0 编排、reducer、演示冻结层 |
 
@@ -256,6 +257,26 @@ agh evolve --mode meta --rounds 8
 实测 8 轮：难度从 1 升到 4，曲线在加难时回落再爬升，参数稳定在 `update=0, coverage≈0.41, vertical≈0.37`；老虎机最后偏向 `weight_up`。
 
 参数层用退火步长（前半程 0.1、后半程 0.02）、一次可动两个权重、并对权重做归一化后，6 轮把均值从 0.54253 推到 0.67324，收敛到 `confidence=0.05, structural=0.172, update=0, vertical=0.356, coverage=0.422`，`dissent_tau=0.18`。
+
+## 自我改写的安全边界
+
+「新代码跑通就删旧代码」不能做，因为「跑通」证明不了没有 bug，删掉就没了退路。`agh/selfmod.py` 给的是另一条路：
+
+- **制品不可变**：每个版本打成 `tar.gz`，算 manifest 与整包 sha256；校验失败拒绝切换
+- **原子切换**：只有 `current.json` 指针决定跑哪个版本，写入用 tmp + replace
+- **门禁**：候选版本在临时目录解开，跑完所有 gate 才切换；任一 gate 失败或异常，现网不动
+- **回滚**：指针回到上一版，旧版本一直都在
+- **回收**：显式 `gc(keep_last, min_age_days)`，当前版本永不删
+
+```python
+from agh.selfmod import ArtifactStore, CallableGate, CommandGate, promote
+
+store = ArtifactStore("runs/selfmod")
+store.stage("build/agh", "v2")
+promote(store, "v2", [CommandGate("pytest", ["python", "-m", "pytest", "-q"])])
+```
+
+边界：这套设计假设**监督者在被改代码之外**。如果新代码能改指针、改 gate 或改监督者，门禁就是装饰；真正的自改需要独立进程、独立权限与人工批准。
 
 ## M0 实测
 

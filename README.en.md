@@ -4,7 +4,7 @@
 
 **Agent Gestalt Hierarchy** — an M0 vertical slice of a multi-agent "gestalt reconstruction" framework. A parent issues a skeleton and a contract; children reconstruct the whole rather than reassembling parts; every submission is signed and provenance-checked. Gate, arena, arbitration, governance, budget ledger and a hash-chained log form one runnable, testable, replayable pipeline.
 
-> Status: M0 (v0.16.0). Children are **rule-based reconstructors**, not LLMs. Every number below is reproducible locally.
+> Status: M0 (v0.17.0). Children are **rule-based reconstructors**, not LLMs. Every number below is reproducible locally.
 
 ```
 Parent M0
@@ -102,6 +102,7 @@ Expected output (excerpt):
 | `agh/benchmarks.py` | Configurable benchmark generator (fixed nodes, random edges/required) |
 | `agh/evolution_sharded.py` | Sharded elites plus global parameter evolution (combined mode) |
 | `agh/meta.py` | Meta-evolution: operator bandit plus curriculum (meta mode) |
+| `agh/selfmod.py` | Self-modification base: immutable artifacts, gates, atomic switch, rollback |
 | `agh/providers.py` | OpenAI-compatible model adapter (env key, JSON mode, retries) |
 | `agh/pipeline.py` | M0 orchestration, reducer, demo frozen layer |
 
@@ -255,6 +256,18 @@ agh evolve --mode meta --rounds 8
 Eight rounds: difficulty rose from 1 to 4, the curve dipped and recovered on each harder level, and parameters settled at `update=0, coverage≈0.41, vertical≈0.37`.
 
 With annealed step sizes (0.1 early, 0.02 late), up to two weight changes per mutation and weight normalization, six rounds lift the mean from 0.54253 to 0.67324, converging to `confidence=0.05, structural=0.172, update=0, vertical=0.356, coverage=0.422`, `dissent_tau=0.18`.
+
+## Safe self-modification
+
+"Do not delete the old code until the new one runs flawlessly" is the right instinct, but "runs" does not prove absence of bugs, and deleting removes the only way back. `agh/selfmod.py` does this instead:
+
+- **Immutable artifacts**: each version is a `tar.gz` with a manifest and a whole-archive sha256; a bad checksum is refused
+- **Atomic switch**: a single `current.json` pointer decides what runs, written via tmp + replace
+- **Gates**: the candidate is extracted to a temp dir and every gate must pass before switching; a failing or crashing gate leaves production untouched
+- **Rollback**: the pointer returns to the previous version, which is still there
+- **GC**: explicit `gc(keep_last, min_age_days)`; the current version is never removed
+
+The boundary: this assumes the **supervisor lives outside the code being changed**. If new code can rewrite the pointer, the gates or the supervisor, the gates are decoration.
 
 ## M0 results
 

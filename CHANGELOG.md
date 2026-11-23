@@ -2,6 +2,21 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [0.17.0] - 2026-11-24
+
+自我改写的安全底座，回答「能不能让 AGH 改自己代码」。
+
+### Added
+
+- `agh/selfmod.py`：不可变制品（tar.gz + manifest + sha256）、原子指针切换、门禁 promote、回滚、显式 gc
+- `CallableGate` / `CommandGate`
+- 测试 190 → 198
+
+### Design note
+
+- 不做「跑通就删旧代码」；旧版本永久保留，回收只按保留期与最近 N 个
+- 门禁失败或异常时现网不动；监督者必须在被改代码之外，否则门禁无效
+
 ## [0.16.0] - 2026-11-24
 
 元进化：学会怎么改自己，并自己加难度。
