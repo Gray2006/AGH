@@ -108,27 +108,41 @@ def cmd_evolve(args: argparse.Namespace) -> int:
     root = (args.root or repo_root()).resolve()
     frozen = _prepare(root, args.refresh_anchor)
     cfg = ArenaConfig.from_frozen(frozen)
-    seed_recon = faithful_child("ct-seed")
-    seed = Strategy(
-        name="seed-faithful",
-        features=tuple(seed_recon.signature.features),
-        parts=tuple(seed_recon.parts),
-        covered=tuple(seed_recon.coverage.covered),
-        confidence=seed_recon.self_confidence,
-        depth=0.9,
-    )
+    if args.benchmarks > 0:
+        from .benchmarks import feature_pool as bench_features
+        from .benchmarks import generate_benchmarks
+
+        benches = generate_benchmarks(args.benchmarks, seed=args.bench_seed)
+        nodes = benches[0].skeleton.nodes
+        complete = [f"{nodes[i]}-{nodes[j]}" for i in range(len(nodes)) for j in range(i + 1, len(nodes))]
+        seed = Strategy(
+            name="seed-gen",
+            features=tuple(complete),
+            parts=tuple(nodes),
+            covered=tuple(nodes),
+            confidence=0.6,
+            depth=0.7,
+        )
+        _ = bench_features  # 保留给特征池用
+    else:
+        benches = default_benchmarks(m0_skeleton(), PARENT_SIG.features)
+        seed_recon = faithful_child("ct-seed")
+        seed = Strategy(
+            name="seed-faithful",
+            features=tuple(seed_recon.signature.features),
+            parts=tuple(seed_recon.parts),
+            covered=tuple(seed_recon.coverage.covered),
+            confidence=seed_recon.self_confidence,
+            depth=0.9,
+        )
     active_mutator = None
     if args.llm_mutator:
+        from .benchmarks import feature_pool as bench_features
         from .evolution_llm import LlmStrategyMutator
         from .providers import make_client
 
-        benches = default_benchmarks(m0_skeleton(), PARENT_SIG.features)
-        base = m0_skeleton()
-        feature_pool = sorted(
+        feature_pool = bench_features(benches) or sorted(
             {f for b in benches for f in b.parent.features}
-            | {f"{a}-{b}" for a, b in base.edges}
-            | set(base.nodes)
-            | {"pred:flat", "pred:hierarchical", "pred:independent"}
         )
         node_pool = sorted({n for b in benches for n in b.skeleton.nodes})
         client = make_client(
@@ -141,7 +155,7 @@ def cmd_evolve(args: argparse.Namespace) -> int:
         log_path.unlink()
     report = evolve(
         seed,
-        default_benchmarks(m0_skeleton(), PARENT_SIG.features),
+        benches,
         cfg,
         EvolutionConfig(
             generations=args.generations,
@@ -159,7 +173,7 @@ def cmd_evolve(args: argparse.Namespace) -> int:
     if args.compare_runs > 0:
         comparison = compare_search(
             seed,
-            default_benchmarks(m0_skeleton(), PARENT_SIG.features),
+            benches,
             cfg,
             EvolutionConfig(
                 generations=args.generations,
@@ -221,6 +235,8 @@ def build_parser() -> argparse.ArgumentParser:
     evolve_cmd.add_argument("--out", type=Path, default=Path("runs") / "evolve" / "report.json")
     evolve_cmd.add_argument("--compare-runs", type=int, default=0, help="跑进化 vs 基线对照")
     evolve_cmd.add_argument("--seeds-per-run", type=int, default=1, help="每轮取多个种子的均值")
+    evolve_cmd.add_argument("--benchmarks", type=int, default=0, help="生成多少个随机基准（0=用默认 3 个）")
+    evolve_cmd.add_argument("--bench-seed", type=int, default=0)
     evolve_cmd.add_argument("--llm-mutator", action="store_true", help="用模型提议变异")
     evolve_cmd.add_argument("--provider", default="deepseek")
     evolve_cmd.add_argument("--model", default=None)

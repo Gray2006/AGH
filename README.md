@@ -4,7 +4,7 @@
 
 **Agent Gestalt Hierarchy**：多智能体「整体重构」框架的 M0 垂直切片。母体发骨架与契约，子级按整体重构而不是拼零件，回传带签名与出处；写入门、竞技场、仲裁、治理机、预算账本、哈希链日志串成一条可跑、可测、可重放的链路。
 
-> 状态：M0（v0.10.3），子级是**规则重构器**，不接 LLM。所有数字都能在本地复现。
+> 状态：M0（v0.11.0），子级是**规则重构器**，不接 LLM。所有数字都能在本地复现。
 
 ```
 母体 M0
@@ -99,6 +99,7 @@ python -m agh                # 跑 M0，落盘 runs/m0/（等价 python scripts/
 | `agh/sdk.py` | Python SDK：run / verify / replay / experiment / ablation |
 | `agh/evolution.py` | 档案式自我迭代：受限基因组、血统、治理门与预算 |
 | `agh/evolution_llm.py` | LLM 变异器 + 进化 vs 随机搜索对照 |
+| `agh/benchmarks.py` | 可配置基准生成器（节点固定、边/必需项随机） |
 | `agh/providers.py` | OpenAI 兼容模型适配器（环境变量取密钥，JSON 模式 + 重试） |
 | `agh/pipeline.py` | M0 编排、reducer、演示冻结层 |
 
@@ -225,6 +226,14 @@ agh evolve --generations 5 --compare-runs 5   # 同预算下与随机搜索配�
 对照的意义是能证伪：如果随机搜索一样好，档案与选择就没有价值。基线有两条——随机搜索与带重启的贪心爬山，多重比较用 Holm 校正；`--seeds-per-run` 让每轮在多个种子上取均值再配对，降方差。
 
 进化过程本身也写进哈希链日志（`runs/evolve/events.jsonl`）：每次变异、接受、结束都有记录，`agh verify` 可校验。
+
+默认只有 3 个骨架，区分度不够。用生成器铺开到 N 个随机基准：
+
+```bash
+agh evolve --benchmarks 10 --bench-seed 0 --generations 5 --population 3
+```
+
+生成的骨架节点数固定、边与必需项随机，参照签名取自各自骨架；单次调用仍只评估本地规则子级，不花模型 token。
 
 ## M0 实测
 

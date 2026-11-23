@@ -2,6 +2,16 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [0.11.0] - 2026-11-23
+
+可配置基准生成器，让对照有区分度。
+
+### Added
+
+- `agh/benchmarks.py`：按固定节点词汇生成随机骨架（边、必需项随机），参照签名取自各自骨架
+- CLI `agh evolve --benchmarks N --bench-seed S`
+- 测试 170 → 174
+
 ## [0.10.3] - 2026-11-23
 
 修一个让进化无法发生的适应度缺陷。
