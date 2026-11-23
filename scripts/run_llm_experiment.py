@@ -33,6 +33,7 @@ def main() -> int:
     parser.add_argument("--api-key-env", default=None)
     parser.add_argument("--max-tokens", type=int, default=2048)
     parser.add_argument("--include-reference", action="store_true", help="提示里附一个参考重构（消融）")
+    parser.add_argument("--temperature", type=float, default=None)
     parser.add_argument("--samples", type=int, default=8)
     parser.add_argument("--out", type=Path, default=ROOT / "runs" / "g1" / "llm-experiment.json")
     args = parser.parse_args()
@@ -42,6 +43,9 @@ def main() -> int:
     client = make_client(
         args.provider, model=args.model, base_url=args.base_url, api_key_env=args.api_key_env
     )
+    client.max_tokens = args.max_tokens
+    if args.temperature is not None:
+        client.temperature = args.temperature
     reference = None
     if args.include_reference:
         reference = faithful_child("ct-reference").model_dump(mode="json")
@@ -85,6 +89,8 @@ def main() -> int:
         "max_score": round(max(scores), 5) if scores else 0.0,
         "rule_baseline": round(rule_score, 5),
         "include_reference": bool(args.include_reference),
+        "temperature": client.temperature,
+        "scores": [round(x, 5) for x in scores],
         "delta_vs_rule": (
             {
                 "mean": round(paired_bootstrap_ci(deltas, resamples=2000, seed=0).mean, 5),

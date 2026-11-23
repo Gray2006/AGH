@@ -2,6 +2,20 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [1.3.0] - 2026-11-24
+
+温度消融，并修脚本参数未生效。
+
+### Fixed
+
+- `run_llm_experiment.py` 的 `--max-tokens` / `--temperature` 之前没有真正赋给客户端（消融跑出来两组都是默认温度）
+
+### Measured
+
+- temperature 0.2（40 次）：均分约 0.498，配对差 -0.012，CI 不含 0
+- temperature 0.9（12 次）：均分 0.50554，差 -0.005，CI 含 0
+- command-code 端点只支持 deepseek-v4.1-flash；另外四个模型名均 400
+
 ## [1.2.0] - 2026-11-24
 
 提示消融：验证「给骨架不给答案」的代价。
