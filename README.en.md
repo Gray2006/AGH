@@ -52,7 +52,7 @@ git clone https://github.com/Gray2006/AGH.git
 cd AGH
 pip install -e ".[dev]"
 
-python -m pytest -q          # 99 tests
+python -m pytest -q          # 101 tests
 python -m agh                # run M0, writes runs/m0/ (same as python scripts/run_m0.py)
 ```
 
@@ -105,7 +105,7 @@ Thresholds live in `config/frozen/` and are covered by the anchor. Docs in [`doc
 | Governance | qualified dissent → T2, stops at `VERIFIED`; `RELEASED` after human approval |
 | Ledger | 0 violations |
 | Replay | L1 `bit_exact=true` |
-| Tests | 99 passed |
+| Tests | 101 passed |
 
 ## Design decisions
 

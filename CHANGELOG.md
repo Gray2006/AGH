@@ -2,6 +2,29 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [0.2.0] - 2026-11-23
+
+项目改名 AGH，补齐命令行与 lint。
+
+### Added
+
+- `python -m agh` 入口与 `agh` 控制台脚本；`--refresh-anchor` 重建冻结层锚点
+- ruff 配置（line-length 120，忽略中文全角标点的 RUF001-003）；CI 加 lint 步骤
+- `py.typed` 标记；`SECURITY.md`；版本号一致性测试
+
+### Fixed
+
+- `bus.publish_batch`：批次大于去重窗口时 KeyError
+- `governance.observe`：停车不幂等，`from_state` 记错
+- `ledger.settle`：超预留未比较 `wall_ms`
+- `arena.diversity_precheck`：两两距离重复计算，O(n³) → O(n²)
+
+### Changed
+
+- 包名 `agh-framework` → `AGH`；仓库与文档统一为 AGH
+- 清理 55 处 lint 问题（未用导入、导入排序、可合并判断等）
+- 测试 95 → 101
+
 ## [0.1.0] - 2026-11-23
 
 首个版本：AGH v3.1 M0 垂直切片。

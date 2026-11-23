@@ -52,7 +52,7 @@ git clone https://github.com/Gray2006/AGH.git
 cd AGH
 pip install -e ".[dev]"
 
-python -m pytest -q          # 99 条测试
+python -m pytest -q          # 101 条测试
 python -m agh                # 跑 M0，落盘 runs/m0/（等价 python scripts/run_m0.py）
 ```
 
@@ -105,7 +105,7 @@ python -m agh                # 跑 M0，落盘 runs/m0/（等价 python scripts/
 | 治理 | 有合格异议 → 升 T2 停在 `VERIFIED`；人工批准后 `RELEASED` |
 | 账本 | 违规 0 |
 | 重放 | L1 `bit_exact=true` |
-| 测试 | 99 passed |
+| 测试 | 101 passed |
 
 ## 设计取舍
 
