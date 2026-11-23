@@ -2,6 +2,17 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [0.10.0] - 2026-11-23
+
+接入真模型。
+
+### Added
+
+- `agh/providers.py`：OpenAI 兼容 chat completions 适配器（DeepSeek / OpenAI / OpenRouter / Ollama 预设），密钥只从环境变量读，JSON 模式 + 重试
+- `evolve(..., mutator=...)`：变异器可注入；CLI `--llm-mutator --provider --model --api-key-env`
+- `scripts/run_llm_child.py`：用真模型跑一次子级重构
+- 测试 162 → 166
+
 ## [0.9.0] - 2026-11-23
 
 对照实验降方差、基线加强。

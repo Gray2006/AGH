@@ -117,6 +117,18 @@ def cmd_evolve(args: argparse.Namespace) -> int:
         confidence=seed_recon.self_confidence,
         depth=0.9,
     )
+    active_mutator = None
+    if args.llm_mutator:
+        from .evolution_llm import LlmStrategyMutator
+        from .providers import make_client
+
+        benches = default_benchmarks(m0_skeleton(), PARENT_SIG.features)
+        feature_pool = sorted({f for b in benches for f in b.parent.features})
+        node_pool = sorted({n for b in benches for n in b.skeleton.nodes})
+        client = make_client(
+            args.provider, model=args.model, api_key_env=args.api_key_env
+        )
+        active_mutator = LlmStrategyMutator(feature_pool, node_pool, complete=client)
     log_path = args.out.parent / "events.jsonl"
     log_path.parent.mkdir(parents=True, exist_ok=True)
     if log_path.exists():
@@ -132,6 +144,7 @@ def cmd_evolve(args: argparse.Namespace) -> int:
             seed=args.seed,
         ),
         log=EventLog(log_path),
+        mutator=active_mutator,
     )
     target = report.write(args.out)
     print(json.dumps(report.as_dict(), ensure_ascii=False, indent=2))
@@ -201,6 +214,10 @@ def build_parser() -> argparse.ArgumentParser:
     evolve_cmd.add_argument("--out", type=Path, default=Path("runs") / "evolve" / "report.json")
     evolve_cmd.add_argument("--compare-runs", type=int, default=0, help="跑进化 vs 基线对照")
     evolve_cmd.add_argument("--seeds-per-run", type=int, default=1, help="每轮取多个种子的均值")
+    evolve_cmd.add_argument("--llm-mutator", action="store_true", help="用模型提议变异")
+    evolve_cmd.add_argument("--provider", default="deepseek")
+    evolve_cmd.add_argument("--model", default=None)
+    evolve_cmd.add_argument("--api-key-env", default=None)
     evolve_cmd.set_defaults(func=cmd_evolve)
 
     version = sub.add_parser("version", help="打印版本")

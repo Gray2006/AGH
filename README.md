@@ -4,7 +4,7 @@
 
 **Agent Gestalt Hierarchy**：多智能体「整体重构」框架的 M0 垂直切片。母体发骨架与契约，子级按整体重构而不是拼零件，回传带签名与出处；写入门、竞技场、仲裁、治理机、预算账本、哈希链日志串成一条可跑、可测、可重放的链路。
 
-> 状态：M0（v0.9.0），子级是**规则重构器**，不接 LLM。所有数字都能在本地复现。
+> 状态：M0（v0.10.0），子级是**规则重构器**，不接 LLM。所有数字都能在本地复现。
 
 ```
 母体 M0
@@ -52,7 +52,7 @@ git clone https://github.com/Gray2006/AGH.git
 cd AGH
 pip install -e ".[dev]"
 
-python -m pytest -q          # 162 条测试
+python -m pytest -q          # 166 条测试
 python -m agh                # 跑 M0，落盘 runs/m0/（等价 python scripts/run_m0.py）
 ```
 
@@ -99,6 +99,7 @@ python -m agh                # 跑 M0，落盘 runs/m0/（等价 python scripts/
 | `agh/sdk.py` | Python SDK：run / verify / replay / experiment / ablation |
 | `agh/evolution.py` | 档案式自我迭代：受限基因组、血统、治理门与预算 |
 | `agh/evolution_llm.py` | LLM 变异器 + 进化 vs 随机搜索对照 |
+| `agh/providers.py` | OpenAI 兼容模型适配器（环境变量取密钥，JSON 模式 + 重试） |
 | `agh/pipeline.py` | M0 编排、reducer、演示冻结层 |
 
 配置在 `config/frozen/`，阈值全部进冻结层，改配置会被锚点发现。文档在 [`docs/`](docs/)：实现报告、方案原文、两份引用/事实核验。
@@ -120,6 +121,16 @@ recon = child.reconstruct("ct-1")               # 校验不过抛 ChildOutputErr
 ```
 
 `ChildOutputError` 带原始文本与逐条 schema 错误，可以直接拿去重试或换模型。框架里没有网络代码：模型怎么调是部署方的事。
+
+仓库提供 OpenAI 兼容适配器 `agh/providers.py`，密钥只从环境变量读：
+
+```bash
+set DEEPSEEK_API_KEY=sk-...                 # PowerShell: $env:DEEPSEEK_API_KEY="sk-..."
+python scripts/run_llm_child.py --provider deepseek
+agh evolve --llm-mutator --provider deepseek --generations 5
+```
+
+任何 OpenAI 兼容端点都行：`--base-url https://... --model xxx --api-key-env MY_KEY`。客户端带 JSON 模式与重试；解析失败会抛错，不会静默返回半成品。
 
 ## G1 实验
 
@@ -227,7 +238,7 @@ agh evolve --generations 5 --compare-runs 5   # 同预算下与随机搜索配�
 | 治理 | 有合格异议 → 升 T2 停在 `VERIFIED`；人工批准后 `RELEASED` |
 | 账本 | 违规 0 |
 | 重放 | L1 `bit_exact=true` |
-| 测试 | 162 passed |
+| 测试 | 166 passed |
 
 ## 设计取舍
 

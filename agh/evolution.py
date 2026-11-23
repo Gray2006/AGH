@@ -284,6 +284,7 @@ def evolve(
     cfg: ArenaConfig,
     config: EvolutionConfig | None = None,
     log: EventLog | None = None,
+    mutator: Any | None = None,
 ) -> EvolutionReport:
     """档案式进化主循环：变异 → 评估 → 接受/拒绝 → 入档。"""
     settings = config or EvolutionConfig()
@@ -298,7 +299,7 @@ def evolve(
 
     feature_pool = sorted({f for b in benchmarks for f in b.parent.features})
     node_pool = sorted({n for b in benchmarks for n in b.skeleton.nodes})
-    mutator = StrategyMutator(feature_pool, node_pool)
+    active_mutator = mutator if mutator is not None else StrategyMutator(feature_pool, node_pool)
     archive = Archive()
     notes: list[str] = []
 
@@ -331,7 +332,7 @@ def evolve(
             generation_best = curve[-1]
             for _ in range(settings.population):
                 parent = archive.select(rng)
-                child_strategy = mutator.mutate(parent.strategy, rng, f"v{counter}-g{generation}")
+                child_strategy = active_mutator.mutate(parent.strategy, rng, f"v{counter}-g{generation}")
                 lease = ledger.reserve(
                     owner=child_strategy.name,
                     reserved=BudgetVector(compute_units=1, wall_ms=1000, usd=0.01),
