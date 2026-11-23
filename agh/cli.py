@@ -18,8 +18,9 @@ from pathlib import Path
 
 from . import __version__
 from .crypto import KeyRing
+from .evolution import EvolutionConfig, Strategy, default_benchmarks, evolve
 from .frozen import FrozenLayer
-from .pipeline import DEV_KID, DEV_SECRET, run_m0
+from .pipeline import DEV_KID, DEV_SECRET, PARENT_SIG, faithful_child, m0_skeleton, run_m0
 from .sdk import AghClient, default_frozen_root
 
 
@@ -99,6 +100,38 @@ def cmd_ablation(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_evolve(args: argparse.Namespace) -> int:
+    from .arena import ArenaConfig
+
+    root = (args.root or repo_root()).resolve()
+    frozen = _prepare(root, args.refresh_anchor)
+    cfg = ArenaConfig.from_frozen(frozen)
+    seed_recon = faithful_child("ct-seed")
+    seed = Strategy(
+        name="seed-faithful",
+        features=tuple(seed_recon.signature.features),
+        parts=tuple(seed_recon.parts),
+        covered=tuple(seed_recon.coverage.covered),
+        confidence=seed_recon.self_confidence,
+        depth=0.9,
+    )
+    report = evolve(
+        seed,
+        default_benchmarks(m0_skeleton(), PARENT_SIG.features),
+        cfg,
+        EvolutionConfig(
+            generations=args.generations,
+            population=args.population,
+            budget_calls=args.budget,
+            seed=args.seed,
+        ),
+    )
+    target = report.write(args.out)
+    print(json.dumps(report.as_dict(), ensure_ascii=False, indent=2))
+    print(f"\n报告: {target}")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="agh", description="AGH 多智能体整体重构框架")
     parser.add_argument("--version", action="version", version=f"AGH {__version__}")
@@ -133,6 +166,16 @@ def build_parser() -> argparse.ArgumentParser:
     ablation.add_argument("--frozen", type=Path, default=None)
     ablation.add_argument("--out", type=Path, default=Path("runs") / "g1" / "ablation.json")
     ablation.set_defaults(func=cmd_ablation)
+
+    evolve_cmd = sub.add_parser("evolve", help="档案式自我迭代（受限基因组）")
+    evolve_cmd.add_argument("--root", type=Path, default=None)
+    evolve_cmd.add_argument("--refresh-anchor", action="store_true")
+    evolve_cmd.add_argument("--generations", type=int, default=5)
+    evolve_cmd.add_argument("--population", type=int, default=3)
+    evolve_cmd.add_argument("--budget", type=int, default=500)
+    evolve_cmd.add_argument("--seed", type=int, default=7)
+    evolve_cmd.add_argument("--out", type=Path, default=Path("runs") / "evolve" / "report.json")
+    evolve_cmd.set_defaults(func=cmd_evolve)
 
     version = sub.add_parser("version", help="打印版本")
     version.set_defaults(func=lambda _a: print(__version__) or 0)
