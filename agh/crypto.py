@@ -18,8 +18,9 @@ import hmac
 import json
 import secrets
 import time
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, field
-from typing import Any, Callable, Iterable, Mapping
+from typing import Any
 
 from .contracts import (
     SCHEMA_VERSION,
@@ -84,7 +85,7 @@ class KeyRing:
         self.get(kid).revoked = True
 
     @classmethod
-    def with_secret(cls, kid: str, secret: bytes) -> "KeyRing":
+    def with_secret(cls, kid: str, secret: bytes) -> KeyRing:
         ring = cls()
         ring.register(kid, secret)
         return ring
@@ -292,9 +293,10 @@ class SettlementVerifier:
         if msg.nonce in self._nonces:
             raise ProvenanceError("replay_nonce", msg.nonce)
         last = self._last.get(msg.settlement_id)
-        if last is not None:
-            if msg.epoch < last[0] or (msg.epoch == last[0] and msg.seq <= last[1]):
-                raise ProvenanceError("stale_seq", msg.settlement_id)
+        if last is not None and (
+            msg.epoch < last[0] or (msg.epoch == last[0] and msg.seq <= last[1])
+        ):
+            raise ProvenanceError("stale_seq", msg.settlement_id)
         self._nonces.add(msg.nonce)
         self._last[msg.settlement_id] = (msg.epoch, msg.seq)
 

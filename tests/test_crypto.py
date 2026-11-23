@@ -8,9 +8,9 @@ from agh.crypto import (
     KeyRing,
     ProvenanceError,
     ProvenanceGateway,
+    SettlementVerifier,
     derive_trust,
     sign_settlement,
-    SettlementVerifier,
 )
 
 SECRET = b"unit-test-secret"
@@ -117,7 +117,7 @@ def test_revoked_key_rejected() -> None:
 
 
 def test_unknown_kid_rejected() -> None:
-    gw, ring = make_gateway()
+    gw, _ring = make_gateway()
     env = gw.issue(
         payload={"a": 1}, producer_id="c1", producer_kind="child",
         parent_contract_id=None, trust=TrustLevel.LOCAL,

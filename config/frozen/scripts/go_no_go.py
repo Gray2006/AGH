@@ -18,7 +18,6 @@ HERE = Path(__file__).resolve().parent
 FROZEN = HERE.parent
 sys.path.insert(0, str(FROZEN.parent.parent))
 
-from agh.evalstats import paired_bootstrap_ci  # noqa: E402
 from agh.frozen import FrozenLayer, load_json  # noqa: E402
 
 

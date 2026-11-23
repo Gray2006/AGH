@@ -98,3 +98,11 @@ def test_max_tokens_must_be_positive() -> None:
     ledger = Ledger(BudgetVector(compute_units=1, wall_ms=1, usd=1.0))
     with pytest.raises(ValueError):
         ledger.reserve(owner="c1", reserved=BudgetVector(compute_units=1, wall_ms=1, usd=0.1), max_tokens=0)
+
+def test_over_reserved_checks_wall_ms() -> None:
+    ledger = Ledger(BudgetVector(compute_units=100, wall_ms=1000, usd=1.0))
+    lease = ledger.reserve(
+        owner="c1", reserved=BudgetVector(compute_units=10, wall_ms=100, usd=0.1), max_tokens=10
+    )
+    ledger.settle(lease.lease_id, BudgetVector(compute_units=10, wall_ms=500, usd=0.1))
+    assert ledger.snapshot().violations == 1

@@ -14,9 +14,11 @@ from __future__ import annotations
 
 import hashlib
 import json
-from dataclasses import dataclass, field
+from collections.abc import Iterable, Sequence
+from dataclasses import dataclass
+from itertools import combinations
 from pathlib import Path
-from typing import Any, Iterable, Sequence
+from typing import Any
 
 from .contracts import AbstractSignature, GestaltReconstruction, Skeleton
 from .frozen import load_json
@@ -65,7 +67,7 @@ class ArenaConfig:
     calibration: Calibration
 
     @classmethod
-    def from_frozen(cls, frozen_root: Path) -> "ArenaConfig":
+    def from_frozen(cls, frozen_root: Path) -> ArenaConfig:
         raw = load_json(frozen_root, "thresholds.json")
         arena = raw["arena"]
         cal = raw["calibration"]
@@ -129,7 +131,7 @@ class HardFilter:
     reasons: tuple[str, ...] = ()
 
     @classmethod
-    def ok(cls) -> "HardFilter":
+    def ok(cls) -> HardFilter:
         return cls(True, ())
 
 
@@ -318,11 +320,9 @@ def diversity_precheck(
         return DiversityReport(0, 0.0, False, cfg.oversample_factor)
     clusters: list[set[str]] = []
     min_pair = 1.0
+    for a, b in combinations(feats, 2):
+        min_pair = min(min_pair, structural_distance(a, b))
     for f in feats:
-        for i, existing in enumerate(feats):
-            for j in range(i + 1, len(feats)):
-                d = structural_distance(feats[i], feats[j])
-                min_pair = min(min_pair, d)
         placed = False
         for cluster in clusters:
             if structural_distance(cluster, f) < cfg.diversity_min_pairwise:
@@ -364,7 +364,7 @@ class ArbitrationResult:
 
 
 def _tiebreak(seed: int, candidate_id: str) -> str:
-    return hashlib.sha256(f"{seed}:{candidate_id}".encode("utf-8")).hexdigest()
+    return hashlib.sha256(f"{seed}:{candidate_id}".encode()).hexdigest()
 
 
 def arbitrate(

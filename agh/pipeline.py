@@ -12,7 +12,6 @@
 from __future__ import annotations
 
 import json
-import secrets
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -40,12 +39,11 @@ from .contracts import (
     SkeletonMove,
     TrustLevel,
 )
-from .crypto import EnvelopeVerifier, ProvenanceError, ProvenanceGateway
-from .crypto import KeyRing
+from .crypto import EnvelopeVerifier, KeyRing, ProvenanceGateway
 from .eventlog import EventLog, L1Replay, LogEntry, state_digest
-from .frozen import FrozenLayer, load_json
+from .frozen import FrozenLayer
 from .gate import MemoryStore, RetrievalGate, RiskModel, WriteGate
-from .governance import GovernanceConfig, GovernanceMachine, PendingApproval
+from .governance import GovernanceConfig, GovernanceMachine
 from .ledger import Ledger
 
 DEV_KID = "gw-dev"

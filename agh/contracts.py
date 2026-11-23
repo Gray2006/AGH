@@ -65,7 +65,7 @@ class Skeleton(_Wire):
     min_vertical_moves: int = Field(default=1, ge=0)
 
     @model_validator(mode="after")
-    def _edges_reference_known_nodes(self) -> "Skeleton":
+    def _edges_reference_known_nodes(self) -> Skeleton:
         known = set(self.nodes)
         for a, b in self.edges:
             if a not in known or b not in known:
@@ -132,7 +132,7 @@ class ChildSubmission(_Wire):
     produced_at_ms: int = Field(ge=0)
 
     @model_validator(mode="after")
-    def _ids_consistent(self) -> "ChildSubmission":
+    def _ids_consistent(self) -> ChildSubmission:
         if self.payload.contract_id != self.contract_id:
             raise ValueError("payload.contract_id 与提交包 contract_id 不一致")
         if self.payload.child_id != self.child_id:
@@ -194,14 +194,14 @@ class BudgetVector(_Wire):
     wall_ms: int = Field(default=0, ge=0)
     usd: float = Field(default=0.0, ge=0.0)
 
-    def __add__(self, other: "BudgetVector") -> "BudgetVector":
+    def __add__(self, other: BudgetVector) -> BudgetVector:
         return BudgetVector(
             compute_units=self.compute_units + other.compute_units,
             wall_ms=self.wall_ms + other.wall_ms,
             usd=self.usd + other.usd,
         )
 
-    def le(self, other: "BudgetVector") -> bool:
+    def le(self, other: BudgetVector) -> bool:
         return (
             self.compute_units <= other.compute_units
             and self.wall_ms <= other.wall_ms

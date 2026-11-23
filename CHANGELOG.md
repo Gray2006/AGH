@@ -1,4 +1,4 @@
-# Changelog
+﻿# Changelog
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
@@ -19,7 +19,7 @@
 - `eventlog`：哈希链日志、L1 逐位重放、L2 统计等价
 - `evalstats`：配对 bootstrap、Holm、Cohen's d
 - `pipeline`：M0 编排与 reducer；`scripts/run_m0.py` 一键复现
-- 95 条测试；冻结配置（thresholds / risk_model / phase_gates / go_no_go）
+- 99 条测试；冻结配置（thresholds / risk_model / phase_gates / go_no_go）
 - 文档：实现报告、引用核验、NATS 与仓库核验
 
 ### Known limitations

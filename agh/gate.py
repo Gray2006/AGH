@@ -12,14 +12,14 @@
 from __future__ import annotations
 
 import random
+from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Callable, Iterable, Sequence
+from typing import Any
 
 from .contracts import Provenance, SignedEnvelope, TrustLevel
 from .crypto import EnvelopeVerifier, ProvenanceError, derive_trust
 from .frozen import load_json
-
 
 # --------------------------------------------------------------------------
 # 风险模型（留在冻结层）
@@ -36,7 +36,7 @@ class RiskModel:
     promotion_min_rechecks: int
 
     @classmethod
-    def from_frozen(cls, frozen_root: Path) -> "RiskModel":
+    def from_frozen(cls, frozen_root: Path) -> RiskModel:
         raw = load_json(frozen_root, "risk_model.json")
         return cls(
             weights=dict(raw["weights"]),

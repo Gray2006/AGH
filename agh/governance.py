@@ -14,11 +14,12 @@ SAFE_HALTED / QUARANTINED / RETIRED。
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Iterable, Literal
+from typing import Literal
 
-from .frozen import FrozenLayer, FrozenLayerError, load_json
+from .frozen import FrozenLayer, load_json
 
 State = Literal[
     "PROPOSED",
@@ -71,7 +72,7 @@ class GovernanceConfig:
     consecutive_degrade: int = 2
 
     @classmethod
-    def from_frozen(cls, frozen_root: Path) -> "GovernanceConfig":
+    def from_frozen(cls, frozen_root: Path) -> GovernanceConfig:
         raw = load_json(frozen_root, "thresholds.json")["governance"]
         return cls(
             degrade_delta=float(raw["degrade_delta"]),
@@ -119,10 +120,13 @@ class GovernanceMachine:
 
         if tier == "T2" and not human_approved:
             raise PendingApproval(f"T2 变更 {self.state} → {to_state} 需人工批准")
-        if tier == "T0" and to_state == "RELEASED":
+        if (
+            tier == "T0"
+            and to_state == "RELEASED"
+            and self.recheck_count.get(self.revision, 0) < 1
+        ):
             # T0 允许自动，但必须有复验计数
-            if self.recheck_count.get(self.revision, 0) < 1:
-                raise InvalidTransition("T0 自动发布前必须至少复验一次")
+            raise InvalidTransition("T0 自动发布前必须至少复验一次")
 
         self.history.append(
             TransitionRecord(self.state, to_state, tier, self.revision, reason)
@@ -139,10 +143,15 @@ class GovernanceMachine:
         return self.transition("ROLLED_BACK", tier="T1", reason=reason)
 
     def observe(self, score: float) -> bool:
-        """监控劣化：连续两次窗口均值下降低于阈值 → SAFE_HALTED。"""
+        """监控劣化：连续两次窗口均值下降低于阈值 → SAFE_HALTED。
+
+        已停车后重复调用返回 False，不重复记历史；记录里的 from_state 是停车前状态。
+        """
         self._scores.append(score)
         w = self.config.degrade_window
         if len(self._scores) < 2 * w:
+            return False
+        if self.state == "SAFE_HALTED":
             return False
         recent = sum(self._scores[-w:]) / w
         previous = sum(self._scores[-2 * w : -w]) / w
@@ -151,10 +160,11 @@ class GovernanceMachine:
         else:
             self._degrade_streak = 0
         if self._degrade_streak >= self.config.consecutive_degrade:
+            previous_state = self.state
             self.state = "SAFE_HALTED"
             self.history.append(
                 TransitionRecord(
-                    self.state,
+                    previous_state,
                     "SAFE_HALTED",
                     "T1",
                     self.revision,

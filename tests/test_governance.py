@@ -91,3 +91,16 @@ def test_degrade_detection_halts(frozen_src: Path) -> None:
         halted = gov.observe(0.05) or halted
     assert halted
     assert gov.state == "SAFE_HALTED"
+
+def test_halt_is_idempotent_and_records_real_from_state(frozen_src: Path) -> None:
+    gov = GovernanceMachine(
+        frozen=None,
+        config=GovernanceConfig(degrade_window=1, consecutive_degrade=1, degrade_delta=0.05),
+    )
+    gov.transition("VALIDATING", tier="T1")
+    assert not gov.observe(1.0)
+    assert gov.observe(0.5)
+    assert gov.observe(0.1) is False  # 已停车，不重复记录
+    assert len(gov.history) == 2
+    assert gov.history[-1].from_state == "VALIDATING"
+    assert gov.history[-1].to_state == "SAFE_HALTED"

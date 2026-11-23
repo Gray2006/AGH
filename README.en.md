@@ -1,4 +1,4 @@
-# AGH
+﻿# AGH
 
 [English](README.en.md) · [简体中文](README.md) · MIT
 
@@ -48,12 +48,12 @@ AGH's answers:
 Python 3.12+.
 
 ```bash
-git clone https://github.com/Gray2006/agh.git
-cd agh
+git clone https://github.com/Gray2006/AGH.git
+cd AGH
 pip install -e ".[dev]"
 
-python -m pytest -q          # 95 tests
-python scripts/run_m0.py     # run M0, writes runs/m0/
+python -m pytest -q          # 99 tests
+python -m agh                # run M0, writes runs/m0/ (same as python scripts/run_m0.py)
 ```
 
 `run_m0.py` first generates or verifies the frozen-layer anchor `config/anchor.json`, then runs the full pipeline and writes the report plus the event log.
@@ -105,7 +105,7 @@ Thresholds live in `config/frozen/` and are covered by the anchor. Docs in [`doc
 | Governance | qualified dissent → T2, stops at `VERIFIED`; `RELEASED` after human approval |
 | Ledger | 0 violations |
 | Replay | L1 `bit_exact=true` |
-| Tests | 95 passed |
+| Tests | 99 passed |
 
 ## Design decisions
 
@@ -135,13 +135,13 @@ See [`docs/verification-references.md`](docs/verification-references.md) and [`d
 
 ## Contributing
 
-```bash
+`ash
 pip install -e ".[dev]"
-python -m pytest -q
-```
+python -m ruff check .
+python -m pytest
+`
 
-Run the full suite before committing. Regenerating the anchor requires a stated reason. See [CONTRIBUTING.md](CONTRIBUTING.md).
-
+Run lint and the full suite before committing. After changing frozen config, rebuild the anchor with `python -m agh --refresh-anchor` and state the reason. See [CONTRIBUTING.md](CONTRIBUTING.md).
 ## License
 
 MIT, see [LICENSE](LICENSE).

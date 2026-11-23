@@ -6,7 +6,6 @@ import pytest
 
 from agh.crypto import KeyRing
 from agh.frozen import (
-    Anchor,
     FrozenLayer,
     FrozenLayerError,
     FrozenLayerTampered,

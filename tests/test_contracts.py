@@ -20,16 +20,16 @@ from agh.contracts import (
 
 
 def make_recon(**over: object) -> GestaltReconstruction:
-    data = dict(
-        child_id="c1",
-        contract_id="ct1",
-        skeleton_id="sk1",
-        parts=["P1", "C1"],
-        coverage=CoverageClaim(covered=["P1"]),
-        signature=AbstractSignature(signature_id="s1", features=["a-b"]),
-        self_confidence=0.5,
-        content={"edges": [["P1", "C1"]]},
-    )
+    data = {
+        "child_id": "c1",
+        "contract_id": "ct1",
+        "skeleton_id": "sk1",
+        "parts": ["P1", "C1"],
+        "coverage": CoverageClaim(covered=["P1"]),
+        "signature": AbstractSignature(signature_id="s1", features=["a-b"]),
+        "self_confidence": 0.5,
+        "content": {"edges": [["P1", "C1"]]},
+    }
     data.update(over)
     return GestaltReconstruction(**data)
 

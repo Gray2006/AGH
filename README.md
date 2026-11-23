@@ -1,4 +1,4 @@
-# AGH
+﻿# AGH
 
 [English](README.en.md) · [简体中文](README.md) · MIT
 
@@ -48,12 +48,12 @@ AGH 的做法：
 需要 Python 3.12+。
 
 ```bash
-git clone https://github.com/Gray2006/agh.git
-cd agh
+git clone https://github.com/Gray2006/AGH.git
+cd AGH
 pip install -e ".[dev]"
 
-python -m pytest -q          # 95 条测试
-python scripts/run_m0.py     # 跑 M0，落盘 runs/m0/
+python -m pytest -q          # 99 条测试
+python -m agh                # 跑 M0，落盘 runs/m0/（等价 python scripts/run_m0.py）
 ```
 
 `run_m0.py` 会先生成或校验冻结层锚点 `config/anchor.json`，再跑完整链路，输出报告与事件日志。
@@ -105,7 +105,7 @@ python scripts/run_m0.py     # 跑 M0，落盘 runs/m0/
 | 治理 | 有合格异议 → 升 T2 停在 `VERIFIED`；人工批准后 `RELEASED` |
 | 账本 | 违规 0 |
 | 重放 | L1 `bit_exact=true` |
-| 测试 | 95 passed |
+| 测试 | 99 passed |
 
 ## 设计取舍
 
@@ -135,13 +135,13 @@ python scripts/run_m0.py     # 跑 M0，落盘 runs/m0/
 
 ## 开发
 
-```bash
+`ash
 pip install -e ".[dev]"
-python -m pytest -q
-```
+python -m ruff check .
+python -m pytest
+`
 
-提交前请跑全量测试；改动冻结配置需要重新生成锚点并说明理由。详见 [CONTRIBUTING.md](CONTRIBUTING.md)。
-
+提交前请跑 lint 与全量测试；改动冻结配置后用 `python -m agh --refresh-anchor` 重建锚点，并在提交说明里写清理由。详见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 ## 许可
 
 MIT，见 [LICENSE](LICENSE)。

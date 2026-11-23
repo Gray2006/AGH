@@ -13,8 +13,9 @@ ack 超时重投递是 NATS 的真实行为，本实现也模拟：超时后消�
 from __future__ import annotations
 
 import time
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
-from typing import Any, Callable, Protocol, Sequence
+from typing import Any, Protocol
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -119,28 +120,27 @@ class InProcBus:
 
         log = self._streams.setdefault(stream, [])
         window = self._dedup.setdefault(stream, {})
-        seqs: list[int] = []
+        assigned: dict[str, int] = {}
         fresh: list[Event] = []
         for e in events:
             if e.event_id in window:
                 self.stats.duplicates_published += 1
-                seqs.append(window[e.event_id])
+                assigned[e.event_id] = window[e.event_id]
             else:
                 fresh.append(e)
         # 原子批量：校验全做完再落盘
         for e in fresh:
             log.append(e)
             seq = len(log)
-            window[e.event_id] = seq
-            if len(window) > self.dedup_window:
-                oldest = next(iter(window))
-                del window[oldest]
+            assigned[e.event_id] = seq
             self.stats.published += 1
+        # 去重窗口只保留最近 dedup_window 条；批次内序号已记在 assigned，
+        # 不受窗口裁剪影响（批次大于窗口时不会丢返回值）
+        window.update({e.event_id: assigned[e.event_id] for e in fresh})
+        while len(window) > self.dedup_window:
+            del window[next(iter(window))]
         # 返回顺序与入参一致
-        result: list[int] = []
-        for e in events:
-            result.append(window[e.event_id])
-        return result
+        return [assigned[e.event_id] for e in events]
 
     # ---------------------------------------------------------------- 订阅
     def subscribe(self, stream: str, consumer: str) -> None:
@@ -152,7 +152,7 @@ class InProcBus:
         log = self._streams.get(stream, [])
         now = self._clock()
         out: list[Delivery] = []
-        for seq, d in list(state.pending.items()):
+        for d in list(state.pending.values()):
             if len(out) >= max_msgs:
                 break
             if now - d.delivered_at_ms >= self.ack_wait_ms:

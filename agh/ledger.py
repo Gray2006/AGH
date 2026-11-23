@@ -13,8 +13,9 @@ from __future__ import annotations
 
 import time
 import uuid
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Callable
+from typing import Any
 
 from .contracts import BudgetVector
 
@@ -142,7 +143,11 @@ class Ledger:
         if lease.settled:
             # 已结算过，返回结算金额，不重复计账
             return self._settled.get(lease.lease_id, BudgetVector())
-        if actual.usd > lease.reserved.usd or actual.compute_units > lease.reserved.compute_units:
+        if (
+            actual.usd > lease.reserved.usd
+            or actual.compute_units > lease.reserved.compute_units
+            or actual.wall_ms > lease.reserved.wall_ms
+        ):
             self.violations.append(
                 LedgerViolation(
                     kind="over_reserved",

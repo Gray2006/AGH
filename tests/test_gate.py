@@ -2,11 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pytest
-
-from agh.contracts import Provenance, TrustLevel
+from agh.contracts import TrustLevel
 from agh.crypto import EnvelopeVerifier, KeyRing, ProvenanceGateway
-from agh.frozen import load_json
 from agh.gate import (
     MemoryRecord,
     MemoryStore,
@@ -14,8 +11,8 @@ from agh.gate import (
     RiskModel,
     WriteGate,
     promotion_decision,
-    risk_score,
     reuse_decision,
+    risk_score,
 )
 
 SECRET = b"gate-test-secret"
@@ -77,7 +74,7 @@ def test_taint_caps_trust_at_local(frozen_src: Path) -> None:
 
 
 def test_speculative_link_raises_risk(frozen_src: Path) -> None:
-    _, gateway, _, model, _, gate = make_gate(frozen_src)
+    _, _gateway, _, model, _, _gate = make_gate(frozen_src)
     base = risk_score({"content": {"edges": [], "speculative_links": 0}}, 0, model)
     spec = risk_score({"content": {"edges": [], "speculative_links": 1}}, 0, model)
     assert spec > base

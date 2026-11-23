@@ -5,7 +5,6 @@ from pathlib import Path
 import pytest
 
 from agh.arena import (
-    AbstractSignature,
     ArenaConfig,
     Calibration,
     CompetitiveCandidate,
@@ -22,6 +21,8 @@ from agh.arena import (
 )
 from agh.contracts import (
     AbstractSignature as ContractSignature,
+)
+from agh.contracts import (
     CoverageClaim,
     GestaltReconstruction,
     Skeleton,
