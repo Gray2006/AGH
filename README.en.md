@@ -6,6 +6,12 @@
 
 > Status: M0 (v0.2.0). Children are **rule-based reconstructors**, not LLMs. Every number below is reproducible locally.
 
+## Positioning
+
+AGH is not an orchestration framework; it is a **verification layer**. LangGraph-class tools answer "how do I get the task to run"; AGH answers "why should the output be trusted, and can it be replayed bit-for-bit". They sit on different layers and do not replace each other.
+
+A component-by-component comparison against orchestration frameworks, observability tools, audit ecosystems and provenance infrastructure — plus four near neighbours (Sovereign-OS, DOAgent, Bernstein; a fourth could not be verified and is not cited) and the honest gaps — is in [docs/positioning.md](docs/positioning.md).
+
 ```
 Parent M0
   │  skeleton + contract + budget reservation
@@ -52,7 +58,7 @@ git clone https://github.com/Gray2006/AGH.git
 cd AGH
 pip install -e ".[dev]"
 
-python -m pytest -q          # 101 tests
+python -m pytest -q          # 102 tests
 python -m agh                # run M0, writes runs/m0/ (same as python scripts/run_m0.py)
 ```
 
@@ -105,7 +111,7 @@ Thresholds live in `config/frozen/` and are covered by the anchor. Docs in [`doc
 | Governance | qualified dissent → T2, stops at `VERIFIED`; `RELEASED` after human approval |
 | Ledger | 0 violations |
 | Replay | L1 `bit_exact=true` |
-| Tests | 101 passed |
+| Tests | 102 passed |
 
 ## Design decisions
 

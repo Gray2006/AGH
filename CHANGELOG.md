@@ -1,6 +1,13 @@
-﻿# Changelog
+# Changelog
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
+
+## [Unreleased]
+
+### Added
+
+- `docs/positioning.md`：与编排框架、可观测工具、审计生态、出处技术的定位对比；四个近似项目逐项对照；事实核验记录
+- README 双语加「定位」段
 
 ## [0.2.0] - 2026-11-23
 
@@ -23,7 +30,7 @@
 
 - 包名 `agh-framework` → `AGH`；仓库与文档统一为 AGH
 - 清理 55 处 lint 问题（未用导入、导入排序、可合并判断等）
-- 测试 95 → 101
+- 测试 95 → 102
 
 ## [0.1.0] - 2026-11-23
 

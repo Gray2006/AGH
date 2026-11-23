@@ -6,6 +6,12 @@
 
 > 状态：M0（v0.2.0），子级是**规则重构器**，不接 LLM。所有数字都能在本地复现。
 
+## 定位
+
+AGH 不是编排框架，是**验证层**。LangGraph 那类解决「怎么把任务跑起来」，AGH 解决「跑出来的东西凭什么可信、能不能逐位重放」。两者不同层，不能互相替代；把它当编排框架用会失望，把它当多智能体结果的可验证性协议看才有意义。
+
+与编排框架、可观测工具、审计生态、出处技术的逐项对比，四个近似项目（Sovereign-OS、DOAgent、Bernstein，另一个未核实不采信），以及短板与选型建议，见 [docs/positioning.md](docs/positioning.md)。
+
 ```
 母体 M0
   │  骨架 + 契约 + 预算预留
@@ -52,7 +58,7 @@ git clone https://github.com/Gray2006/AGH.git
 cd AGH
 pip install -e ".[dev]"
 
-python -m pytest -q          # 101 条测试
+python -m pytest -q          # 102 条测试
 python -m agh                # 跑 M0，落盘 runs/m0/（等价 python scripts/run_m0.py）
 ```
 
@@ -105,7 +111,7 @@ python -m agh                # 跑 M0，落盘 runs/m0/（等价 python scripts/
 | 治理 | 有合格异议 → 升 T2 停在 `VERIFIED`；人工批准后 `RELEASED` |
 | 账本 | 违规 0 |
 | 重放 | L1 `bit_exact=true` |
-| 测试 | 101 passed |
+| 测试 | 102 passed |
 
 ## 设计取舍
 
