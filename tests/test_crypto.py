@@ -167,3 +167,70 @@ def test_settlement_replay_and_version_guard() -> None:
     with pytest.raises(ProvenanceError) as exc:
         SettlementVerifier(ring, judge_hash).verify(wrong_version)
     assert exc.value.code == "judge_version_mismatch"
+
+def _ed_private() -> bytes:
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+
+    return Ed25519PrivateKey.generate().private_bytes_raw()
+
+
+def test_ed25519_gateway_roundtrip() -> None:
+    ring = KeyRing.with_ed25519("ed-1", _ed_private())
+    gw = ProvenanceGateway(ring, "ed-1")
+    env = gw.issue(
+        payload={"a": 1}, producer_id="c1", producer_kind="child",
+        parent_contract_id=None, trust=TrustLevel.LOCAL,
+    )
+    prov = EnvelopeVerifier(ring).verify(env)
+    assert prov.kid == "ed-1"
+    assert prov.trust == int(TrustLevel.LOCAL)
+
+
+def test_ed25519_tampered_sig_rejected() -> None:
+    ring = KeyRing.with_ed25519("ed-1", _ed_private())
+    gw = ProvenanceGateway(ring, "ed-1")
+    env = gw.issue(
+        payload={"a": 1}, producer_id="c1", producer_kind="child",
+        parent_contract_id=None, trust=TrustLevel.LOCAL,
+    )
+    raw = env.model_dump(mode="json")
+    raw["provenance"]["sig"] = "00" * 64
+    with pytest.raises(ProvenanceError) as exc:
+        EnvelopeVerifier(ring).verify(SignedEnvelope.model_validate(raw))
+    assert exc.value.code == "bad_sig"
+
+
+def test_key_rotation_overlap_then_expiry() -> None:
+    now = 1_000_000
+    ring = KeyRing.with_secret("old", b"x" * 16)
+    gw_old = ProvenanceGateway(ring, "old", clock=lambda: now)
+    env_old = gw_old.issue(
+        payload={"a": 1}, producer_id="c1", producer_kind="child",
+        parent_contract_id=None, trust=TrustLevel.LOCAL,
+    )
+    ring.rotate("old", "new", secret=b"y" * 16, overlap_ms=1_000, now_ms=now)
+
+    # 重叠窗口内旧密钥仍可验
+    EnvelopeVerifier(ring, clock=lambda: now + 500).verify(env_old)
+    # 窗口过后旧密钥过期
+    with pytest.raises(ProvenanceError) as exc:
+        EnvelopeVerifier(ring, clock=lambda: now + 2_000).verify(env_old)
+    assert exc.value.code == "expired_kid"
+
+    gw_new = ProvenanceGateway(ring, "new", clock=lambda: now + 2_000)
+    env_new = gw_new.issue(
+        payload={"a": 2}, producer_id="c2", producer_kind="child",
+        parent_contract_id=None, trust=TrustLevel.LOCAL,
+    )
+    EnvelopeVerifier(ring, clock=lambda: now + 2_000).verify(env_new)
+
+
+def test_rotation_to_ed25519() -> None:
+    ring = KeyRing.with_secret("old", b"x" * 16)
+    ring.rotate("old", "new", private_bytes=_ed_private(), overlap_ms=0, now_ms=0)
+    gw = ProvenanceGateway(ring, "new", clock=lambda: 0)
+    env = gw.issue(
+        payload={"a": 1}, producer_id="c1", producer_kind="child",
+        parent_contract_id=None, trust=TrustLevel.LOCAL,
+    )
+    EnvelopeVerifier(ring, clock=lambda: 0).verify(env)

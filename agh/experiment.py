@@ -14,6 +14,7 @@ M0 只跑一次演示；这里把「多子级 × 多随机种子」的对比做�
 
 from __future__ import annotations
 
+import math
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -36,7 +37,7 @@ from .contracts import (
 from .evalstats import Interval, bootstrap_pvalue, holm, paired_bootstrap_ci
 from .llm import ReconstructChild
 
-BASELINES = ("single", "majority")
+BASELINES = ("single", "majority", "best_of_n")
 
 
 @dataclass(frozen=True)
@@ -94,6 +95,7 @@ class ExperimentReport:
     contested_rate: float
     comparisons: list[Comparison] = field(default_factory=list)
     skipped_seeds: int = 0
+    metrics: dict[str, float] = field(default_factory=dict)
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -101,6 +103,7 @@ class ExperimentReport:
             "contract_id": self.contract_id,
             "skipped_seeds": self.skipped_seeds,
             "contested_rate": round(self.contested_rate, 4),
+            "metrics": {k: round(v, 4) for k, v in self.metrics.items()},
             "arms": [a.as_dict() for a in self.arms],
             "comparisons": [
                 {
@@ -156,6 +159,32 @@ def _majority_candidate(
     )
 
 
+def fact_retention(candidate: GestaltReconstruction, facts: Sequence[str]) -> float:
+    """关键事实保留率：父级特征与骨架必需项里，候选保住了多少。"""
+    if not facts:
+        return 1.0
+    kept = set(candidate.signature.features) | set(candidate.parts)
+    return len([f for f in facts if f in kept]) / len(facts)
+
+
+def stance_entropy(candidates: Sequence[GestaltReconstruction]) -> float:
+    """立场熵：候选之间对每个特征的分歧程度，归一化到 [0,1]。
+
+    0 = 所有候选立场一致；1 = 每个特征都恰好一半支持一半反对。
+    """
+    if len(candidates) < 2:
+        return 0.0
+    features = sorted({f for c in candidates for f in c.signature.features})
+    if not features:
+        return 0.0
+    total = 0.0
+    for feature in features:
+        p = sum(1 for c in candidates if feature in c.signature.features) / len(candidates)
+        if 0.0 < p < 1.0:
+            total += -(p * math.log2(p) + (1 - p) * math.log2(1 - p))
+    return total / len(features)
+
+
 def run_experiment(
     arms: Sequence[Arm],
     skeleton: Skeleton,
@@ -167,6 +196,7 @@ def run_experiment(
     resamples: int = 2_000,
     alpha: float = 0.05,
     benchmark: str = "seed",
+    benign_arms: Sequence[str] | None = None,
 ) -> ExperimentReport:
     """跑多子级竞技场实验，返回带统计结论的报告。"""
     if not arms:
@@ -179,6 +209,12 @@ def run_experiment(
     )
     stats = {arm.name: ArmStats(name=arm.name) for arm in arms}
     records: list[dict[str, Any]] = []
+    retention: list[float] = []
+    entropy: list[float] = []
+    benign_attempts = 0
+    benign_blocked = 0
+    benign = set(benign_arms) if benign_arms is not None else {arms[0].name}
+    facts = list(parent_features or []) + list(skeleton.required_items)
     contested = 0
     used = 0
     skipped = 0
@@ -196,7 +232,12 @@ def run_experiment(
             filt = hard_filter(recon, skeleton)
             if not filt.passed:
                 stats[arm.name].errors += 1
+                if arm.name in benign:
+                    benign_attempts += 1
+                    benign_blocked += 1
                 continue
+            if arm.name in benign:
+                benign_attempts += 1
             score = score_candidate(
                 recon, skeleton, cfg, verifier_score=None, parent_signature=parent_sig
             )
@@ -212,11 +253,13 @@ def run_experiment(
             stats[arm.name].valid += 1
             stats[arm.name].score_sum += score.score
             arm_scores[arm.name] = score.score
+            retention.append(fact_retention(recon, facts))
 
         if not produced:
             skipped += 1
             continue
         used += 1
+        entropy.append(stance_entropy(valid_recons))
         result = arbitrate([c for _, _, c in produced], seed=seed, cfg=cfg)
         if result.contested:
             contested += 1
@@ -233,6 +276,7 @@ def run_experiment(
             "single": score_candidate(
                 first, skeleton, cfg, verifier_score=None, parent_signature=parent_sig
             ).score,
+            "best_of_n": max(arm_scores.values()),
         }
         # 基线 2：多数票重构
         majority = _majority_candidate(valid_recons, skeleton, contract_id)
@@ -279,6 +323,11 @@ def run_experiment(
         contested_rate=(contested / used) if used else 0.0,
         comparisons=comparisons,
         skipped_seeds=skipped,
+        metrics={
+            "fact_retention": (sum(retention) / len(retention)) if retention else 0.0,
+            "stance_entropy": (sum(entropy) / len(entropy)) if entropy else 0.0,
+            "false_block_rate": (benign_blocked / benign_attempts) if benign_attempts else 0.0,
+        },
     )
 
 

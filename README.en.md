@@ -4,7 +4,7 @@
 
 **Agent Gestalt Hierarchy** — an M0 vertical slice of a multi-agent "gestalt reconstruction" framework. A parent issues a skeleton and a contract; children reconstruct the whole rather than reassembling parts; every submission is signed and provenance-checked. Gate, arena, arbitration, governance, budget ledger and a hash-chained log form one runnable, testable, replayable pipeline.
 
-> Status: M0 (v0.3.0). Children are **rule-based reconstructors**, not LLMs. Every number below is reproducible locally.
+> Status: M0 (v0.4.0). Children are **rule-based reconstructors**, not LLMs. Every number below is reproducible locally.
 
 ```
 Parent M0
@@ -52,7 +52,7 @@ git clone https://github.com/Gray2006/AGH.git
 cd AGH
 pip install -e ".[dev]"
 
-python -m pytest -q          # 114 tests
+python -m pytest -q          # 122 tests
 python -m agh                # run M0, writes runs/m0/ (same as python scripts/run_m0.py)
 ```
 
@@ -90,7 +90,8 @@ Expected output (excerpt):
 | `agh/eventlog.py` | Hash-chained log, bit-exact L1 replay, L2 statistical equivalence |
 | `agh/evalstats.py` | Paired bootstrap CI, bootstrap p-value, Holm correction, Cohen's d |
 | `agh/llm.py` | LLM child adapter: prompt, JSON extraction, contract schema validation (no network code) |
-| `agh/experiment.py` | G1 experiments: arms × seeds with single / majority baselines and paired statistics |
+| `agh/experiment.py` | G1 experiments: arms × seeds with single / majority / best-of-N baselines and paired statistics |
+| `agh/ablation.py` | 9-cell ablation suite: full pipeline plus 8 single-point removals |
 | `agh/pipeline.py` | M0 orchestration, reducer, demo frozen layer |
 
 Thresholds live in `config/frozen/` and are covered by the anchor. Docs in [`docs/`](docs/): implementation report, original plan, and two verification reports.
@@ -127,6 +128,29 @@ python scripts/run_experiment.py --seeds 100 --out runs/g1/experiment.json
 
 Numbers from rule children only show the pipeline works; swap in `LlmChild` and the same script produces real experiments.
 
+## Ablations and metrics
+
+```bash
+python scripts/run_ablation.py --seeds 50 --out runs/g1/ablation.json
+```
+
+- Eight single-point removals: vertical consistency, coverage, structural distance, update, calibrated confidence, dissent, arbitration, diversity
+- Reports also carry three metrics: fact retention (parent features and required items kept), stance entropy (0 = agreement, 1 = even split), false-block rate (benign candidates rejected by the hard filter)
+- Same statistics as G1: paired bootstrap CI, bootstrap p-value, Holm
+
+## Signing backends
+
+HMAC-SHA256 by default; Ed25519 for production, with rotation:
+
+```python
+from agh.crypto import KeyRing
+
+ring = KeyRing.with_ed25519("gw-1", private_bytes)
+ring.rotate("gw-1", "gw-2", private_bytes=new_private, overlap_ms=3_600_000)
+```
+
+The old key keeps verifying inside the overlap window, then returns `expired_kid`. The key type is dispatched by `kid`, so HMAC and Ed25519 can coexist.
+
 ## M0 results
 
 | Check | Result |
@@ -139,7 +163,7 @@ Numbers from rule children only show the pipeline works; swap in `LlmChild` and 
 | Governance | qualified dissent → T2, stops at `VERIFIED`; `RELEASED` after human approval |
 | Ledger | 0 violations |
 | Replay | L1 `bit_exact=true` |
-| Tests | 114 passed |
+| Tests | 122 passed |
 
 ## Design decisions
 

@@ -54,16 +54,54 @@ def _sign(secret: bytes, message: str) -> str:
     return hmac.new(secret, message.encode("utf-8"), hashlib.sha256).hexdigest()
 
 
+def _ed25519_private(private_bytes: bytes):
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+
+    return Ed25519PrivateKey.from_private_bytes(private_bytes)
+
+
+def _ed25519_public(public_bytes: bytes):
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
+
+    return Ed25519PublicKey.from_public_bytes(public_bytes)
+
+
+def sign_with(key: Key, message: str) -> str:
+    """按密钥类型签名：HMAC-SHA256 或 Ed25519（hex 编码）。"""
+    if key.kind == "ed25519":
+        if key.private_bytes is None:
+            raise ProvenanceError("missing_private_key", key.kid)
+        return _ed25519_private(key.private_bytes).sign(message.encode("utf-8")).hex()
+    return _sign(key.secret, message)
+
+
+def verify_with(key: Key, message: str, sig: str) -> bool:
+    if key.kind == "ed25519":
+        if key.public_bytes is None:
+            return False
+        try:
+            _ed25519_public(key.public_bytes).verify(
+                bytes.fromhex(sig), message.encode("utf-8")
+            )
+            return True
+        except Exception:
+            return False
+    return hmac.compare_digest(_sign(key.secret, message), sig)
+
+
 @dataclass
 class Key:
     kid: str
-    secret: bytes
+    secret: bytes = b""
     not_after_ms: int | None = None
     revoked: bool = False
+    kind: str = "hmac"
+    private_bytes: bytes | None = None
+    public_bytes: bytes | None = None
 
 
 class KeyRing:
-    """简单密钥环：注册、轮换、吊销。"""
+    """简单密钥环：注册、轮换、吊销。支持 HMAC 与 Ed25519 混用。"""
 
     def __init__(self) -> None:
         self._keys: dict[str, Key] = {}
@@ -72,6 +110,43 @@ class KeyRing:
         if kid in self._keys:
             raise ValueError(f"kid 已存在: {kid}")
         self._keys[kid] = Key(kid=kid, secret=secret, not_after_ms=not_after_ms)
+
+    def register_ed25519(
+        self, kid: str, private_bytes: bytes, not_after_ms: int | None = None
+    ) -> None:
+        if kid in self._keys:
+            raise ValueError(f"kid 已存在: {kid}")
+        private = _ed25519_private(private_bytes)
+        public_bytes = private.public_key().public_bytes_raw()
+        self._keys[kid] = Key(
+            kid=kid,
+            kind="ed25519",
+            private_bytes=private_bytes,
+            public_bytes=public_bytes,
+            not_after_ms=not_after_ms,
+        )
+
+    def rotate(
+        self,
+        old_kid: str,
+        new_kid: str,
+        *,
+        secret: bytes | None = None,
+        private_bytes: bytes | None = None,
+        overlap_ms: int = 0,
+        now_ms: int | None = None,
+    ) -> str:
+        """注册新密钥，并让旧密钥在 overlap 窗口后失效（0 表示立即失效）。"""
+        if secret is None and private_bytes is None:
+            raise ValueError("轮换需要 secret 或 private_bytes")
+        if private_bytes is not None:
+            self.register_ed25519(new_kid, private_bytes)
+        else:
+            self.register(new_kid, secret or b"")
+        old = self.get(old_kid)
+        now = now_ms if now_ms is not None else int(time.time() * 1000)
+        old.not_after_ms = now + max(0, overlap_ms)
+        return new_kid
 
     def get(self, kid: str) -> Key:
         key = self._keys.get(kid)
@@ -88,6 +163,12 @@ class KeyRing:
     def with_secret(cls, kid: str, secret: bytes) -> KeyRing:
         ring = cls()
         ring.register(kid, secret)
+        return ring
+
+    @classmethod
+    def with_ed25519(cls, kid: str, private_bytes: bytes) -> KeyRing:
+        ring = cls()
+        ring.register_ed25519(kid, private_bytes)
         return ring
 
 
@@ -150,7 +231,7 @@ class ProvenanceGateway:
             payload_sha256=payload_hash,
             sig="0" * 64,
         )
-        sig = _sign(self.keyring.get(self.kid).secret, _provenance_message(prov))
+        sig = sign_with(self.keyring.get(self.kid), _provenance_message(prov))
         prov = prov.model_copy(update={"sig": sig})
         return SignedEnvelope(provenance=prov, payload=payload)
 
@@ -206,8 +287,7 @@ class EnvelopeVerifier:
             raise ProvenanceError("expired_kid", p.kid)
         if abs(now - p.issued_at_ms) > self.max_skew_ms:
             raise ProvenanceError("clock_skew", str(p.issued_at_ms))
-        expected = _sign(key.secret, _provenance_message(p))
-        if not hmac.compare_digest(expected, p.sig):
+        if not verify_with(key, _provenance_message(p), p.sig):
             raise ProvenanceError("bad_sig", p.event_id)
         if p.nonce in self._nonces:
             raise ProvenanceError("replay_nonce", p.nonce)
@@ -269,7 +349,7 @@ def sign_settlement(
         kid=kid,
         sig="0" * 64,
     )
-    sig = _sign(keyring.get(kid).secret, settlement_message(msg))
+    sig = sign_with(keyring.get(kid), settlement_message(msg))
     return msg.model_copy(update={"sig": sig})
 
 
@@ -284,9 +364,7 @@ class SettlementVerifier:
 
     def verify(self, msg: SettlementMessage) -> None:
         key = self.keyring.get(msg.kid)
-        if not hmac.compare_digest(
-            _sign(key.secret, settlement_message(msg)), msg.sig
-        ):
+        if not verify_with(key, settlement_message(msg), msg.sig):
             raise ProvenanceError("bad_settlement_sig", msg.settlement_id)
         if msg.judge_version_hash != self.expected_judge_hash:
             raise ProvenanceError("judge_version_mismatch", msg.settlement_id)

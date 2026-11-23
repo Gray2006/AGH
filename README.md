@@ -4,7 +4,7 @@
 
 **Agent Gestalt Hierarchy**：多智能体「整体重构」框架的 M0 垂直切片。母体发骨架与契约，子级按整体重构而不是拼零件，回传带签名与出处；写入门、竞技场、仲裁、治理机、预算账本、哈希链日志串成一条可跑、可测、可重放的链路。
 
-> 状态：M0（v0.3.0），子级是**规则重构器**，不接 LLM。所有数字都能在本地复现。
+> 状态：M0（v0.4.0），子级是**规则重构器**，不接 LLM。所有数字都能在本地复现。
 
 ```
 母体 M0
@@ -52,7 +52,7 @@ git clone https://github.com/Gray2006/AGH.git
 cd AGH
 pip install -e ".[dev]"
 
-python -m pytest -q          # 114 条测试
+python -m pytest -q          # 122 条测试
 python -m agh                # 跑 M0，落盘 runs/m0/（等价 python scripts/run_m0.py）
 ```
 
@@ -90,7 +90,8 @@ python -m agh                # 跑 M0，落盘 runs/m0/（等价 python scripts/
 | `agh/eventlog.py` | 哈希链日志、L1 逐位重放、L2 统计等价 |
 | `agh/evalstats.py` | 配对 bootstrap CI、bootstrap p 值、Holm 校正、Cohen's d |
 | `agh/llm.py` | LLM 子级适配：拼提示、抽 JSON、按契约 schema 校验（不含网络代码） |
-| `agh/experiment.py` | G1 实验：多子级 × 多种子，含 single / majority 基线与配对统计 |
+| `agh/experiment.py` | G1 实验：多子级 × 多种子，含 single / majority / best-of-N 基线与配对统计 |
+| `agh/ablation.py` | 9 组消融：完整链路 + 8 个单点关闭，配对 bootstrap + Holm |
 | `agh/pipeline.py` | M0 编排、reducer、演示冻结层 |
 
 配置在 `config/frozen/`，阈值全部进冻结层，改配置会被锚点发现。文档在 [`docs/`](docs/)：实现报告、方案原文、两份引用/事实核验。
@@ -127,6 +128,29 @@ python scripts/run_experiment.py --seeds 100 --out runs/g1/experiment.json
 
 规则子级下跑出的数字只说明链路正确，不能当真实模型结论；换成 `LlmChild` 后同一脚本可直接跑真实实验。
 
+## 消融与度量
+
+```bash
+python scripts/run_ablation.py --seeds 50 --out runs/g1/ablation.json
+```
+
+- 8 个单点关闭：垂直一致性、覆盖率、结构距离、更新量、校准置信、异议、仲裁、多样性
+- 实验报告同时给出三个度量：关键事实保留率（父级特征与必需项保住了多少）、立场熵（候选间分歧程度，0=一致 1=对半）、误拦率（良性候选被硬过滤挡掉的比例）
+- 统计口径与 G1 一致：配对 bootstrap CI + bootstrap p 值 + Holm
+
+## 签名后端
+
+默认 HMAC-SHA256；生产可切 Ed25519，并支持轮换：
+
+```python
+from agh.crypto import KeyRing
+
+ring = KeyRing.with_ed25519("gw-1", private_bytes)
+ring.rotate("gw-1", "gw-2", private_bytes=new_private, overlap_ms=3_600_000)
+```
+
+轮换后旧密钥在 overlap 窗口内仍可验签，窗口过后返回 `expired_kid`。密钥类型由 `kid` 自动分派，HMAC 与 Ed25519 可以混用。
+
 ## M0 实测
 
 | 检查 | 结果 |
@@ -139,7 +163,7 @@ python scripts/run_experiment.py --seeds 100 --out runs/g1/experiment.json
 | 治理 | 有合格异议 → 升 T2 停在 `VERIFIED`；人工批准后 `RELEASED` |
 | 账本 | 违规 0 |
 | 重放 | L1 `bit_exact=true` |
-| 测试 | 114 passed |
+| 测试 | 122 passed |
 
 ## 设计取舍
 

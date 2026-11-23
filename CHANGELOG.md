@@ -2,6 +2,22 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [0.4.0] - 2026-11-23
+
+按对比报告补齐消融、度量与生产签名。
+
+### Added
+
+- `agh/ablation.py`：9 组消融（完整链路 + 8 个单点关闭），配对 bootstrap + Holm；`scripts/run_ablation.py`
+- `agh/experiment.py`：新增 `best_of_n` 基线；报告增加三个度量——关键事实保留率、立场熵、误拦率
+- `agh/crypto.py`：Ed25519 签名后端（`KeyRing.with_ed25519` / `register_ed25519`），密钥轮换 `rotate(overlap_ms=...)`，HMAC 与 Ed25519 按 kid 自动分派
+- 依赖 `cryptography>=42`
+- 测试 114 → 122
+
+### Changed
+
+- README 增加「消融与度量」「签名后端」两节
+
 ## [0.3.0] - 2026-11-23
 
 补上「M0 只有规则子级」和「没有竞技场实验」两个最大缺口。
