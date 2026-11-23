@@ -37,7 +37,7 @@ class ChatClient:
     model: str
     api_key_env: str = "OPENAI_API_KEY"
     temperature: float = 0.2
-    max_tokens: int = 1024
+    max_tokens: int = 2048
     json_mode: bool = True
     timeout: int = 120
     retries: int = 2
@@ -72,10 +72,15 @@ class ChatClient:
         }
         last_error: Exception | None = None
         for attempt in range(self.retries + 1):
+            attempt_payload = dict(payload)
+            # 推理模型的 reasoning token 也算 completion；截断时放大预算重试
+            attempt_payload["max_tokens"] = min(8192, self.max_tokens * (2**attempt))
             try:
-                data = self.transport(url, headers, payload)
+                data = self.transport(url, headers, attempt_payload)
                 message = data["choices"][0]["message"]
                 content = message.get("content")
+                if data["choices"][0].get("finish_reason") == "length":
+                    raise ValueError("输出被截断（finish_reason=length）")
                 if content is None:
                     raise ValueError(
                         f"模型没有返回 content（finish_reason={data['choices'][0].get('finish_reason')}）"

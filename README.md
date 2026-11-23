@@ -4,7 +4,7 @@
 
 **Agent Gestalt Hierarchy**：多智能体「整体重构」框架的 M0 垂直切片。母体发骨架与契约，子级按整体重构而不是拼零件，回传带签名与出处；写入门、竞技场、仲裁、治理机、预算账本、哈希链日志串成一条可跑、可测、可重放的链路。
 
-> 状态：M0（v1.0.0），子级是**规则重构器**，不接 LLM。所有数字都能在本地复现。
+> 状态：M0（v1.1.0），子级是**规则重构器**，不接 LLM。所有数字都能在本地复现。
 
 ```
 母体 M0
@@ -136,6 +136,14 @@ agh evolve --llm-mutator --provider deepseek --generations 5
 ```
 
 任何 OpenAI 兼容端点都行：`--base-url https://... --model xxx --api-key-env MY_KEY`。客户端带 JSON 模式与重试；解析失败会抛错，不会静默返回半成品。
+
+契约通过率实验（真模型重复重构，统计合格率与分数分布）：
+
+```bash
+python scripts/run_llm_experiment.py --provider command-code --samples 8
+```
+
+实测（deepseek-v4.1-flash，8 次）：修复截断重试后 8/8 通过契约，均分 0.48899，规则子级基线 0.511，配对差 -0.02201（CI -0.03225–-0.00921）——真模型略低于手工规则子级。
 
 ## G1 实验
 

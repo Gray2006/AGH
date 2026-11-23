@@ -2,6 +2,23 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [1.1.0] - 2026-11-24
+
+真模型契约通过率实验，并修掉截断导致的假失败。
+
+### Added
+
+- `scripts/run_llm_experiment.py`：真模型重复重构，统计通过率、分数分布与对规则基线的配对差
+- CLI `--max-tokens`
+
+### Fixed
+
+- `providers`：`finish_reason=length` 时按截断处理并放大预算重试（此前 reasoning token 吃满输出，表现为 JSON 括号不闭合）
+
+### Measured
+
+- deepseek-v4.1-flash，8 次：8/8 通过契约，均分 0.48899，规则基线 0.511，配对差 -0.02201（CI -0.03225–-0.00921）
+
 ## [1.0.0] - 2026-11-24
 
 第一个稳定版本：公开 API 冻结，自我改写闭环补齐。

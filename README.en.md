@@ -4,7 +4,7 @@
 
 **Agent Gestalt Hierarchy** — an M0 vertical slice of a multi-agent "gestalt reconstruction" framework. A parent issues a skeleton and a contract; children reconstruct the whole rather than reassembling parts; every submission is signed and provenance-checked. Gate, arena, arbitration, governance, budget ledger and a hash-chained log form one runnable, testable, replayable pipeline.
 
-> Status: M0 (v1.0.0). Children are **rule-based reconstructors**, not LLMs. Every number below is reproducible locally.
+> Status: M0 (v1.1.0). Children are **rule-based reconstructors**, not LLMs. Every number below is reproducible locally.
 
 ```
 Parent M0
@@ -136,6 +136,14 @@ agh evolve --llm-mutator --provider deepseek --generations 5
 ```
 
 Any OpenAI-compatible endpoint works: `--base-url https://... --model xxx --api-key-env MY_KEY`. The client enables JSON mode and retries; invalid output raises instead of silently returning a half-baked object.
+
+Contract-pass-rate experiment (repeated reconstructions from a real model):
+
+```bash
+python scripts/run_llm_experiment.py --provider command-code --samples 8
+```
+
+Measured with deepseek-v4.1-flash (8 samples): after fixing truncation retries, 8/8 passed the contract, mean score 0.48899 vs the rule baseline 0.511, paired delta -0.02201 (CI -0.03225 to -0.00921) — the real model is slightly below the handcrafted rule child.
 
 ## G1 experiments
 

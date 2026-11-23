@@ -29,6 +29,7 @@ def main() -> int:
     parser.add_argument("--model", default=None)
     parser.add_argument("--base-url", default=None)
     parser.add_argument("--api-key-env", default=None)
+    parser.add_argument("--max-tokens", type=int, default=2048)
     args = parser.parse_args()
 
     client = make_client(
@@ -37,6 +38,7 @@ def main() -> int:
         base_url=args.base_url,
         api_key_env=args.api_key_env,
     )
+    client.max_tokens = args.max_tokens
     child = LlmChild(
         name="llm-child",
         complete=client,
