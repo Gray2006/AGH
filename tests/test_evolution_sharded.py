@@ -12,6 +12,7 @@ from agh.evolution_sharded import (
     anneal_scale,
     combined_evolve,
     mutate_params,
+    normalize_weights,
     seed_for,
     sharded_evolve,
 )
@@ -91,3 +92,20 @@ def test_mutation_step_respects_scale(cfg: ArenaConfig) -> None:
         for key, value in candidate.weights.items():
             assert abs(value - genome.weights[key]) <= 0.02 + 1e-9
         genome = candidate
+
+
+def test_mutated_weights_stay_normalized() -> None:
+    import random
+
+    cfg = ArenaConfig.from_frozen(Path("config/frozen"))
+    genome = ParamGenome.from_config(cfg)
+    rng = random.Random(5)
+    for _ in range(40):
+        genome = mutate_params(genome, rng, scale=0.1)
+        assert abs(sum(genome.weights.values()) - 1.0) < 1e-6
+
+
+def test_normalize_weights() -> None:
+    out = normalize_weights({"a": 0.2, "b": 0.2, "c": 0.7})
+    assert abs(sum(out.values()) - 1.0) < 1e-6
+    assert out["c"] > out["a"]

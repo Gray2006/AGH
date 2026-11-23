@@ -2,6 +2,16 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [0.14.2] - 2026-11-24
+
+修一个让「进步」变假的缺陷：参数变异后权重和不再为 1。
+
+### Fixed
+
+- `mutate_params` 与 `ParamGenome.config` 对权重做归一化；此前变异后总和可到 1.1，分数被整体抬高，看上去的改进有一部分只是缩放
+- 归一化后重跑（10 基准，6 轮）：曲线 0.54253 → 0.67324，参数收敛 `confidence 0.05 / structural 0.172 / update 0 / vertical 0.356 / coverage 0.422`，`dissent_tau 0.18`
+- 测试 182 → 184
+
 ## [0.14.1] - 2026-11-24
 
 修垂直一致性只由骨架决定的缺陷。

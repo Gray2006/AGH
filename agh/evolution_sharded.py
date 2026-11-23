@@ -49,7 +49,7 @@ class ParamGenome:
     def config(self, cfg: ArenaConfig) -> ArenaConfig:
         return replace(
             cfg,
-            weights=dict(self.weights),
+            weights=normalize_weights(dict(self.weights)),
             dissent_tau=self.dissent_tau,
             diversity_min_clusters=self.diversity_min_clusters,
         )
@@ -78,7 +78,21 @@ def mutate_params(
     tau = parent.dissent_tau
     if rng.random() < 0.5:
         tau = round(min(0.9, max(0.05, parent.dissent_tau + scale * rng.choice([-1.0, 1.0]))), 3)
-    return ParamGenome(weights=weights, dissent_tau=tau)
+    return ParamGenome(weights=normalize_weights(weights), dissent_tau=tau)
+
+
+def normalize_weights(weights: dict[str, float]) -> dict[str, float]:
+    """归一化到和为 1：否则权重整体变大也会抬高分数，改进是假的。"""
+    total = sum(weights.values())
+    if total <= 0:
+        return weights
+    scaled = {k: round(v / total, 4) for k, v in weights.items()}
+    # 四舍五入后补齐到 1，补在最大的那一项上
+    diff = round(1.0 - sum(scaled.values()), 4)
+    if diff:
+        key = max(scaled, key=lambda k: scaled[k])
+        scaled[key] = round(scaled[key] + diff, 4)
+    return scaled
 
 
 def anneal_scale(round_index: int, rounds: int) -> float:
