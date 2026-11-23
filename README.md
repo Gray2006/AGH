@@ -4,7 +4,7 @@
 
 **Agent Gestalt Hierarchy**：多智能体「整体重构」框架的 M0 垂直切片。母体发骨架与契约，子级按整体重构而不是拼零件，回传带签名与出处；写入门、竞技场、仲裁、治理机、预算账本、哈希链日志串成一条可跑、可测、可重放的链路。
 
-> 状态：M0（v0.14.2），子级是**规则重构器**，不接 LLM。所有数字都能在本地复现。
+> 状态：M0（v0.15.0），子级是**规则重构器**，不接 LLM。所有数字都能在本地复现。
 
 ```
 母体 M0
@@ -64,7 +64,7 @@ python -m agh                # 跑 M0，落盘 runs/m0/（等价 python scripts/
 {
   "winner": "child-faithful",
   "contested": true,
-  "scores": {"child-faithful": 0.55092, "child-dissent": 0.43320},
+  "scores": {"child-faithful": 0.55313, "child-dissent": 0.45975},
   "rejected": [
     "child-forged:rejected:payload_hash_mismatch",
     "child-shallow:hard_filter:parts 缺必需项: ['C2']"
@@ -245,14 +245,14 @@ agh evolve --benchmarks 10 --mode combined   # 分片精英 + 全局参数进化
 
 实测（10 基准，3 代 × 3 个体）：分片均值 0.29863，单基因组 0.22972，配对差 +0.0689（CI 0.0167–0.1162，n=10）。
 
-参数层用退火步长（前半程 0.1、后半程 0.02）并允许一次动两个权重后，4 轮把均值推到 0.55807，权重收敛到 `update=0, vertical=0.35, coverage=0.35, confidence=0.2`。
+参数层用退火步长（前半程 0.1、后半程 0.02）、一次可动两个权重、并对权重做归一化后，6 轮把均值从 0.54253 推到 0.67324，收敛到 `confidence=0.05, structural=0.172, update=0, vertical=0.356, coverage=0.422`，`dissent_tau=0.18`。
 
 ## M0 实测
 
 | 检查 | 结果 |
 |---|---|
-| 胜者 | `child-faithful`，0.55092 |
-| 异议 | `child-dissent` 0.43320，novelty 1.0，结论标 `contested` |
+| 胜者 | `child-faithful`，0.55313 |
+| 异议 | `child-dissent` 0.45975，novelty 1.0，结论标 `contested` |
 | 伪造 provenance | 拒收：`payload_hash_mismatch` |
 | 浅重构 | 硬过滤拒收：parts 缺 C2 |
 | 多样性 | 3 簇，最小两两距离 0.6，充足 |

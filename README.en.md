@@ -4,7 +4,7 @@
 
 **Agent Gestalt Hierarchy** — an M0 vertical slice of a multi-agent "gestalt reconstruction" framework. A parent issues a skeleton and a contract; children reconstruct the whole rather than reassembling parts; every submission is signed and provenance-checked. Gate, arena, arbitration, governance, budget ledger and a hash-chained log form one runnable, testable, replayable pipeline.
 
-> Status: M0 (v0.14.2). Children are **rule-based reconstructors**, not LLMs. Every number below is reproducible locally.
+> Status: M0 (v0.15.0). Children are **rule-based reconstructors**, not LLMs. Every number below is reproducible locally.
 
 ```
 Parent M0
@@ -64,7 +64,7 @@ Expected output (excerpt):
 {
   "winner": "child-faithful",
   "contested": true,
-  "scores": {"child-faithful": 0.55092, "child-dissent": 0.43320},
+  "scores": {"child-faithful": 0.55313, "child-dissent": 0.45975},
   "rejected": [
     "child-forged:rejected:payload_hash_mismatch",
     "child-shallow:hard_filter:missing required parts: ['C2']"
@@ -245,14 +245,14 @@ agh evolve --benchmarks 10 --mode combined   # sharded elites + global parameter
 
 Measured on 10 benchmarks, 3 generations × 3 individuals: sharded 0.29863 vs single 0.22972, paired delta +0.0689 (CI 0.0167–0.1162, n=10).
 
-With annealed step sizes (0.1 early, 0.02 late) and up to two weight changes per mutation, four rounds lift the mean to 0.55807, converging to `update=0, vertical=0.35, coverage=0.35, confidence=0.2`.
+With annealed step sizes (0.1 early, 0.02 late), up to two weight changes per mutation and weight normalization, six rounds lift the mean from 0.54253 to 0.67324, converging to `confidence=0.05, structural=0.172, update=0, vertical=0.356, coverage=0.422`, `dissent_tau=0.18`.
 
 ## M0 results
 
 | Check | Result |
 |---|---|
-| Winner | `child-faithful`, 0.55092 |
-| Dissent | `child-dissent` 0.43320, novelty 1.0, marked `contested` |
+| Winner | `child-faithful`, 0.55313 |
+| Dissent | `child-dissent` 0.45975, novelty 1.0, marked `contested` |
 | Forged provenance | rejected: `payload_hash_mismatch` |
 | Shallow reconstruction | rejected by hard filter: missing C2 |
 | Diversity | 3 clusters, min pairwise distance 0.6 |

@@ -2,6 +2,16 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [0.15.0] - 2026-11-24
+
+第二轮进化结果写回冻结层。
+
+### Changed
+
+- `config/frozen/thresholds.json`：权重 `confidence 0.05 / structural 0.172 / update 0 / vertical 0.356 / coverage 0.422`，`dissent_tau 0.18`
+- 锚点重建；M0 胜者不变，分数 0.55092 → 0.55313，异议 0.43320 → 0.45975
+- 归一化后的进化曲线：0.54253 → 0.67324（6 轮）
+
 ## [0.14.2] - 2026-11-24
 
 修一个让「进步」变假的缺陷：参数变异后权重和不再为 1。
