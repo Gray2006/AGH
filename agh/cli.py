@@ -149,6 +149,24 @@ def cmd_evolve(args: argparse.Namespace) -> int:
             args.provider, model=args.model, api_key_env=args.api_key_env
         )
         active_mutator = LlmStrategyMutator(feature_pool, node_pool, complete=client)
+    if args.mode == "meta":
+        from .meta import meta_evolve
+
+        result = meta_evolve(
+            cfg,
+            EvolutionConfig(
+                generations=args.generations,
+                population=args.population,
+                budget_calls=args.budget,
+                seed=args.seed,
+            ),
+            rounds=args.rounds,
+        )
+        target = result.write(args.out)
+        print(json.dumps(result.as_dict(), ensure_ascii=False, indent=2))
+        print(f"\n报告: {target}")
+        return 0
+
     if args.mode in ("sharded", "combined"):
         from .evolution_sharded import combined_evolve, sharded_evolve
 
@@ -255,7 +273,7 @@ def build_parser() -> argparse.ArgumentParser:
     evolve_cmd.add_argument("--seeds-per-run", type=int, default=1, help="每轮取多个种子的均值")
     evolve_cmd.add_argument("--benchmarks", type=int, default=0, help="生成多少个随机基准（0=用默认 3 个）")
     evolve_cmd.add_argument("--bench-seed", type=int, default=0)
-    evolve_cmd.add_argument("--mode", choices=["single", "sharded", "combined"], default="single")
+    evolve_cmd.add_argument("--mode", choices=["single", "sharded", "combined", "meta"], default="single")
     evolve_cmd.add_argument("--rounds", type=int, default=3)
     evolve_cmd.add_argument("--llm-mutator", action="store_true", help="用模型提议变异")
     evolve_cmd.add_argument("--provider", default="deepseek")

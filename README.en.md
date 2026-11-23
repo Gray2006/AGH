@@ -4,7 +4,7 @@
 
 **Agent Gestalt Hierarchy** — an M0 vertical slice of a multi-agent "gestalt reconstruction" framework. A parent issues a skeleton and a contract; children reconstruct the whole rather than reassembling parts; every submission is signed and provenance-checked. Gate, arena, arbitration, governance, budget ledger and a hash-chained log form one runnable, testable, replayable pipeline.
 
-> Status: M0 (v0.15.0). Children are **rule-based reconstructors**, not LLMs. Every number below is reproducible locally.
+> Status: M0 (v0.16.0). Children are **rule-based reconstructors**, not LLMs. Every number below is reproducible locally.
 
 ```
 Parent M0
@@ -101,6 +101,7 @@ Expected output (excerpt):
 | `agh/evolution_llm.py` | LLM mutator plus evolution-vs-random-search comparison |
 | `agh/benchmarks.py` | Configurable benchmark generator (fixed nodes, random edges/required) |
 | `agh/evolution_sharded.py` | Sharded elites plus global parameter evolution (combined mode) |
+| `agh/meta.py` | Meta-evolution: operator bandit plus curriculum (meta mode) |
 | `agh/providers.py` | OpenAI-compatible model adapter (env key, JSON mode, retries) |
 | `agh/pipeline.py` | M0 orchestration, reducer, demo frozen layer |
 
@@ -244,6 +245,14 @@ agh evolve --benchmarks 10 --mode combined   # sharded elites + global parameter
 ```
 
 Measured on 10 benchmarks, 3 generations × 3 individuals: sharded 0.29863 vs single 0.22972, paired delta +0.0689 (CI 0.0167–0.1162, n=10).
+
+Meta-evolution (`--mode meta`) goes one step further: parameter mutations are split into five operators, scored by a UCB1 bandit on whether they improved, and the benchmark difficulty is raised whenever two rounds in a row fail to improve.
+
+```bash
+agh evolve --mode meta --rounds 8
+```
+
+Eight rounds: difficulty rose from 1 to 4, the curve dipped and recovered on each harder level, and parameters settled at `update=0, coverage≈0.41, vertical≈0.37`.
 
 With annealed step sizes (0.1 early, 0.02 late), up to two weight changes per mutation and weight normalization, six rounds lift the mean from 0.54253 to 0.67324, converging to `confidence=0.05, structural=0.172, update=0, vertical=0.356, coverage=0.422`, `dissent_tau=0.18`.
 

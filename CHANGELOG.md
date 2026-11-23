@@ -2,6 +2,21 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [0.16.0] - 2026-11-24
+
+元进化：学会怎么改自己，并自己加难度。
+
+### Added
+
+- `agh/meta.py`：5 种参数算子 + UCB1 老虎机；连续两轮无改进自动升级课程（节点/边/必需项）
+- CLI `agh evolve --mode meta`
+- 权重钳制非负（修 `weight_down` 可能把权重压成负数）
+- 测试 184 → 190
+
+### Measured
+
+- 8 轮：难度 1 → 4，参数收敛 `confidence 0.049 / structural 0.169 / update 0 / vertical 0.369 / coverage 0.414`
+
 ## [0.15.0] - 2026-11-24
 
 第二轮进化结果写回冻结层。

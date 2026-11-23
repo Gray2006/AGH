@@ -83,10 +83,11 @@ def mutate_params(
 
 def normalize_weights(weights: dict[str, float]) -> dict[str, float]:
     """归一化到和为 1：否则权重整体变大也会抬高分数，改进是假的。"""
-    total = sum(weights.values())
+    clamped = {k: max(0.0, float(v)) for k, v in weights.items()}
+    total = sum(clamped.values())
     if total <= 0:
         return weights
-    scaled = {k: round(v / total, 4) for k, v in weights.items()}
+    scaled = {k: round(v / total, 4) for k, v in clamped.items()}
     # 四舍五入后补齐到 1，补在最大的那一项上
     diff = round(1.0 - sum(scaled.values()), 4)
     if diff:

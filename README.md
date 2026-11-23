@@ -4,7 +4,7 @@
 
 **Agent Gestalt Hierarchy**：多智能体「整体重构」框架的 M0 垂直切片。母体发骨架与契约，子级按整体重构而不是拼零件，回传带签名与出处；写入门、竞技场、仲裁、治理机、预算账本、哈希链日志串成一条可跑、可测、可重放的链路。
 
-> 状态：M0（v0.15.0），子级是**规则重构器**，不接 LLM。所有数字都能在本地复现。
+> 状态：M0（v0.16.0），子级是**规则重构器**，不接 LLM。所有数字都能在本地复现。
 
 ```
 母体 M0
@@ -101,6 +101,7 @@ python -m agh                # 跑 M0，落盘 runs/m0/（等价 python scripts/
 | `agh/evolution_llm.py` | LLM 变异器 + 进化 vs 随机搜索对照 |
 | `agh/benchmarks.py` | 可配置基准生成器（节点固定、边/必需项随机） |
 | `agh/evolution_sharded.py` | 分片精英 + 全局参数进化（combined 模式） |
+| `agh/meta.py` | 元进化：算子老虎机 + 课程加难（meta 模式） |
 | `agh/providers.py` | OpenAI 兼容模型适配器（环境变量取密钥，JSON 模式 + 重试） |
 | `agh/pipeline.py` | M0 编排、reducer、演示冻结层 |
 
@@ -244,6 +245,15 @@ agh evolve --benchmarks 10 --mode combined   # 分片精英 + 全局参数进化
 ```
 
 实测（10 基准，3 代 × 3 个体）：分片均值 0.29863，单基因组 0.22972，配对差 +0.0689（CI 0.0167–0.1162，n=10）。
+
+元进化（`--mode meta`）再进一步：参数变异拆成 5 种算子，用 UCB1 按「是否带来改进」记功，
+越有用的算子被选得越多；连续两轮没改进就把基准难度抬一档（更多节点/边/必需项）。
+
+```bash
+agh evolve --mode meta --rounds 8
+```
+
+实测 8 轮：难度从 1 升到 4，曲线在加难时回落再爬升，参数稳定在 `update=0, coverage≈0.41, vertical≈0.37`；老虎机最后偏向 `weight_up`。
 
 参数层用退火步长（前半程 0.1、后半程 0.02）、一次可动两个权重、并对权重做归一化后，6 轮把均值从 0.54253 推到 0.67324，收敛到 `confidence=0.05, structural=0.172, update=0, vertical=0.356, coverage=0.422`，`dissent_tau=0.18`。
 
