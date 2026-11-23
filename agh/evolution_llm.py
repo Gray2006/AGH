@@ -213,6 +213,7 @@ def compare_search(
     seeds_per_run: int = 1,
     baselines: Sequence[str] = ("random", "hill"),
     alpha: float = 0.05,
+    mutator: Any | None = None,
 ) -> SearchComparison:
     """每轮：进化 vs 各基线（同评估预算），Holm 校正多重比较。
 
@@ -240,6 +241,7 @@ def compare_search(
                     resamples=settings.resamples,
                     alpha=settings.alpha,
                 ),
+                mutator=mutator,
             )
             run_evolution.append(report.best.fitness if report.best else 0.0)
             for name in baselines:

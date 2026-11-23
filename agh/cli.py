@@ -163,6 +163,7 @@ def cmd_evolve(args: argparse.Namespace) -> int:
             ),
             runs=args.compare_runs,
             seeds_per_run=args.seeds_per_run,
+            mutator=active_mutator,
         )
         print("\n进化 vs 随机搜索：")
         print(json.dumps(comparison.as_dict(), ensure_ascii=False, indent=2))

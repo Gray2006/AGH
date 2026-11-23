@@ -112,3 +112,37 @@ def test_compare_search_multi_seed(cfg: ArenaConfig) -> None:
     assert data["runs"] == 2
     assert len(data["evolution_scores"]) == 2
     assert len(data["rows"]) == 2
+
+
+class CountingMutator:
+    def __init__(self) -> None:
+        self.calls = 0
+
+    def mutate(self, parent, rng, name):
+        from agh.evolution import Strategy
+
+        self.calls += 1
+        return Strategy(
+            name=name,
+            features=parent.features,
+            parts=parent.parts,
+            covered=parent.covered,
+            confidence=parent.confidence,
+            depth=parent.depth,
+        )
+
+
+def test_compare_search_uses_injected_mutator(cfg: ArenaConfig) -> None:
+    benches = default_benchmarks(m0_skeleton(), PARENT_SIG.features)
+    mutator = CountingMutator()
+    compare_search(
+        seed(),
+        benches,
+        cfg,
+        EvolutionConfig(generations=1, population=2),
+        runs=1,
+        seeds_per_run=1,
+        resamples=100,
+        mutator=mutator,
+    )
+    assert mutator.calls == 2

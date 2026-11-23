@@ -2,6 +2,12 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [0.10.1] - 2026-11-23
+
+### Fixed
+
+- `compare_search` 透传 `mutator`：此前对照里的进化用的是规则变异器，与主循环不一致；CLI 现在会把 `--llm-mutator` 带进对照
+
 ## [0.10.0] - 2026-11-23
 
 接入真模型。
