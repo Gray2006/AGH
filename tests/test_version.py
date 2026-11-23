@@ -21,3 +21,9 @@ def test_pyproject_version_matches_package() -> None:
 def test_changelog_has_section_for_current_version() -> None:
     text = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
     assert f"## [{agh.__version__}]" in text
+
+
+def test_readme_status_shows_current_version() -> None:
+    for name in ("README.md", "README.en.md"):
+        text = (ROOT / name).read_text(encoding="utf-8")
+        assert f"v{agh.__version__}" in text, f"{name} 未更新版本号"
