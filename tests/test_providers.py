@@ -61,3 +61,28 @@ def test_presets(monkeypatch: pytest.MonkeyPatch) -> None:
     assert client.base_url == "https://api.deepseek.com"
     assert client.model == "deepseek-chat"
     assert client.api_key == "k"
+
+
+def test_sends_browser_user_agent(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("TEST_KEY", "k")
+    captured: list[dict] = []
+    client = ChatClient(
+        base_url="https://x/v1", model="m", api_key_env="TEST_KEY",
+        transport=fake_transport(captured),
+    )
+    client("hi")
+    assert "Mozilla" in captured[0]["headers"]["User-Agent"]
+
+
+def test_null_content_raises_with_finish_reason(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("TEST_KEY", "k")
+
+    def transport(url: str, headers: dict, payload: dict) -> dict:
+        return {"choices": [{"message": {"content": None}, "finish_reason": "length"}]}
+
+    client = ChatClient(
+        base_url="https://x/v1", model="m", api_key_env="TEST_KEY",
+        transport=transport, retries=0,
+    )
+    with pytest.raises(RuntimeError):
+        client("hi")

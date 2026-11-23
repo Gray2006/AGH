@@ -43,6 +43,10 @@ class ChatClient:
     retries: int = 2
     transport: Transport = field(default=_urllib_transport, repr=False)
     system: str = "You are a precise JSON generator. Reply with JSON only."
+    user_agent: str = (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/120.0 Safari/537.36"
+    )
 
     @property
     def api_key(self) -> str:
@@ -64,13 +68,20 @@ class ChatClient:
         headers = {
             "Content-Type": "application/json",
             "Authorization": f"Bearer {self.api_key}",
+            "User-Agent": self.user_agent,
         }
         last_error: Exception | None = None
         for attempt in range(self.retries + 1):
             try:
                 data = self.transport(url, headers, payload)
-                return str(data["choices"][0]["message"]["content"])
-            except (urllib.error.URLError, TimeoutError, KeyError, IndexError) as exc:
+                message = data["choices"][0]["message"]
+                content = message.get("content")
+                if content is None:
+                    raise ValueError(
+                        f"模型没有返回 content（finish_reason={data['choices'][0].get('finish_reason')}）"
+                    )
+                return str(content)
+            except (urllib.error.URLError, TimeoutError, KeyError, IndexError, ValueError) as exc:
                 last_error = exc
                 if attempt < self.retries:
                     time.sleep(1.5 * (attempt + 1))
@@ -100,6 +111,11 @@ PRESETS: dict[str, dict[str, Any]] = {
         "base_url": "https://openrouter.ai/api/v1",
         "model": "deepseek/deepseek-chat",
         "api_key_env": "OPENROUTER_API_KEY",
+    },
+    "command-code": {
+        "base_url": "https://api.commandcode.ai/provider/v1",
+        "model": "deepseek/deepseek-v4.1-flash",
+        "api_key_env": "COMMAND_CODE_API_KEY",
     },
     "ollama": {
         "base_url": "http://127.0.0.1:11434/v1",

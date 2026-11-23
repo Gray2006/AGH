@@ -2,6 +2,21 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [0.10.2] - 2026-11-23
+
+跑通真实模型（command-code / deepseek-v4.1-flash）。
+
+### Fixed
+
+- `providers`：请求带浏览器 User-Agent（command-code 的 Cloudflare 会拦默认 UA）；`content` 为 null 时抛明确错误并带 `finish_reason`
+- `llm.build_prompt`：`signature.abstraction` 示例改成布尔（模型照抄字符串会导致校验失败）
+- CLI `--llm-mutator` 的特征池扩到节点、边与 `pred:*`，此前只能从父代特征里选，变异几乎没有空间
+
+### Added
+
+- `command-code` 提供商预设
+- 测试 167 → 169
+
 ## [0.10.1] - 2026-11-23
 
 ### Fixed

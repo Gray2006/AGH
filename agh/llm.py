@@ -121,7 +121,7 @@ def build_prompt(contract: Contract, parent_features: list[str] | None = None) -
         "child_id, contract_id, skeleton_id,",
         "parts (数组，必须包含上面的必需项),",
         'coverage: {"covered": [...]},',
-        'signature: {"signature_id": "...", "features": [...], "abstraction": ""},',
+        'signature: {"signature_id": "...", "features": [...], "abstraction": false},',
         "self_confidence (0-1),",
         'content: {"edges": [[a,b],...], "vertical_moves": [...], "changed_nodes": [...]}',
         "",

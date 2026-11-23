@@ -123,7 +123,13 @@ def cmd_evolve(args: argparse.Namespace) -> int:
         from .providers import make_client
 
         benches = default_benchmarks(m0_skeleton(), PARENT_SIG.features)
-        feature_pool = sorted({f for b in benches for f in b.parent.features})
+        base = m0_skeleton()
+        feature_pool = sorted(
+            {f for b in benches for f in b.parent.features}
+            | {f"{a}-{b}" for a, b in base.edges}
+            | set(base.nodes)
+            | {"pred:flat", "pred:hierarchical", "pred:independent"}
+        )
         node_pool = sorted({n for b in benches for n in b.skeleton.nodes})
         client = make_client(
             args.provider, model=args.model, api_key_env=args.api_key_env
