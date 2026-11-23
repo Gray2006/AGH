@@ -2,6 +2,19 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [0.5.0] - 2026-11-23
+
+补齐生产化与跨组织能力。
+
+### Added
+
+- `agh/timestamp.py`：外部可信时间戳（HMAC 本地 TSA / HTTP TSA），链头锚点落盘与验证
+- `agh/billing.py`：外部计费接入，结算后按 ref 幂等扣款，收据可核对
+- `agh/forgetting.py`：可验证遗忘，签名墓碑 + 残留扫描
+- `agh/claims.py`：跨组织声明与 Merkle 透明日志（包含证明、签名树头）
+- `agh/sdk.py`：Python SDK；CLI 增加 verify / replay / experiment / ablation / version 子命令
+- 测试 122 → 144
+
 ## [0.4.0] - 2026-11-23
 
 按对比报告补齐消融、度量与生产签名。

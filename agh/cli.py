@@ -1,4 +1,13 @@
-"""命令行入口：`python -m agh` 跑 M0 垂直切片。"""
+"""命令行入口：`python -m agh` 或 `agh`。
+
+子命令：
+    run         跑 M0 垂直切片（默认）
+    verify      校验事件日志哈希链
+    replay      L1 逐位重放
+    experiment  G1 竞技场实验
+    ablation    9 组消融
+    version     版本号
+"""
 
 from __future__ import annotations
 
@@ -7,55 +16,137 @@ import json
 import shutil
 from pathlib import Path
 
+from . import __version__
 from .crypto import KeyRing
 from .frozen import FrozenLayer
 from .pipeline import DEV_KID, DEV_SECRET, run_m0
+from .sdk import AghClient, default_frozen_root
 
 
 def repo_root() -> Path:
-    """源码仓库根目录（含 config/frozen）。"""
     return Path(__file__).resolve().parents[1]
 
 
-def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(
-        prog="agh", description="跑 AGH M0 垂直切片并输出报告"
-    )
-    parser.add_argument(
-        "--root", type=Path, default=None, help="含 config/frozen 的目录，默认仓库根"
-    )
-    parser.add_argument(
-        "--out", type=Path, default=None, help="输出目录，默认 <root>/runs/m0"
-    )
-    parser.add_argument(
-        "--refresh-anchor",
-        action="store_true",
-        help="冻结层改动后重建锚点（会重新签名当前目录）",
-    )
-    args = parser.parse_args(argv)
-
-    root = (args.root or repo_root()).resolve()
+def _prepare(root: Path, refresh_anchor: bool) -> Path:
     frozen = root / "config" / "frozen"
     if not frozen.is_dir():
-        parser.error(f"找不到冻结配置目录: {frozen}")
+        raise SystemExit(f"找不到冻结配置目录: {frozen}")
     anchor = root / "config" / "anchor.json"
-    run_dir = (args.out or root / "runs" / "m0").resolve()
-
     keyring = KeyRing.with_secret(DEV_KID, DEV_SECRET)
     layer = FrozenLayer(frozen)
-    if anchor.exists() and not args.refresh_anchor:
+    if anchor.exists() and not refresh_anchor:
         layer.verify(anchor, keyring)
         print(f"锚点校验通过: {anchor}")
     else:
         layer.write_anchor(anchor, keyring, DEV_KID)
         print(f"锚点已{'重建' if anchor.exists() else '生成'}: {anchor}")
+    return frozen
 
+
+def cmd_run(args: argparse.Namespace) -> int:
+    root = (args.root or repo_root()).resolve()
+    frozen = _prepare(root, args.refresh_anchor)
+    run_dir = (args.out or root / "runs" / "m0").resolve()
     if run_dir.exists():
         shutil.rmtree(run_dir)
     run_dir.mkdir(parents=True, exist_ok=True)
-
-    report = run_m0(frozen_root=frozen, run_dir=run_dir)
+    report = run_m0(
+        frozen_root=frozen,
+        run_dir=run_dir,
+        include_dissent=not args.no_dissent,
+        human_approved=not args.no_approve,
+    )
     print(json.dumps(report.as_dict(), ensure_ascii=False, indent=2))
     print(f"\n事件日志: {run_dir / 'events.jsonl'}")
     print(f"报告: {run_dir / 'report.json'}")
     return 0 if report.l1_bit_exact else 1
+
+
+def cmd_verify(args: argparse.Namespace) -> int:
+    client = AghClient(run_dir=args.run_dir)
+    ok = client.verify_log()
+    print(json.dumps({"ok": ok, "log": str(client.run_dir / "events.jsonl")}, ensure_ascii=False))
+    return 0 if ok else 1
+
+
+def cmd_replay(args: argparse.Namespace) -> int:
+    client = AghClient(run_dir=args.run_dir)
+    report = client.replay()
+    payload = {
+        "steps": report.steps,
+        "mismatches": report.mismatches,
+        "bit_exact": report.bit_exact,
+    }
+    print(json.dumps(payload, ensure_ascii=False, indent=2))
+    return 0 if report.bit_exact else 1
+
+
+def cmd_experiment(args: argparse.Namespace) -> int:
+    client = AghClient(frozen_root=args.frozen or default_frozen_root())
+    report = client.experiment(seeds=args.seeds, resamples=args.resamples)
+    target = report.write(args.out)
+    print(json.dumps(report.as_dict(), ensure_ascii=False, indent=2))
+    print(f"\n报告: {target}")
+    return 0
+
+
+def cmd_ablation(args: argparse.Namespace) -> int:
+    client = AghClient(frozen_root=args.frozen or default_frozen_root())
+    report = client.ablation(seeds=args.seeds, resamples=args.resamples)
+    target = report.write(args.out)
+    print(json.dumps(report.as_dict(), ensure_ascii=False, indent=2))
+    print(f"\n报告: {target}")
+    return 0
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(prog="agh", description="AGH 多智能体整体重构框架")
+    parser.add_argument("--version", action="version", version=f"AGH {__version__}")
+    sub = parser.add_subparsers(dest="command")
+
+    run = sub.add_parser("run", help="跑 M0 垂直切片")
+    run.add_argument("--root", type=Path, default=None)
+    run.add_argument("--out", type=Path, default=None)
+    run.add_argument("--refresh-anchor", action="store_true")
+    run.add_argument("--no-dissent", action="store_true")
+    run.add_argument("--no-approve", action="store_true")
+    run.set_defaults(func=cmd_run)
+
+    verify = sub.add_parser("verify", help="校验事件日志哈希链")
+    verify.add_argument("--run-dir", type=Path, default=Path("runs") / "m0")
+    verify.set_defaults(func=cmd_verify)
+
+    replay = sub.add_parser("replay", help="L1 逐位重放")
+    replay.add_argument("--run-dir", type=Path, default=Path("runs") / "m0")
+    replay.set_defaults(func=cmd_replay)
+
+    experiment = sub.add_parser("experiment", help="G1 竞技场实验")
+    experiment.add_argument("--seeds", type=int, default=100)
+    experiment.add_argument("--resamples", type=int, default=2_000)
+    experiment.add_argument("--frozen", type=Path, default=None)
+    experiment.add_argument("--out", type=Path, default=Path("runs") / "g1" / "experiment.json")
+    experiment.set_defaults(func=cmd_experiment)
+
+    ablation = sub.add_parser("ablation", help="9 组消融")
+    ablation.add_argument("--seeds", type=int, default=50)
+    ablation.add_argument("--resamples", type=int, default=2_000)
+    ablation.add_argument("--frozen", type=Path, default=None)
+    ablation.add_argument("--out", type=Path, default=Path("runs") / "g1" / "ablation.json")
+    ablation.set_defaults(func=cmd_ablation)
+
+    version = sub.add_parser("version", help="打印版本")
+    version.set_defaults(func=lambda _a: print(__version__) or 0)
+
+    return parser
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = build_parser()
+    args = parser.parse_args(argv)
+    if not getattr(args, "command", None):
+        args = parser.parse_args(["run", *(argv or [])])
+    return int(args.func(args))
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

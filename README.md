@@ -4,7 +4,7 @@
 
 **Agent Gestalt Hierarchy**：多智能体「整体重构」框架的 M0 垂直切片。母体发骨架与契约，子级按整体重构而不是拼零件，回传带签名与出处；写入门、竞技场、仲裁、治理机、预算账本、哈希链日志串成一条可跑、可测、可重放的链路。
 
-> 状态：M0（v0.4.0），子级是**规则重构器**，不接 LLM。所有数字都能在本地复现。
+> 状态：M0（v0.5.0），子级是**规则重构器**，不接 LLM。所有数字都能在本地复现。
 
 ```
 母体 M0
@@ -52,7 +52,7 @@ git clone https://github.com/Gray2006/AGH.git
 cd AGH
 pip install -e ".[dev]"
 
-python -m pytest -q          # 122 条测试
+python -m pytest -q          # 144 条测试
 python -m agh                # 跑 M0，落盘 runs/m0/（等价 python scripts/run_m0.py）
 ```
 
@@ -92,6 +92,11 @@ python -m agh                # 跑 M0，落盘 runs/m0/（等价 python scripts/
 | `agh/llm.py` | LLM 子级适配：拼提示、抽 JSON、按契约 schema 校验（不含网络代码） |
 | `agh/experiment.py` | G1 实验：多子级 × 多种子，含 single / majority / best-of-N 基线与配对统计 |
 | `agh/ablation.py` | 9 组消融：完整链路 + 8 个单点关闭，配对 bootstrap + Holm |
+| `agh/timestamp.py` | 外部可信时间戳：HMAC 本地 TSA / HTTP TSA，锚点落盘与验证 |
+| `agh/billing.py` | 外部计费：结算后按 ref 幂等扣款，收据可核对 |
+| `agh/forgetting.py` | 可验证遗忘：签名墓碑 + 残留扫描 |
+| `agh/claims.py` | 跨组织声明：签名声明 + Merkle 透明日志 + 包含证明 |
+| `agh/sdk.py` | Python SDK：run / verify / replay / experiment / ablation |
 | `agh/pipeline.py` | M0 编排、reducer、演示冻结层 |
 
 配置在 `config/frozen/`，阈值全部进冻结层，改配置会被锚点发现。文档在 [`docs/`](docs/)：实现报告、方案原文、两份引用/事实核验。
@@ -151,6 +156,32 @@ ring.rotate("gw-1", "gw-2", private_bytes=new_private, overlap_ms=3_600_000)
 
 轮换后旧密钥在 overlap 窗口内仍可验签，窗口过后返回 `expired_kid`。密钥类型由 `kid` 自动分派，HMAC 与 Ed25519 可以混用。
 
+## 命令行与 SDK
+
+```bash
+agh run                 # 跑 M0（默认）
+agh verify              # 校验事件日志哈希链
+agh replay              # L1 逐位重放
+agh experiment --seeds 100
+agh ablation --seeds 50
+```
+
+```python
+from agh.sdk import AghClient
+
+client = AghClient()
+report = client.run()
+assert client.verify_log()
+assert client.replay().bit_exact
+```
+
+## 时间戳、计费、遗忘与声明
+
+- **外部时间戳**：`anchor_log(log_head, tsa, path)` 把链头交给 TSA 盖章；`HmacTimestampAuthority` 用于本地，`HttpTimestampAuthority` 接外部服务（传输函数可注入，RFC 3161 客户端可替换 transport）
+- **外部计费**：`BillingLedger(ledger, provider).settle(...)` 先结算预算再按 ref 幂等扣款；`JsonFileBilling` 落盘收据，`HttpBilling` 接外部计费
+- **可验证遗忘**：`ForgettingRegistry.forget()` 生成签名墓碑，`verify_forgetting()` 同时校验签名与残留引用
+- **跨组织声明**：`sign_statement()` + `TransparencyLog`（Merkle 树、包含证明、签名树头），三方对上才算成立
+
 ## M0 实测
 
 | 检查 | 结果 |
@@ -163,7 +194,7 @@ ring.rotate("gw-1", "gw-2", private_bytes=new_private, overlap_ms=3_600_000)
 | 治理 | 有合格异议 → 升 T2 停在 `VERIFIED`；人工批准后 `RELEASED` |
 | 账本 | 违规 0 |
 | 重放 | L1 `bit_exact=true` |
-| 测试 | 122 passed |
+| 测试 | 144 passed |
 
 ## 设计取舍
 

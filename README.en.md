@@ -4,7 +4,7 @@
 
 **Agent Gestalt Hierarchy** — an M0 vertical slice of a multi-agent "gestalt reconstruction" framework. A parent issues a skeleton and a contract; children reconstruct the whole rather than reassembling parts; every submission is signed and provenance-checked. Gate, arena, arbitration, governance, budget ledger and a hash-chained log form one runnable, testable, replayable pipeline.
 
-> Status: M0 (v0.4.0). Children are **rule-based reconstructors**, not LLMs. Every number below is reproducible locally.
+> Status: M0 (v0.5.0). Children are **rule-based reconstructors**, not LLMs. Every number below is reproducible locally.
 
 ```
 Parent M0
@@ -52,7 +52,7 @@ git clone https://github.com/Gray2006/AGH.git
 cd AGH
 pip install -e ".[dev]"
 
-python -m pytest -q          # 122 tests
+python -m pytest -q          # 144 tests
 python -m agh                # run M0, writes runs/m0/ (same as python scripts/run_m0.py)
 ```
 
@@ -92,6 +92,11 @@ Expected output (excerpt):
 | `agh/llm.py` | LLM child adapter: prompt, JSON extraction, contract schema validation (no network code) |
 | `agh/experiment.py` | G1 experiments: arms × seeds with single / majority / best-of-N baselines and paired statistics |
 | `agh/ablation.py` | 9-cell ablation suite: full pipeline plus 8 single-point removals |
+| `agh/timestamp.py` | External trusted timestamps: local HMAC TSA / HTTP TSA, anchor write and verify |
+| `agh/billing.py` | External billing: idempotent charge per ref after settlement |
+| `agh/forgetting.py` | Verifiable forgetting: signed tombstones plus residual scan |
+| `agh/claims.py` | Cross-org statements: signed statements, Merkle transparency log, inclusion proofs |
+| `agh/sdk.py` | Python SDK: run / verify / replay / experiment / ablation |
 | `agh/pipeline.py` | M0 orchestration, reducer, demo frozen layer |
 
 Thresholds live in `config/frozen/` and are covered by the anchor. Docs in [`docs/`](docs/): implementation report, original plan, and two verification reports.
@@ -151,6 +156,32 @@ ring.rotate("gw-1", "gw-2", private_bytes=new_private, overlap_ms=3_600_000)
 
 The old key keeps verifying inside the overlap window, then returns `expired_kid`. The key type is dispatched by `kid`, so HMAC and Ed25519 can coexist.
 
+## CLI and SDK
+
+```bash
+agh run                 # M0 (default)
+agh verify              # verify the hash-chained event log
+agh replay              # bit-exact L1 replay
+agh experiment --seeds 100
+agh ablation --seeds 50
+```
+
+```python
+from agh.sdk import AghClient
+
+client = AghClient()
+report = client.run()
+assert client.verify_log()
+assert client.replay().bit_exact
+```
+
+## Timestamps, billing, forgetting, statements
+
+- **External timestamps**: `anchor_log(log_head, tsa, path)`; `HmacTimestampAuthority` for local use, `HttpTimestampAuthority` for a remote service (transport injectable; swap in an RFC 3161 client without changing the interface)
+- **External billing**: `BillingLedger(ledger, provider).settle(...)` settles the budget then charges once per ref; `JsonFileBilling` and `HttpBilling` included
+- **Verifiable forgetting**: signed tombstones plus a residual scan over records and edges
+- **Cross-org statements**: `sign_statement()` + `TransparencyLog` (Merkle tree, inclusion proofs, signed tree head)
+
 ## M0 results
 
 | Check | Result |
@@ -163,7 +194,7 @@ The old key keeps verifying inside the overlap window, then returns `expired_kid
 | Governance | qualified dissent → T2, stops at `VERIFIED`; `RELEASED` after human approval |
 | Ledger | 0 violations |
 | Replay | L1 `bit_exact=true` |
-| Tests | 122 passed |
+| Tests | 144 passed |
 
 ## Design decisions
 
