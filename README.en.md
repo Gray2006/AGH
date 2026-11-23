@@ -4,7 +4,7 @@
 
 **Agent Gestalt Hierarchy** — an M0 vertical slice of a multi-agent "gestalt reconstruction" framework. A parent issues a skeleton and a contract; children reconstruct the whole rather than reassembling parts; every submission is signed and provenance-checked. Gate, arena, arbitration, governance, budget ledger and a hash-chained log form one runnable, testable, replayable pipeline.
 
-> Status: M0 (v0.2.0). Children are **rule-based reconstructors**, not LLMs. Every number below is reproducible locally.
+> Status: M0 (v0.3.0). Children are **rule-based reconstructors**, not LLMs. Every number below is reproducible locally.
 
 ```
 Parent M0
@@ -52,7 +52,7 @@ git clone https://github.com/Gray2006/AGH.git
 cd AGH
 pip install -e ".[dev]"
 
-python -m pytest -q          # 102 tests
+python -m pytest -q          # 114 tests
 python -m agh                # run M0, writes runs/m0/ (same as python scripts/run_m0.py)
 ```
 
@@ -88,10 +88,44 @@ Expected output (excerpt):
 | `agh/gate.py` | Write / retrieval (selection integrity) / promotion / reuse gates |
 | `agh/governance.py` | Eight-state machine, T0/T1/T2 tiers, degradation halt |
 | `agh/eventlog.py` | Hash-chained log, bit-exact L1 replay, L2 statistical equivalence |
-| `agh/evalstats.py` | Paired bootstrap CI, Holm correction, Cohen's d |
+| `agh/evalstats.py` | Paired bootstrap CI, bootstrap p-value, Holm correction, Cohen's d |
+| `agh/llm.py` | LLM child adapter: prompt, JSON extraction, contract schema validation (no network code) |
+| `agh/experiment.py` | G1 experiments: arms × seeds with single / majority baselines and paired statistics |
 | `agh/pipeline.py` | M0 orchestration, reducer, demo frozen layer |
 
 Thresholds live in `config/frozen/` and are covered by the anchor. Docs in [`docs/`](docs/): implementation report, original plan, and two verification reports.
+
+## Wiring a real LLM
+
+M0 children are rule functions, but the interface is ready: `LlmChild` needs only a completion function; the framework builds the prompt, extracts JSON and validates against the contract schema.
+
+```python
+from agh.llm import LlmChild
+from agh.pipeline import m0_skeleton
+
+child = LlmChild(
+    name="llm-child",
+    complete=lambda prompt: my_model(prompt),   # any string-returning transport
+    skeleton=m0_skeleton(),
+)
+recon = child.reconstruct("ct-1")               # raises ChildOutputError on invalid output
+```
+
+`ChildOutputError` carries the raw text and per-field schema errors, so callers can retry or switch models. No network code ships in the framework.
+
+## G1 experiments
+
+One demo is not evidence. `scripts/run_experiment.py` runs arms across seeds and compares against same-seed baselines:
+
+```bash
+python scripts/run_experiment.py --seeds 100 --out runs/g1/experiment.json
+```
+
+- Baselines: `single` (first arm only) and `majority` (features shared by at least half the candidates)
+- Statistics: paired bootstrap CI, bootstrap p-value, Holm correction; thresholds come from the frozen layer
+- Report: valid/error counts, win rate, mean score per arm, contested rate, per-arm comparisons
+
+Numbers from rule children only show the pipeline works; swap in `LlmChild` and the same script produces real experiments.
 
 ## M0 results
 
@@ -105,7 +139,7 @@ Thresholds live in `config/frozen/` and are covered by the anchor. Docs in [`doc
 | Governance | qualified dissent → T2, stops at `VERIFIED`; `RELEASED` after human approval |
 | Ledger | 0 violations |
 | Replay | L1 `bit_exact=true` |
-| Tests | 102 passed |
+| Tests | 114 passed |
 
 ## Design decisions
 

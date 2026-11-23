@@ -43,6 +43,24 @@ def paired_bootstrap_ci(
     return Interval(mean=float(arr.mean()), lo=float(lo), hi=float(hi), n=int(arr.size))
 
 
+def bootstrap_pvalue(
+    diffs: list[float] | np.ndarray,
+    resamples: int = 2_000,
+    seed: int = 0,
+) -> float:
+    """配对 bootstrap 单侧 p 值：重采样均值的比例不超过 0。
+
+    用于实验报告里配合 holm 做多重比较；不是「显著」的替代品。
+    """
+    arr = np.asarray(diffs, dtype=float)
+    if arr.size == 0:
+        raise ValueError("样本为空")
+    rng = np.random.default_rng(seed)
+    idx = rng.integers(0, arr.size, size=(resamples, arr.size))
+    means = arr[idx].mean(axis=1)
+    return float((means <= 0).mean())
+
+
 def holm(pvalues: list[float], alpha: float = 0.05) -> list[tuple[int, float, bool]]:
     """返回 (原索引, 校正后阈值, 是否显著)，按 p 升序逐步判定。"""
     order = sorted(range(len(pvalues)), key=lambda i: pvalues[i])

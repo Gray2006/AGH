@@ -4,7 +4,7 @@
 
 **Agent Gestalt Hierarchy**：多智能体「整体重构」框架的 M0 垂直切片。母体发骨架与契约，子级按整体重构而不是拼零件，回传带签名与出处；写入门、竞技场、仲裁、治理机、预算账本、哈希链日志串成一条可跑、可测、可重放的链路。
 
-> 状态：M0（v0.2.0），子级是**规则重构器**，不接 LLM。所有数字都能在本地复现。
+> 状态：M0（v0.3.0），子级是**规则重构器**，不接 LLM。所有数字都能在本地复现。
 
 ```
 母体 M0
@@ -52,7 +52,7 @@ git clone https://github.com/Gray2006/AGH.git
 cd AGH
 pip install -e ".[dev]"
 
-python -m pytest -q          # 102 条测试
+python -m pytest -q          # 114 条测试
 python -m agh                # 跑 M0，落盘 runs/m0/（等价 python scripts/run_m0.py）
 ```
 
@@ -88,10 +88,44 @@ python -m agh                # 跑 M0，落盘 runs/m0/（等价 python scripts/
 | `agh/gate.py` | 写入门 / 检索门（选择完整性）/ 提升门 / 复用门 |
 | `agh/governance.py` | 八状态机，T0/T1/T2 分级，劣化停车 |
 | `agh/eventlog.py` | 哈希链日志、L1 逐位重放、L2 统计等价 |
-| `agh/evalstats.py` | 配对 bootstrap CI、Holm 校正、Cohen's d |
+| `agh/evalstats.py` | 配对 bootstrap CI、bootstrap p 值、Holm 校正、Cohen's d |
+| `agh/llm.py` | LLM 子级适配：拼提示、抽 JSON、按契约 schema 校验（不含网络代码） |
+| `agh/experiment.py` | G1 实验：多子级 × 多种子，含 single / majority 基线与配对统计 |
 | `agh/pipeline.py` | M0 编排、reducer、演示冻结层 |
 
 配置在 `config/frozen/`，阈值全部进冻结层，改配置会被锚点发现。文档在 [`docs/`](docs/)：实现报告、方案原文、两份引用/事实核验。
+
+## 接真 LLM
+
+M0 的子级是规则函数，但接口已经留好：`LlmChild` 只需要一个传输函数，框架负责拼提示、抽 JSON、按契约 schema 校验。
+
+```python
+from agh.llm import LlmChild
+from agh.pipeline import m0_skeleton
+
+child = LlmChild(
+    name="llm-child",
+    complete=lambda prompt: my_model(prompt),   # 返回字符串即可
+    skeleton=m0_skeleton(),
+)
+recon = child.reconstruct("ct-1")               # 校验不过抛 ChildOutputError
+```
+
+`ChildOutputError` 带原始文本与逐条 schema 错误，可以直接拿去重试或换模型。框架里没有网络代码：模型怎么调是部署方的事。
+
+## G1 实验
+
+单次演示不足以判断架构是否有效。`scripts/run_experiment.py` 跑多子级 × 多种子，并和同种子的简单基线做配对比较：
+
+```bash
+python scripts/run_experiment.py --seeds 100 --out runs/g1/experiment.json
+```
+
+- 基线：`single`（只看第一个子级）、`majority`（过半候选共有特征拼成的多数票重构）
+- 统计：配对 bootstrap CI + bootstrap p 值 + Holm 校正，阈值来自冻结层
+- 报告：每个子级的有效数/错误数/胜率/均分、contested 比例、逐项比较
+
+规则子级下跑出的数字只说明链路正确，不能当真实模型结论；换成 `LlmChild` 后同一脚本可直接跑真实实验。
 
 ## M0 实测
 
@@ -105,7 +139,7 @@ python -m agh                # 跑 M0，落盘 runs/m0/（等价 python scripts/
 | 治理 | 有合格异议 → 升 T2 停在 `VERIFIED`；人工批准后 `RELEASED` |
 | 账本 | 违规 0 |
 | 重放 | L1 `bit_exact=true` |
-| 测试 | 102 passed |
+| 测试 | 114 passed |
 
 ## 设计取舍
 

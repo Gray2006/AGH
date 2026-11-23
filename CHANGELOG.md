@@ -1,7 +1,20 @@
-﻿# Changelog
+# Changelog
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [0.3.0] - 2026-11-23
+
+补上「M0 只有规则子级」和「没有竞技场实验」两个最大缺口。
+
+### Added
+
+- \gh/llm.py\：LLM 子级适配器。\LlmChild\ 接收任意 \complete(prompt) -> str\ 传输函数，负责拼提示、抽 JSON、按 econstruction_schema\ 校验；失败抛 \ChildOutputError\（带原始文本与逐条错误）
+- \gh/experiment.py\：G1 竞技场实验。多子级 × 多种子跑完整链路，输出胜率、均分、contested 比例，并和 \single\ / \majority\ 基线做配对比较
+- \gh/evalstats.py\：新增 \ootstrap_pvalue- \scripts/run_experiment.py\：一键跑实验并写 uns/g1/experiment.json- 测试 102 → 114
+
+### Changed
+
+- README 增加「接真 LLM」「G1 实验」两节，模块表补 \llm.py\、\experiment.py
 ## [0.2.0] - 2026-11-23
 
 项目改名 AGH，补齐命令行与 lint。
