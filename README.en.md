@@ -4,7 +4,7 @@
 
 **Agent Gestalt Hierarchy** — an M0 vertical slice of a multi-agent "gestalt reconstruction" framework. A parent issues a skeleton and a contract; children reconstruct the whole rather than reassembling parts; every submission is signed and provenance-checked. Gate, arena, arbitration, governance, budget ledger and a hash-chained log form one runnable, testable, replayable pipeline.
 
-> Status: M0 (v0.11.0). Children are **rule-based reconstructors**, not LLMs. Every number below is reproducible locally.
+> Status: M0 (v0.12.0). Children are **rule-based reconstructors**, not LLMs. Every number below is reproducible locally.
 
 ```
 Parent M0
@@ -100,6 +100,7 @@ Expected output (excerpt):
 | `agh/evolution.py` | Archive-based self-iteration: bounded genome, lineage, governance gate, budget |
 | `agh/evolution_llm.py` | LLM mutator plus evolution-vs-random-search comparison |
 | `agh/benchmarks.py` | Configurable benchmark generator (fixed nodes, random edges/required) |
+| `agh/evolution_sharded.py` | Sharded elites plus global parameter evolution (combined mode) |
 | `agh/providers.py` | OpenAI-compatible model adapter (env key, JSON mode, retries) |
 | `agh/pipeline.py` | M0 orchestration, reducer, demo frozen layer |
 
@@ -234,6 +235,15 @@ agh evolve --benchmarks 10 --bench-seed 0 --generations 5 --population 3
 ```
 
 Generated skeletons share a node vocabulary but differ in edges and required items; each reference signature comes from its own skeleton. Evaluation stays local and deterministic.
+
+Across heterogeneous benchmarks a single genome cancels itself out. Two better shapes:
+
+```bash
+agh evolve --benchmarks 10 --mode sharded    # one archive per benchmark
+agh evolve --benchmarks 10 --mode combined   # sharded elites + global parameter evolution
+```
+
+Measured on 10 benchmarks, 3 generations × 3 individuals: sharded 0.29863 vs single 0.22972, paired delta +0.0689 (CI 0.0167–0.1162, n=10).
 
 ## M0 results
 

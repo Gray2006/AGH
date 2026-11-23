@@ -2,6 +2,17 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [0.12.0] - 2026-11-23
+
+结合两条路线：分片精英 + 全局参数进化。
+
+### Added
+
+- `agh/evolution_sharded.py`：`sharded_evolve`（每基准独立档案）与 `combined_evolve`（外层进化评分参数，内层分片）
+- CLI `agh evolve --mode single|sharded|combined`、`--rounds`
+- 测试 174 → 179
+- 实测 10 基准：分片 0.29863 vs 单基因组 0.22972，配对差 +0.0689（CI 0.0167–0.1162）
+
 ## [0.11.0] - 2026-11-23
 
 可配置基准生成器，让对照有区分度。

@@ -4,7 +4,7 @@
 
 **Agent Gestalt Hierarchy**：多智能体「整体重构」框架的 M0 垂直切片。母体发骨架与契约，子级按整体重构而不是拼零件，回传带签名与出处；写入门、竞技场、仲裁、治理机、预算账本、哈希链日志串成一条可跑、可测、可重放的链路。
 
-> 状态：M0（v0.11.0），子级是**规则重构器**，不接 LLM。所有数字都能在本地复现。
+> 状态：M0（v0.12.0），子级是**规则重构器**，不接 LLM。所有数字都能在本地复现。
 
 ```
 母体 M0
@@ -100,6 +100,7 @@ python -m agh                # 跑 M0，落盘 runs/m0/（等价 python scripts/
 | `agh/evolution.py` | 档案式自我迭代：受限基因组、血统、治理门与预算 |
 | `agh/evolution_llm.py` | LLM 变异器 + 进化 vs 随机搜索对照 |
 | `agh/benchmarks.py` | 可配置基准生成器（节点固定、边/必需项随机） |
+| `agh/evolution_sharded.py` | 分片精英 + 全局参数进化（combined 模式） |
 | `agh/providers.py` | OpenAI 兼容模型适配器（环境变量取密钥，JSON 模式 + 重试） |
 | `agh/pipeline.py` | M0 编排、reducer、演示冻结层 |
 
@@ -234,6 +235,15 @@ agh evolve --benchmarks 10 --bench-seed 0 --generations 5 --population 3
 ```
 
 生成的骨架节点数固定、边与必需项随机，参照签名取自各自骨架；单次调用仍只评估本地规则子级，不花模型 token。
+
+跨异构基准时，单一基因组会被互相抵消。两种更合适的形态：
+
+```bash
+agh evolve --benchmarks 10 --mode sharded    # 每基准独立档案
+agh evolve --benchmarks 10 --mode combined   # 分片精英 + 全局参数进化
+```
+
+实测（10 基准，3 代 × 3 个体）：分片均值 0.29863，单基因组 0.22972，配对差 +0.0689（CI 0.0167–0.1162，n=10）。
 
 ## M0 实测
 
