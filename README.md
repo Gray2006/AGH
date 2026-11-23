@@ -143,7 +143,7 @@ agh evolve --llm-mutator --provider deepseek --generations 5
 python scripts/run_llm_experiment.py --provider command-code --samples 8
 ```
 
-实测（deepseek-v4.1-flash，8 次）：修复截断重试后 8/8 通过契约，均分 0.48899，规则子级基线 0.511，配对差 -0.02201（CI -0.03225–-0.00921）——真模型略低于手工规则子级。
+实测（deepseek-v4.1-flash，30 次）：30/30 通过契约，均分 0.49271（0.425–0.511），规则子级基线 0.511，配对差 -0.01829（CI -0.02635–-0.01078）——真模型稳定合格，但显著低于手工规则子级。
 
 ## G1 实验
 

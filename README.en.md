@@ -143,7 +143,7 @@ Contract-pass-rate experiment (repeated reconstructions from a real model):
 python scripts/run_llm_experiment.py --provider command-code --samples 8
 ```
 
-Measured with deepseek-v4.1-flash (8 samples): after fixing truncation retries, 8/8 passed the contract, mean score 0.48899 vs the rule baseline 0.511, paired delta -0.02201 (CI -0.03225 to -0.00921) — the real model is slightly below the handcrafted rule child.
+Measured with deepseek-v4.1-flash (30 samples): 30/30 passed the contract, mean score 0.49271 (0.425–0.511) vs the rule baseline 0.511, paired delta -0.01829 (CI -0.02635 to -0.01078) — the real model is consistently valid but significantly below the handcrafted rule child.
 
 ## G1 experiments
 
