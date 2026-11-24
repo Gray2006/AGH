@@ -1,0 +1,3641 @@
+[
+ {
+  "skeleton": {
+   "skeleton_id": "sk-gen-0",
+   "nodes": [
+    "N0",
+    "N1",
+    "N2",
+    "N3",
+    "N4",
+    "N5",
+    "N6",
+    "N7"
+   ],
+   "edges": [
+    [
+     "N0",
+     "N1"
+    ],
+    [
+     "N1",
+     "N2"
+    ],
+    [
+     "N2",
+     "N3"
+    ],
+    [
+     "N1",
+     "N4"
+    ],
+    [
+     "N1",
+     "N5"
+    ],
+    [
+     "N4",
+     "N6"
+    ],
+    [
+     "N3",
+     "N7"
+    ],
+    [
+     "N5",
+     "N6"
+    ],
+    [
+     "N0",
+     "N4"
+    ],
+    [
+     "N2",
+     "N4"
+    ],
+    [
+     "N0",
+     "N5"
+    ]
+   ],
+   "required_items": [
+    "N0",
+    "N1",
+    "N3",
+    "N4",
+    "N7"
+   ],
+   "moves": [
+    {
+     "node": "N1",
+     "vertical": false,
+     "declared_depth": 0.0,
+     "preserved_depth": 0.0
+    },
+    {
+     "node": "N2",
+     "vertical": false,
+     "declared_depth": 0.0,
+     "preserved_depth": 0.0
+    },
+    {
+     "node": "N3",
+     "vertical": true,
+     "declared_depth": 0.32,
+     "preserved_depth": 0.83
+    },
+    {
+     "node": "N4",
+     "vertical": true,
+     "declared_depth": 0.77,
+     "preserved_depth": 0.5
+    },
+    {
+     "node": "N5",
+     "vertical": true,
+     "declared_depth": 0.42,
+     "preserved_depth": 0.44
+    }
+   ],
+   "min_vertical_moves": 1
+  },
+  "reconstruction": {
+   "child_id": "child-sk-gen-0-refactor",
+   "contract_id": "ct-sk-gen-0",
+   "skeleton_id": "sk-gen-0",
+   "parts": [
+    "N0",
+    "N1",
+    "N2",
+    "N3",
+    "N4",
+    "N5",
+    "N6",
+    "N7"
+   ],
+   "coverage": {
+    "covered": [
+     "N0",
+     "N1",
+     "N3",
+     "N4",
+     "N7"
+    ]
+   },
+   "signature": {
+    "signature_id": "sig-sk-gen-0-refactor-v1",
+    "features": [
+     "rooted DAG with branch and convergence structure",
+     "required-node coverage preserved across N0,N1,N3,N4,N7",
+     "vertical depth preservation applied to N3,N4,N5",
+     "horizontal repositioning applied to N1,N2"
+    ],
+    "abstraction": false
+   },
+   "self_confidence": 0.86,
+   "content": {
+    "edges": [
+     [
+      "N0",
+      "N1"
+     ],
+     [
+      "N1",
+      "N2"
+     ],
+     [
+      "N2",
+      "N3"
+     ],
+     [
+      "N3",
+      "N7"
+     ],
+     [
+      "N1",
+      "N4"
+     ],
+     [
+      "N4",
+      "N6"
+     ],
+     [
+      "N1",
+      "N5"
+     ],
+     [
+      "N5",
+      "N6"
+     ],
+     [
+      "N0",
+      "N4"
+     ],
+     [
+      "N2",
+      "N4"
+     ],
+     [
+      "N0",
+      "N5"
+     ]
+    ],
+    "vertical_moves": [
+     {
+      "node": "N3",
+      "preserved_depth": 0.83
+     },
+     {
+      "node": "N4",
+      "preserved_depth": 0.5
+     },
+     {
+      "node": "N5",
+      "preserved_depth": 0.44
+     }
+    ],
+    "changed_nodes": [
+     "N1",
+     "N2",
+     "N3",
+     "N4",
+     "N5"
+    ]
+   },
+   "summary": ""
+  },
+  "label": 1
+ },
+ {
+  "skeleton": {
+   "skeleton_id": "sk-gen-1",
+   "nodes": [
+    "N0",
+    "N1",
+    "N2",
+    "N3",
+    "N4",
+    "N5",
+    "N6",
+    "N7"
+   ],
+   "edges": [
+    [
+     "N0",
+     "N1"
+    ],
+    [
+     "N0",
+     "N2"
+    ],
+    [
+     "N2",
+     "N3"
+    ],
+    [
+     "N0",
+     "N4"
+    ],
+    [
+     "N3",
+     "N5"
+    ],
+    [
+     "N5",
+     "N6"
+    ],
+    [
+     "N2",
+     "N7"
+    ],
+    [
+     "N3",
+     "N4"
+    ],
+    [
+     "N5",
+     "N7"
+    ],
+    [
+     "N2",
+     "N4"
+    ],
+    [
+     "N4",
+     "N6"
+    ]
+   ],
+   "required_items": [
+    "N0",
+    "N3",
+    "N4",
+    "N6",
+    "N7"
+   ],
+   "moves": [
+    {
+     "node": "N1",
+     "vertical": true,
+     "declared_depth": 0.47,
+     "preserved_depth": 0.34
+    },
+    {
+     "node": "N2",
+     "vertical": true,
+     "declared_depth": 0.71,
+     "preserved_depth": 0.43
+    },
+    {
+     "node": "N3",
+     "vertical": false,
+     "declared_depth": 0.0,
+     "preserved_depth": 0.0
+    },
+    {
+     "node": "N4",
+     "vertical": true,
+     "declared_depth": 0.53,
+     "preserved_depth": 0.73
+    },
+    {
+     "node": "N5",
+     "vertical": true,
+     "declared_depth": 0.64,
+     "preserved_depth": 0.42
+    }
+   ],
+   "min_vertical_moves": 1
+  },
+  "reconstruction": {
+   "child_id": "sk-gen-1-refactor",
+   "contract_id": "ct-sk-gen-1",
+   "skeleton_id": "sk-gen-1",
+   "parts": [
+    "N0",
+    "N1",
+    "N2",
+    "N3",
+    "N4",
+    "N5",
+    "N6",
+    "N7"
+   ],
+   "coverage": {
+    "covered": [
+     "N0",
+     "N3",
+     "N4",
+     "N6",
+     "N7"
+    ]
+   },
+   "signature": {
+    "signature_id": "sig-sk-gen-1-refactor",
+    "features": [
+     "N0 fan-out to N1,N2,N4",
+     "N2 branches to N3,N7,N4",
+     "N3 branches to N5,N4",
+     "N5 branches to N6,N7",
+     "N4 converges to N6",
+     "N2->N4 and N3->N4 create reconvergence"
+    ],
+    "abstraction": false
+   },
+   "self_confidence": 0.9,
+   "content": {
+    "edges": [
+     [
+      "N0",
+      "N1"
+     ],
+     [
+      "N0",
+      "N2"
+     ],
+     [
+      "N2",
+      "N3"
+     ],
+     [
+      "N0",
+      "N4"
+     ],
+     [
+      "N3",
+      "N5"
+     ],
+     [
+      "N5",
+      "N6"
+     ],
+     [
+      "N2",
+      "N7"
+     ],
+     [
+      "N3",
+      "N4"
+     ],
+     [
+      "N5",
+      "N7"
+     ],
+     [
+      "N2",
+      "N4"
+     ],
+     [
+      "N4",
+      "N6"
+     ]
+    ],
+    "vertical_moves": [
+     {
+      "node": "N1",
+      "preserved_depth": 0.34
+     },
+     {
+      "node": "N2",
+      "preserved_depth": 0.43
+     },
+     {
+      "node": "N4",
+      "preserved_depth": 0.73
+     },
+     {
+      "node": "N5",
+      "preserved_depth": 0.42
+     }
+    ],
+    "changed_nodes": [
+     "N1",
+     "N2",
+     "N3",
+     "N4",
+     "N5"
+    ]
+   },
+   "summary": ""
+  },
+  "label": 1
+ },
+ {
+  "skeleton": {
+   "skeleton_id": "sk-gen-2",
+   "nodes": [
+    "N0",
+    "N1",
+    "N2",
+    "N3",
+    "N4",
+    "N5",
+    "N6",
+    "N7"
+   ],
+   "edges": [
+    [
+     "N0",
+     "N1"
+    ],
+    [
+     "N0",
+     "N2"
+    ],
+    [
+     "N1",
+     "N3"
+    ],
+    [
+     "N2",
+     "N4"
+    ],
+    [
+     "N0",
+     "N5"
+    ],
+    [
+     "N3",
+     "N6"
+    ],
+    [
+     "N6",
+     "N7"
+    ],
+    [
+     "N1",
+     "N7"
+    ],
+    [
+     "N0",
+     "N4"
+    ]
+   ],
+   "required_items": [
+    "N1",
+    "N4",
+    "N5",
+    "N6",
+    "N7"
+   ],
+   "moves": [
+    {
+     "node": "N1",
+     "vertical": true,
+     "declared_depth": 0.41,
+     "preserved_depth": 0.74
+    },
+    {
+     "node": "N2",
+     "vertical": true,
+     "declared_depth": 0.69,
+     "preserved_depth": 0.37
+    },
+    {
+     "node": "N3",
+     "vertical": true,
+     "declared_depth": 0.43,
+     "preserved_depth": 0.46
+    },
+    {
+     "node": "N4",
+     "vertical": false,
+     "declared_depth": 0.0,
+     "preserved_depth": 0.0
+    }
+   ],
+   "min_vertical_moves": 1
+  },
+  "reconstruction": {
+   "child_id": "sk-gen-2-refactor",
+   "contract_id": "ct-sk-gen-2",
+   "skeleton_id": "sk-gen-2",
+   "parts": [
+    "N0",
+    "N1",
+    "N2",
+    "N3",
+    "N4",
+    "N5",
+    "N6",
+    "N7"
+   ],
+   "coverage": {
+    "covered": [
+     "N1",
+     "N4",
+     "N5",
+     "N6",
+     "N7"
+    ]
+   },
+   "signature": {
+    "signature_id": "sig-sk-gen-2-parent",
+    "features": [
+     "N0-N1",
+     "N0-N2",
+     "N1-N3",
+     "N2-N4",
+     "N0-N5",
+     "N3-N6",
+     "N6-N7",
+     "N1-N7",
+     "N0-N4"
+    ],
+    "abstraction": false
+   },
+   "self_confidence": 0.86,
+   "content": {
+    "edges": [
+     [
+      "N0",
+      "N1"
+     ],
+     [
+      "N0",
+      "N2"
+     ],
+     [
+      "N1",
+      "N3"
+     ],
+     [
+      "N2",
+      "N4"
+     ],
+     [
+      "N0",
+      "N5"
+     ],
+     [
+      "N3",
+      "N6"
+     ],
+     [
+      "N6",
+      "N7"
+     ],
+     [
+      "N1",
+      "N7"
+     ],
+     [
+      "N0",
+      "N4"
+     ]
+    ],
+    "vertical_moves": [
+     {
+      "node": "N1",
+      "preserved_depth": 0.74
+     },
+     {
+      "node": "N2",
+      "preserved_depth": 0.37
+     },
+     {
+      "node": "N3",
+      "preserved_depth": 0.46
+     }
+    ],
+    "changed_nodes": [
+     "N1",
+     "N2",
+     "N3",
+     "N4"
+    ]
+   },
+   "summary": ""
+  },
+  "label": 1
+ },
+ {
+  "skeleton": {
+   "skeleton_id": "sk-gen-3",
+   "nodes": [
+    "N0",
+    "N1",
+    "N2",
+    "N3",
+    "N4",
+    "N5",
+    "N6",
+    "N7"
+   ],
+   "edges": [
+    [
+     "N0",
+     "N1"
+    ],
+    [
+     "N0",
+     "N2"
+    ],
+    [
+     "N0",
+     "N3"
+    ],
+    [
+     "N3",
+     "N4"
+    ],
+    [
+     "N4",
+     "N5"
+    ],
+    [
+     "N5",
+     "N6"
+    ],
+    [
+     "N4",
+     "N7"
+    ],
+    [
+     "N1",
+     "N3"
+    ],
+    [
+     "N3",
+     "N6"
+    ],
+    [
+     "N0",
+     "N7"
+    ]
+   ],
+   "required_items": [
+    "N0",
+    "N2",
+    "N3",
+    "N5",
+    "N7"
+   ],
+   "moves": [
+    {
+     "node": "N1",
+     "vertical": true,
+     "declared_depth": 0.43,
+     "preserved_depth": 0.68
+    },
+    {
+     "node": "N2",
+     "vertical": true,
+     "declared_depth": 0.52,
+     "preserved_depth": 0.67
+    },
+    {
+     "node": "N3",
+     "vertical": true,
+     "declared_depth": 0.65,
+     "preserved_depth": 0.8
+    },
+    {
+     "node": "N4",
+     "vertical": true,
+     "declared_depth": 0.53,
+     "preserved_depth": 0.68
+    },
+    {
+     "node": "N5",
+     "vertical": true,
+     "declared_depth": 0.44,
+     "preserved_depth": 0.67
+    }
+   ],
+   "min_vertical_moves": 1
+  },
+  "reconstruction": {
+   "child_id": "ct-sk-gen-3-child",
+   "contract_id": "ct-sk-gen-3",
+   "skeleton_id": "sk-gen-3",
+   "parts": [
+    "N0",
+    "N1",
+    "N2",
+    "N3",
+    "N4",
+    "N5",
+    "N6",
+    "N7"
+   ],
+   "coverage": {
+    "covered": [
+     "N0",
+     "N2",
+     "N3",
+     "N5",
+     "N7"
+    ]
+   },
+   "signature": {
+    "signature_id": "sig-sk-gen-3-refactored",
+    "features": [
+     "N0 fan-out to N1,N2,N3,N7",
+     "N3->N4->N5->N6 chain",
+     "N4->N7 shortcut",
+     "N1->N3 cross-link",
+     "N3->N6 merge"
+    ],
+    "abstraction": false
+   },
+   "self_confidence": 0.86,
+   "content": {
+    "edges": [
+     [
+      "N0",
+      "N1"
+     ],
+     [
+      "N0",
+      "N2"
+     ],
+     [
+      "N0",
+      "N3"
+     ],
+     [
+      "N3",
+      "N4"
+     ],
+     [
+      "N4",
+      "N5"
+     ],
+     [
+      "N5",
+      "N6"
+     ],
+     [
+      "N4",
+      "N7"
+     ],
+     [
+      "N1",
+      "N3"
+     ],
+     [
+      "N3",
+      "N6"
+     ],
+     [
+      "N0",
+      "N7"
+     ]
+    ],
+    "vertical_moves": [
+     {
+      "node": "N1",
+      "preserved_depth": 0.68
+     },
+     {
+      "node": "N2",
+      "preserved_depth": 0.67
+     },
+     {
+      "node": "N3",
+      "preserved_depth": 0.8
+     },
+     {
+      "node": "N4",
+      "preserved_depth": 0.68
+     },
+     {
+      "node": "N5",
+      "preserved_depth": 0.67
+     }
+    ],
+    "changed_nodes": [
+     "N1",
+     "N2",
+     "N3",
+     "N4",
+     "N5"
+    ]
+   },
+   "summary": ""
+  },
+  "label": 1
+ },
+ {
+  "skeleton": {
+   "skeleton_id": "sk-gen-4",
+   "nodes": [
+    "N0",
+    "N1",
+    "N2",
+    "N3",
+    "N4",
+    "N5",
+    "N6"
+   ],
+   "edges": [
+    [
+     "N0",
+     "N1"
+    ],
+    [
+     "N0",
+     "N2"
+    ],
+    [
+     "N2",
+     "N3"
+    ],
+    [
+     "N3",
+     "N4"
+    ],
+    [
+     "N3",
+     "N5"
+    ],
+    [
+     "N4",
+     "N6"
+    ],
+    [
+     "N0",
+     "N4"
+    ]
+   ],
+   "required_items": [
+    "N1",
+    "N2",
+    "N3",
+    "N6"
+   ],
+   "moves": [
+    {
+     "node": "N1",
+     "vertical": true,
+     "declared_depth": 0.84,
+     "preserved_depth": 0.59
+    },
+    {
+     "node": "N2",
+     "vertical": true,
+     "declared_depth": 0.86,
+     "preserved_depth": 0.89
+    },
+    {
+     "node": "N3",
+     "vertical": true,
+     "declared_depth": 0.59,
+     "preserved_depth": 0.69
+    }
+   ],
+   "min_vertical_moves": 1
+  },
+  "reconstruction": {
+   "child_id": "child-sk-gen-4-refactor",
+   "contract_id": "ct-sk-gen-4",
+   "skeleton_id": "sk-gen-4",
+   "parts": [
+    "N0",
+    "N1",
+    "N2",
+    "N3",
+    "N4",
+    "N5",
+    "N6"
+   ],
+   "coverage": {
+    "covered": [
+     "N1",
+     "N2",
+     "N3",
+     "N6"
+    ]
+   },
+   "signature": {
+    "signature_id": "sig-sk-gen-4-refactored",
+    "features": [
+     "edge:N0->N1",
+     "edge:N0->N2",
+     "edge:N2->N3",
+     "edge:N3->N4",
+     "edge:N3->N5",
+     "edge:N4->N6",
+     "edge:N0->N4",
+     "vertical:N1@0.59",
+     "vertical:N2@0.89",
+     "vertical:N3@0.69"
+    ],
+    "abstraction": false
+   },
+   "self_confidence": 0.92,
+   "content": {
+    "edges": [
+     [
+      "N0",
+      "N1"
+     ],
+     [
+      "N0",
+      "N2"
+     ],
+     [
+      "N2",
+      "N3"
+     ],
+     [
+      "N3",
+      "N4"
+     ],
+     [
+      "N3",
+      "N5"
+     ],
+     [
+      "N4",
+      "N6"
+     ],
+     [
+      "N0",
+      "N4"
+     ]
+    ],
+    "vertical_moves": [
+     {
+      "node": "N1",
+      "preserved_depth": 0.59
+     },
+     {
+      "node": "N2",
+      "preserved_depth": 0.89
+     },
+     {
+      "node": "N3",
+      "preserved_depth": 0.69
+     }
+    ],
+    "changed_nodes": [
+     "N1",
+     "N2",
+     "N3"
+    ]
+   },
+   "summary": ""
+  },
+  "label": 1
+ },
+ {
+  "skeleton": {
+   "skeleton_id": "sk-gen-5",
+   "nodes": [
+    "N0",
+    "N1",
+    "N2",
+    "N3",
+    "N4",
+    "N5",
+    "N6"
+   ],
+   "edges": [
+    [
+     "N0",
+     "N1"
+    ],
+    [
+     "N0",
+     "N2"
+    ],
+    [
+     "N0",
+     "N3"
+    ],
+    [
+     "N0",
+     "N4"
+    ],
+    [
+     "N0",
+     "N5"
+    ],
+    [
+     "N2",
+     "N6"
+    ],
+    [
+     "N3",
+     "N5"
+    ],
+    [
+     "N1",
+     "N2"
+    ],
+    [
+     "N2",
+     "N5"
+    ]
+   ],
+   "required_items": [
+    "N0",
+    "N1",
+    "N4",
+    "N6"
+   ],
+   "moves": [
+    {
+     "node": "N1",
+     "vertical": true,
+     "declared_depth": 0.83,
+     "preserved_depth": 0.89
+    },
+    {
+     "node": "N2",
+     "vertical": false,
+     "declared_depth": 0.0,
+     "preserved_depth": 0.0
+    },
+    {
+     "node": "N3",
+     "vertical": false,
+     "declared_depth": 0.0,
+     "preserved_depth": 0.0
+    },
+    {
+     "node": "N4",
+     "vertical": true,
+     "declared_depth": 0.38,
+     "preserved_depth": 0.32
+    }
+   ],
+   "min_vertical_moves": 1
+  },
+  "reconstruction": {
+   "child_id": "child-sk-gen-5-refactor",
+   "contract_id": "ct-sk-gen-5",
+   "skeleton_id": "sk-gen-5",
+   "parts": [
+    "N0",
+    "N1",
+    "N2",
+    "N3",
+    "N4",
+    "N5",
+    "N6"
+   ],
+   "coverage": {
+    "covered": [
+     "N0",
+     "N1",
+     "N4",
+     "N6"
+    ]
+   },
+   "signature": {
+    "signature_id": "sig-sk-gen-5-refactor",
+    "features": [
+     "vertical:N1",
+     "horizontal:N2",
+     "horizontal:N3",
+     "vertical:N4",
+     "coverage:N0,N1,N4,N6",
+     "edges:9"
+    ],
+    "abstraction": false
+   },
+   "self_confidence": 0.86,
+   "content": {
+    "edges": [
+     [
+      "N0",
+      "N1"
+     ],
+     [
+      "N0",
+      "N2"
+     ],
+     [
+      "N0",
+      "N3"
+     ],
+     [
+      "N0",
+      "N4"
+     ],
+     [
+      "N0",
+      "N5"
+     ],
+     [
+      "N2",
+      "N6"
+     ],
+     [
+      "N3",
+      "N5"
+     ],
+     [
+      "N1",
+      "N2"
+     ],
+     [
+      "N2",
+      "N5"
+     ]
+    ],
+    "vertical_moves": [
+     {
+      "node": "N1",
+      "preserved_depth": 0.89
+     },
+     {
+      "node": "N4",
+      "preserved_depth": 0.32
+     }
+    ],
+    "changed_nodes": [
+     "N1",
+     "N2",
+     "N3",
+     "N4"
+    ]
+   },
+   "summary": ""
+  },
+  "label": 1
+ },
+ {
+  "skeleton": {
+   "skeleton_id": "sk-gen-7",
+   "nodes": [
+    "N0",
+    "N1",
+    "N2",
+    "N3",
+    "N4",
+    "N5",
+    "N6",
+    "N7"
+   ],
+   "edges": [
+    [
+     "N0",
+     "N1"
+    ],
+    [
+     "N0",
+     "N2"
+    ],
+    [
+     "N2",
+     "N3"
+    ],
+    [
+     "N3",
+     "N4"
+    ],
+    [
+     "N0",
+     "N5"
+    ],
+    [
+     "N3",
+     "N6"
+    ],
+    [
+     "N6",
+     "N7"
+    ],
+    [
+     "N0",
+     "N7"
+    ],
+    [
+     "N4",
+     "N7"
+    ],
+    [
+     "N3",
+     "N7"
+    ]
+   ],
+   "required_items": [
+    "N0",
+    "N4",
+    "N5",
+    "N6",
+    "N7"
+   ],
+   "moves": [
+    {
+     "node": "N1",
+     "vertical": false,
+     "declared_depth": 0.0,
+     "preserved_depth": 0.0
+    },
+    {
+     "node": "N2",
+     "vertical": false,
+     "declared_depth": 0.0,
+     "preserved_depth": 0.0
+    },
+    {
+     "node": "N3",
+     "vertical": false,
+     "declared_depth": 0.0,
+     "preserved_depth": 0.0
+    },
+    {
+     "node": "N4",
+     "vertical": false,
+     "declared_depth": 0.0,
+     "preserved_depth": 0.0
+    },
+    {
+     "node": "N5",
+     "vertical": true,
+     "declared_depth": 0.74,
+     "preserved_depth": 0.65
+    }
+   ],
+   "min_vertical_moves": 1
+  },
+  "reconstruction": {
+   "child_id": "child-sk-gen-7-refactor",
+   "contract_id": "ct-sk-gen-7",
+   "skeleton_id": "sk-gen-7",
+   "parts": [
+    "N0",
+    "N1",
+    "N2",
+    "N3",
+    "N4",
+    "N5",
+    "N6",
+    "N7"
+   ],
+   "coverage": {
+    "covered": [
+     "N0",
+     "N4",
+     "N5",
+     "N6",
+     "N7"
+    ]
+   },
+   "signature": {
+    "signature_id": "sig-sk-gen-7-refactor",
+    "features": [
+     "N0-N1",
+     "N0-N2",
+     "N2-N3",
+     "N3-N4",
+     "N0-N5",
+     "N3-N6",
+     "N6-N7",
+     "N0-N7",
+     "N4-N7",
+     "N3-N7",
+     "vertical:N5@0.65"
+    ],
+    "abstraction": false
+   },
+   "self_confidence": 0.9,
+   "content": {
+    "edges": [
+     [
+      "N0",
+      "N1"
+     ],
+     [
+      "N0",
+      "N2"
+     ],
+     [
+      "N2",
+      "N3"
+     ],
+     [
+      "N3",
+      "N4"
+     ],
+     [
+      "N0",
+      "N5"
+     ],
+     [
+      "N3",
+      "N6"
+     ],
+     [
+      "N6",
+      "N7"
+     ],
+     [
+      "N0",
+      "N7"
+     ],
+     [
+      "N4",
+      "N7"
+     ],
+     [
+      "N3",
+      "N7"
+     ]
+    ],
+    "vertical_moves": [
+     {
+      "node": "N5",
+      "preserved_depth": 0.65
+     }
+    ],
+    "changed_nodes": [
+     "N1",
+     "N2",
+     "N3",
+     "N4",
+     "N5"
+    ]
+   },
+   "summary": ""
+  },
+  "label": 1
+ },
+ {
+  "skeleton": {
+   "skeleton_id": "sk-gen-26",
+   "nodes": [
+    "N0",
+    "N1",
+    "N2",
+    "N3",
+    "N4",
+    "N5",
+    "N6"
+   ],
+   "edges": [
+    [
+     "N0",
+     "N1"
+    ],
+    [
+     "N1",
+     "N2"
+    ],
+    [
+     "N2",
+     "N3"
+    ],
+    [
+     "N2",
+     "N4"
+    ],
+    [
+     "N2",
+     "N5"
+    ],
+    [
+     "N0",
+     "N6"
+    ],
+    [
+     "N2",
+     "N6"
+    ],
+    [
+     "N4",
+     "N6"
+    ],
+    [
+     "N3",
+     "N6"
+    ]
+   ],
+   "required_items": [
+    "N1",
+    "N2",
+    "N3",
+    "N6"
+   ],
+   "moves": [
+    {
+     "node": "N1",
+     "vertical": true,
+     "declared_depth": 0.8,
+     "preserved_depth": 0.31
+    },
+    {
+     "node": "N2",
+     "vertical": false,
+     "declared_depth": 0.0,
+     "preserved_depth": 0.0
+    },
+    {
+     "node": "N3",
+     "vertical": true,
+     "declared_depth": 0.78,
+     "preserved_depth": 0.74
+    },
+    {
+     "node": "N4",
+     "vertical": true,
+     "declared_depth": 0.53,
+     "preserved_depth": 0.39
+    }
+   ],
+   "min_vertical_moves": 1
+  },
+  "reconstruction": {
+   "child_id": "child-sk-gen-26-refactor",
+   "contract_id": "ct-sk-gen-26",
+   "skeleton_id": "sk-gen-26",
+   "parts": [
+    "N1",
+    "N2",
+    "N3",
+    "N6"
+   ],
+   "coverage": {
+    "covered": [
+     "N1",
+     "N2",
+     "N3",
+     "N6"
+    ]
+   },
+   "signature": {
+    "signature_id": "sig-sk-gen-26-refactor",
+    "features": [
+     "N0-N1",
+     "N1-N2",
+     "N2-N3",
+     "N2-N4",
+     "N2-N5",
+     "N0-N6",
+     "N2-N6",
+     "N4-N6",
+     "N3-N6"
+    ],
+    "abstraction": false
+   },
+   "self_confidence": 0.9,
+   "content": {
+    "edges": [
+     [
+      "N0",
+      "N1"
+     ],
+     [
+      "N1",
+      "N2"
+     ],
+     [
+      "N2",
+      "N3"
+     ],
+     [
+      "N2",
+      "N4"
+     ],
+     [
+      "N2",
+      "N5"
+     ],
+     [
+      "N0",
+      "N6"
+     ],
+     [
+      "N2",
+      "N6"
+     ],
+     [
+      "N4",
+      "N6"
+     ],
+     [
+      "N3",
+      "N6"
+     ]
+    ],
+    "vertical_moves": [
+     {
+      "node": "N1",
+      "preserved_depth": 0.31
+     },
+     {
+      "node": "N3",
+      "preserved_depth": 0.74
+     },
+     {
+      "node": "N4",
+      "preserved_depth": 0.39
+     }
+    ],
+    "changed_nodes": [
+     "N1",
+     "N2",
+     "N3",
+     "N4"
+    ]
+   },
+   "summary": ""
+  },
+  "label": 0.5
+ },
+ {
+  "skeleton": {
+   "skeleton_id": "sk-gen-10",
+   "nodes": [
+    "N0",
+    "N1",
+    "N2",
+    "N3",
+    "N4",
+    "N5",
+    "N6"
+   ],
+   "edges": [
+    [
+     "N0",
+     "N1"
+    ],
+    [
+     "N1",
+     "N2"
+    ],
+    [
+     "N1",
+     "N3"
+    ],
+    [
+     "N0",
+     "N4"
+    ],
+    [
+     "N1",
+     "N5"
+    ],
+    [
+     "N3",
+     "N6"
+    ],
+    [
+     "N3",
+     "N4"
+    ],
+    [
+     "N0",
+     "N3"
+    ],
+    [
+     "N0",
+     "N6"
+    ]
+   ],
+   "required_items": [
+    "N0",
+    "N2",
+    "N3",
+    "N6"
+   ],
+   "moves": [
+    {
+     "node": "N1",
+     "vertical": false,
+     "declared_depth": 0.0,
+     "preserved_depth": 0.0
+    },
+    {
+     "node": "N2",
+     "vertical": false,
+     "declared_depth": 0.0,
+     "preserved_depth": 0.0
+    },
+    {
+     "node": "N3",
+     "vertical": true,
+     "declared_depth": 0.59,
+     "preserved_depth": 0.41
+    },
+    {
+     "node": "N4",
+     "vertical": true,
+     "declared_depth": 0.58,
+     "preserved_depth": 0.73
+    }
+   ],
+   "min_vertical_moves": 1
+  },
+  "reconstruction": {
+   "child_id": "child-sk-gen-10-refactor",
+   "contract_id": "ct-sk-gen-10",
+   "skeleton_id": "sk-gen-10",
+   "parts": [
+    "N0",
+    "N2",
+    "N3",
+    "N6"
+   ],
+   "coverage": {
+    "covered": [
+     "N0",
+     "N2",
+     "N3",
+     "N6"
+    ]
+   },
+   "signature": {
+    "signature_id": "sig-sk-gen-10-r1",
+    "features": [
+     "N0->N1",
+     "N1->N2",
+     "N1->N3",
+     "N0->N4",
+     "N1->N5",
+     "N3->N6",
+     "N3->N4",
+     "N0->N3",
+     "N0->N6",
+     "vertical:N3@0.41",
+     "vertical:N4@0.73"
+    ],
+    "abstraction": false
+   },
+   "self_confidence": 0.86,
+   "content": {
+    "edges": [
+     [
+      "N0",
+      "N1"
+     ],
+     [
+      "N1",
+      "N2"
+     ],
+     [
+      "N1",
+      "N3"
+     ],
+     [
+      "N0",
+      "N4"
+     ],
+     [
+      "N1",
+      "N5"
+     ],
+     [
+      "N3",
+      "N6"
+     ],
+     [
+      "N3",
+      "N4"
+     ],
+     [
+      "N0",
+      "N3"
+     ],
+     [
+      "N0",
+      "N6"
+     ]
+    ],
+    "vertical_moves": [
+     {
+      "node": "N3",
+      "preserved_depth": 0.41
+     },
+     {
+      "node": "N4",
+      "preserved_depth": 0.73
+     }
+    ],
+    "changed_nodes": [
+     "N1",
+     "N2",
+     "N3",
+     "N4"
+    ]
+   },
+   "summary": ""
+  },
+  "label": 0.5
+ },
+ {
+  "skeleton": {
+   "skeleton_id": "sk-gen-15",
+   "nodes": [
+    "N0",
+    "N1",
+    "N2",
+    "N3",
+    "N4",
+    "N5",
+    "N6"
+   ],
+   "edges": [
+    [
+     "N0",
+     "N1"
+    ],
+    [
+     "N0",
+     "N2"
+    ],
+    [
+     "N2",
+     "N3"
+    ],
+    [
+     "N2",
+     "N4"
+    ],
+    [
+     "N1",
+     "N5"
+    ],
+    [
+     "N5",
+     "N6"
+    ],
+    [
+     "N4",
+     "N6"
+    ],
+    [
+     "N0",
+     "N4"
+    ],
+    [
+     "N4",
+     "N5"
+    ]
+   ],
+   "required_items": [
+    "N1",
+    "N4",
+    "N5",
+    "N6"
+   ],
+   "moves": [
+    {
+     "node": "N1",
+     "vertical": true,
+     "declared_depth": 0.81,
+     "preserved_depth": 0.67
+    },
+    {
+     "node": "N2",
+     "vertical": false,
+     "declared_depth": 0.0,
+     "preserved_depth": 0.0
+    },
+    {
+     "node": "N3",
+     "vertical": true,
+     "declared_depth": 0.74,
+     "preserved_depth": 0.79
+    },
+    {
+     "node": "N4",
+     "vertical": false,
+     "declared_depth": 0.0,
+     "preserved_depth": 0.0
+    }
+   ],
+   "min_vertical_moves": 1
+  },
+  "reconstruction": {
+   "child_id": "child-sk-gen-15-refactor",
+   "contract_id": "ct-sk-gen-15",
+   "skeleton_id": "sk-gen-15",
+   "parts": [
+    "N1",
+    "N4",
+    "N5",
+    "N6"
+   ],
+   "coverage": {
+    "covered": [
+     "N1",
+     "N4",
+     "N5",
+     "N6"
+    ]
+   },
+   "signature": {
+    "signature_id": "sig-sk-gen-15-refactor",
+    "features": [
+     "vertical_move:N1",
+     "horizontal_move:N2",
+     "vertical_move:N3",
+     "horizontal_move:N4",
+     "required_coverage:N1,N4,N5,N6",
+     "edge_set_preserved"
+    ],
+    "abstraction": false
+   },
+   "self_confidence": 0.9,
+   "content": {
+    "edges": [
+     [
+      "N0",
+      "N1"
+     ],
+     [
+      "N0",
+      "N2"
+     ],
+     [
+      "N2",
+      "N3"
+     ],
+     [
+      "N2",
+      "N4"
+     ],
+     [
+      "N1",
+      "N5"
+     ],
+     [
+      "N5",
+      "N6"
+     ],
+     [
+      "N4",
+      "N6"
+     ],
+     [
+      "N0",
+      "N4"
+     ],
+     [
+      "N4",
+      "N5"
+     ]
+    ],
+    "vertical_moves": [
+     {
+      "node": "N1",
+      "preserved_depth": 0.67
+     },
+     {
+      "node": "N3",
+      "preserved_depth": 0.79
+     }
+    ],
+    "changed_nodes": [
+     "N1",
+     "N2",
+     "N3",
+     "N4"
+    ]
+   },
+   "summary": ""
+  },
+  "label": 0.5
+ },
+ {
+  "skeleton": {
+   "skeleton_id": "sk-gen-23",
+   "nodes": [
+    "N0",
+    "N1",
+    "N2",
+    "N3",
+    "N4",
+    "N5",
+    "N6",
+    "N7"
+   ],
+   "edges": [
+    [
+     "N0",
+     "N1"
+    ],
+    [
+     "N0",
+     "N2"
+    ],
+    [
+     "N1",
+     "N3"
+    ],
+    [
+     "N1",
+     "N4"
+    ],
+    [
+     "N1",
+     "N5"
+    ],
+    [
+     "N3",
+     "N6"
+    ],
+    [
+     "N0",
+     "N7"
+    ],
+    [
+     "N4",
+     "N6"
+    ],
+    [
+     "N6",
+     "N7"
+    ],
+    [
+     "N2",
+     "N5"
+    ],
+    [
+     "N4",
+     "N7"
+    ]
+   ],
+   "required_items": [
+    "N1",
+    "N2",
+    "N3",
+    "N4",
+    "N7"
+   ],
+   "moves": [
+    {
+     "node": "N1",
+     "vertical": false,
+     "declared_depth": 0.0,
+     "preserved_depth": 0.0
+    },
+    {
+     "node": "N2",
+     "vertical": true,
+     "declared_depth": 0.69,
+     "preserved_depth": 0.42
+    },
+    {
+     "node": "N3",
+     "vertical": false,
+     "declared_depth": 0.0,
+     "preserved_depth": 0.0
+    },
+    {
+     "node": "N4",
+     "vertical": false,
+     "declared_depth": 0.0,
+     "preserved_depth": 0.0
+    },
+    {
+     "node": "N5",
+     "vertical": true,
+     "declared_depth": 0.46,
+     "preserved_depth": 0.32
+    }
+   ],
+   "min_vertical_moves": 1
+  },
+  "reconstruction": {
+   "child_id": "sk-gen-23-refactor",
+   "contract_id": "ct-sk-gen-23",
+   "skeleton_id": "sk-gen-23",
+   "parts": [
+    "N1",
+    "N2",
+    "N3",
+    "N4",
+    "N7"
+   ],
+   "coverage": {
+    "covered": [
+     "N1",
+     "N2",
+     "N3",
+     "N4",
+     "N7"
+    ]
+   },
+   "signature": {
+    "signature_id": "sig-sk-gen-23",
+    "features": [
+     "N0-N1",
+     "N0-N2",
+     "N1-N3",
+     "N1-N4",
+     "N1-N5",
+     "N3-N6",
+     "N0-N7",
+     "N4-N6",
+     "N6-N7",
+     "N2-N5",
+     "N4-N7"
+    ],
+    "abstraction": false
+   },
+   "self_confidence": 0.9,
+   "content": {
+    "edges": [
+     [
+      "N0",
+      "N1"
+     ],
+     [
+      "N0",
+      "N2"
+     ],
+     [
+      "N1",
+      "N3"
+     ],
+     [
+      "N1",
+      "N4"
+     ],
+     [
+      "N1",
+      "N5"
+     ],
+     [
+      "N3",
+      "N6"
+     ],
+     [
+      "N0",
+      "N7"
+     ],
+     [
+      "N4",
+      "N6"
+     ],
+     [
+      "N6",
+      "N7"
+     ],
+     [
+      "N2",
+      "N5"
+     ],
+     [
+      "N4",
+      "N7"
+     ]
+    ],
+    "vertical_moves": [
+     {
+      "node": "N2",
+      "preserved_depth": 0.42
+     },
+     {
+      "node": "N5",
+      "preserved_depth": 0.32
+     }
+    ],
+    "changed_nodes": [
+     "N1",
+     "N2",
+     "N3",
+     "N4",
+     "N5"
+    ]
+   },
+   "summary": ""
+  },
+  "label": 0.5
+ },
+ {
+  "skeleton": {
+   "skeleton_id": "sk-gen-11",
+   "nodes": [
+    "N0",
+    "N1",
+    "N2",
+    "N3",
+    "N4",
+    "N5",
+    "N6"
+   ],
+   "edges": [
+    [
+     "N0",
+     "N1"
+    ],
+    [
+     "N0",
+     "N2"
+    ],
+    [
+     "N0",
+     "N3"
+    ],
+    [
+     "N3",
+     "N4"
+    ],
+    [
+     "N2",
+     "N5"
+    ],
+    [
+     "N1",
+     "N6"
+    ],
+    [
+     "N5",
+     "N6"
+    ],
+    [
+     "N2",
+     "N6"
+    ],
+    [
+     "N4",
+     "N6"
+    ],
+    [
+     "N4",
+     "N5"
+    ]
+   ],
+   "required_items": [
+    "N0",
+    "N1",
+    "N2",
+    "N6"
+   ],
+   "moves": [
+    {
+     "node": "N1",
+     "vertical": true,
+     "declared_depth": 0.5,
+     "preserved_depth": 0.48
+    },
+    {
+     "node": "N2",
+     "vertical": true,
+     "declared_depth": 0.58,
+     "preserved_depth": 0.52
+    },
+    {
+     "node": "N3",
+     "vertical": false,
+     "declared_depth": 0.0,
+     "preserved_depth": 0.0
+    },
+    {
+     "node": "N4",
+     "vertical": true,
+     "declared_depth": 0.32,
+     "preserved_depth": 0.45
+    },
+    {
+     "node": "N5",
+     "vertical": true,
+     "declared_depth": 0.85,
+     "preserved_depth": 0.83
+    }
+   ],
+   "min_vertical_moves": 1
+  },
+  "reconstruction": {
+   "child_id": "child-sk-gen-11-refactor",
+   "contract_id": "ct-sk-gen-11",
+   "skeleton_id": "sk-gen-11",
+   "parts": [
+    "N0",
+    "N1",
+    "N2",
+    "N6"
+   ],
+   "coverage": {
+    "covered": [
+     "N0",
+     "N1",
+     "N2",
+     "N6"
+    ]
+   },
+   "signature": {
+    "signature_id": "sig-sk-gen-11-refactor",
+    "features": [
+     "N0-N1",
+     "N0-N2",
+     "N0-N3",
+     "N3-N4",
+     "N2-N5",
+     "N1-N6",
+     "N5-N6",
+     "N2-N6",
+     "N4-N6",
+     "N4-N5"
+    ],
+    "abstraction": false
+   },
+   "self_confidence": 0.9,
+   "content": {
+    "edges": [
+     [
+      "N0",
+      "N1"
+     ],
+     [
+      "N0",
+      "N2"
+     ],
+     [
+      "N0",
+      "N3"
+     ],
+     [
+      "N3",
+      "N4"
+     ],
+     [
+      "N2",
+      "N5"
+     ],
+     [
+      "N1",
+      "N6"
+     ],
+     [
+      "N5",
+      "N6"
+     ],
+     [
+      "N2",
+      "N6"
+     ],
+     [
+      "N4",
+      "N6"
+     ],
+     [
+      "N4",
+      "N5"
+     ]
+    ],
+    "vertical_moves": [
+     {
+      "node": "N1",
+      "preserved_depth": 0.48
+     },
+     {
+      "node": "N2",
+      "preserved_depth": 0.52
+     },
+     {
+      "node": "N4",
+      "preserved_depth": 0.45
+     },
+     {
+      "node": "N5",
+      "preserved_depth": 0.83
+     }
+    ],
+    "changed_nodes": [
+     "N1",
+     "N2",
+     "N3",
+     "N4",
+     "N5"
+    ]
+   },
+   "summary": ""
+  },
+  "label": 0.5
+ },
+ {
+  "skeleton": {
+   "skeleton_id": "sk-gen-8",
+   "nodes": [
+    "N0",
+    "N1",
+    "N2",
+    "N3",
+    "N4",
+    "N5",
+    "N6",
+    "N7"
+   ],
+   "edges": [
+    [
+     "N0",
+     "N1"
+    ],
+    [
+     "N0",
+     "N2"
+    ],
+    [
+     "N2",
+     "N3"
+    ],
+    [
+     "N0",
+     "N4"
+    ],
+    [
+     "N2",
+     "N5"
+    ],
+    [
+     "N4",
+     "N6"
+    ],
+    [
+     "N0",
+     "N7"
+    ],
+    [
+     "N3",
+     "N4"
+    ],
+    [
+     "N1",
+     "N7"
+    ],
+    [
+     "N6",
+     "N7"
+    ]
+   ],
+   "required_items": [
+    "N0",
+    "N1",
+    "N2",
+    "N4",
+    "N7"
+   ],
+   "moves": [
+    {
+     "node": "N1",
+     "vertical": false,
+     "declared_depth": 0.0,
+     "preserved_depth": 0.0
+    },
+    {
+     "node": "N2",
+     "vertical": true,
+     "declared_depth": 0.4,
+     "preserved_depth": 0.84
+    },
+    {
+     "node": "N3",
+     "vertical": false,
+     "declared_depth": 0.0,
+     "preserved_depth": 0.0
+    },
+    {
+     "node": "N4",
+     "vertical": true,
+     "declared_depth": 0.84,
+     "preserved_depth": 0.5
+    },
+    {
+     "node": "N5",
+     "vertical": false,
+     "declared_depth": 0.0,
+     "preserved_depth": 0.0
+    }
+   ],
+   "min_vertical_moves": 1
+  },
+  "reconstruction": {
+   "child_id": "child-sk-gen-8-refactor",
+   "contract_id": "ct-sk-gen-8",
+   "skeleton_id": "sk-gen-8",
+   "parts": [
+    "N0",
+    "N1",
+    "N2",
+    "N3",
+    "N4",
+    "N5",
+    "N6",
+    "N7"
+   ],
+   "coverage": {
+    "covered": [
+     "N0",
+     "N1",
+     "N2",
+     "N4",
+     "N7"
+    ]
+   },
+   "signature": {
+    "signature_id": "sig-sk-gen-8-refactor",
+    "features": [
+     "required_coverage:N0,N1,N2,N4,N7",
+     "edge_count:10",
+     "vertical_moves:N2,N4",
+     "horizontal_moves:N1,N3,N5",
+     "preserved_depths:N2=0.84,N4=0.5"
+    ],
+    "abstraction": false
+   },
+   "self_confidence": 0.95,
+   "content": {
+    "edges": [
+     [
+      "N0",
+      "N1"
+     ],
+     [
+      "N0",
+      "N2"
+     ],
+     [
+      "N2",
+      "N3"
+     ],
+     [
+      "N0",
+      "N4"
+     ],
+     [
+      "N2",
+      "N5"
+     ],
+     [
+      "N4",
+      "N6"
+     ],
+     [
+      "N0",
+      "N7"
+     ],
+     [
+      "N3",
+      "N4"
+     ],
+     [
+      "N1",
+      "N7"
+     ],
+     [
+      "N6",
+      "N7"
+     ]
+    ],
+    "vertical_moves": [
+     {
+      "node": "N2",
+      "preserved_depth": 0.84
+     },
+     {
+      "node": "N4",
+      "preserved_depth": 0.5
+     }
+    ],
+    "changed_nodes": [
+     "N1",
+     "N2",
+     "N3",
+     "N4",
+     "N5"
+    ]
+   },
+   "summary": ""
+  },
+  "label": 1
+ },
+ {
+  "skeleton": {
+   "skeleton_id": "sk-gen-9",
+   "nodes": [
+    "N0",
+    "N1",
+    "N2",
+    "N3",
+    "N4",
+    "N5",
+    "N6"
+   ],
+   "edges": [
+    [
+     "N0",
+     "N1"
+    ],
+    [
+     "N0",
+     "N2"
+    ],
+    [
+     "N0",
+     "N3"
+    ],
+    [
+     "N3",
+     "N4"
+    ],
+    [
+     "N1",
+     "N5"
+    ],
+    [
+     "N4",
+     "N6"
+    ],
+    [
+     "N2",
+     "N4"
+    ],
+    [
+     "N1",
+     "N3"
+    ],
+    [
+     "N3",
+     "N5"
+    ],
+    [
+     "N0",
+     "N6"
+    ]
+   ],
+   "required_items": [
+    "N0",
+    "N1",
+    "N2",
+    "N6"
+   ],
+   "moves": [
+    {
+     "node": "N1",
+     "vertical": true,
+     "declared_depth": 0.47,
+     "preserved_depth": 0.43
+    },
+    {
+     "node": "N2",
+     "vertical": true,
+     "declared_depth": 0.68,
+     "preserved_depth": 0.6
+    },
+    {
+     "node": "N3",
+     "vertical": true,
+     "declared_depth": 0.8,
+     "preserved_depth": 0.89
+    },
+    {
+     "node": "N4",
+     "vertical": true,
+     "declared_depth": 0.34,
+     "preserved_depth": 0.32
+    },
+    {
+     "node": "N5",
+     "vertical": false,
+     "declared_depth": 0.0,
+     "preserved_depth": 0.0
+    }
+   ],
+   "min_vertical_moves": 1
+  },
+  "reconstruction": {
+   "child_id": "child-sk-gen-9",
+   "contract_id": "ct-sk-gen-9",
+   "skeleton_id": "sk-gen-9",
+   "parts": [
+    "N0",
+    "N1",
+    "N2",
+    "N3",
+    "N4",
+    "N5",
+    "N6"
+   ],
+   "coverage": {
+    "covered": [
+     "N0",
+     "N1",
+     "N2",
+     "N6"
+    ]
+   },
+   "signature": {
+    "signature_id": "sig-sk-gen-9-refactored",
+    "features": [
+     "N0-N1",
+     "N0-N2",
+     "N0-N3",
+     "N3-N4",
+     "N1-N5",
+     "N4-N6",
+     "N2-N4",
+     "N1-N3",
+     "N3-N5",
+     "N0-N6"
+    ],
+    "abstraction": false
+   },
+   "self_confidence": 0.86,
+   "content": {
+    "edges": [
+     [
+      "N0",
+      "N1"
+     ],
+     [
+      "N0",
+      "N2"
+     ],
+     [
+      "N0",
+      "N3"
+     ],
+     [
+      "N3",
+      "N4"
+     ],
+     [
+      "N1",
+      "N5"
+     ],
+     [
+      "N4",
+      "N6"
+     ],
+     [
+      "N2",
+      "N4"
+     ],
+     [
+      "N1",
+      "N3"
+     ],
+     [
+      "N3",
+      "N5"
+     ],
+     [
+      "N0",
+      "N6"
+     ]
+    ],
+    "vertical_moves": [
+     {
+      "node": "N1",
+      "preserved_depth": 0.43
+     },
+     {
+      "node": "N2",
+      "preserved_depth": 0.6
+     },
+     {
+      "node": "N3",
+      "preserved_depth": 0.89
+     },
+     {
+      "node": "N4",
+      "preserved_depth": 0.32
+     }
+    ],
+    "changed_nodes": [
+     "N1",
+     "N2",
+     "N3",
+     "N4",
+     "N5"
+    ]
+   },
+   "summary": ""
+  },
+  "label": 1
+ },
+ {
+  "skeleton": {
+   "skeleton_id": "sk-gen-11",
+   "nodes": [
+    "N0",
+    "N1",
+    "N2",
+    "N3",
+    "N4",
+    "N5",
+    "N6"
+   ],
+   "edges": [
+    [
+     "N0",
+     "N1"
+    ],
+    [
+     "N1",
+     "N2"
+    ],
+    [
+     "N1",
+     "N3"
+    ],
+    [
+     "N1",
+     "N4"
+    ],
+    [
+     "N3",
+     "N5"
+    ],
+    [
+     "N5",
+     "N6"
+    ],
+    [
+     "N3",
+     "N6"
+    ],
+    [
+     "N3",
+     "N4"
+    ]
+   ],
+   "required_items": [
+    "N0",
+    "N1",
+    "N3",
+    "N6"
+   ],
+   "moves": [
+    {
+     "node": "N1",
+     "vertical": true,
+     "declared_depth": 0.69,
+     "preserved_depth": 0.6
+    },
+    {
+     "node": "N2",
+     "vertical": false,
+     "declared_depth": 0.0,
+     "preserved_depth": 0.0
+    },
+    {
+     "node": "N3",
+     "vertical": true,
+     "declared_depth": 0.5,
+     "preserved_depth": 0.89
+    },
+    {
+     "node": "N4",
+     "vertical": true,
+     "declared_depth": 0.82,
+     "preserved_depth": 0.78
+    }
+   ],
+   "min_vertical_moves": 1
+  },
+  "reconstruction": {
+   "child_id": "child-sk-gen-11",
+   "contract_id": "ct-sk-gen-11",
+   "skeleton_id": "sk-gen-11",
+   "parts": [
+    "N0",
+    "N1",
+    "N2",
+    "N3",
+    "N4",
+    "N5",
+    "N6"
+   ],
+   "coverage": {
+    "covered": [
+     "N0",
+     "N1",
+     "N3",
+     "N6"
+    ]
+   },
+   "signature": {
+    "signature_id": "sig-sk-gen-11-refactor",
+    "features": [
+     "N0->N1",
+     "N1->N2",
+     "N1->N3",
+     "N1->N4",
+     "N3->N5",
+     "N5->N6",
+     "N3->N6",
+     "N3->N4",
+     "vertical:N1:0.6",
+     "vertical:N3:0.89",
+     "vertical:N4:0.78",
+     "horizontal:N2"
+    ],
+    "abstraction": false
+   },
+   "self_confidence": 0.86,
+   "content": {
+    "edges": [
+     [
+      "N0",
+      "N1"
+     ],
+     [
+      "N1",
+      "N2"
+     ],
+     [
+      "N1",
+      "N3"
+     ],
+     [
+      "N1",
+      "N4"
+     ],
+     [
+      "N3",
+      "N5"
+     ],
+     [
+      "N5",
+      "N6"
+     ],
+     [
+      "N3",
+      "N6"
+     ],
+     [
+      "N3",
+      "N4"
+     ]
+    ],
+    "vertical_moves": [
+     {
+      "node": "N1",
+      "preserved_depth": 0.6
+     },
+     {
+      "node": "N3",
+      "preserved_depth": 0.89
+     },
+     {
+      "node": "N4",
+      "preserved_depth": 0.78
+     }
+    ],
+    "changed_nodes": [
+     "N1",
+     "N2",
+     "N3",
+     "N4"
+    ]
+   },
+   "summary": ""
+  },
+  "label": 1
+ },
+ {
+  "skeleton": {
+   "skeleton_id": "sk-gen-12",
+   "nodes": [
+    "N0",
+    "N1",
+    "N2",
+    "N3",
+    "N4",
+    "N5",
+    "N6"
+   ],
+   "edges": [
+    [
+     "N0",
+     "N1"
+    ],
+    [
+     "N0",
+     "N2"
+    ],
+    [
+     "N1",
+     "N3"
+    ],
+    [
+     "N0",
+     "N4"
+    ],
+    [
+     "N2",
+     "N5"
+    ],
+    [
+     "N4",
+     "N6"
+    ],
+    [
+     "N5",
+     "N6"
+    ],
+    [
+     "N2",
+     "N3"
+    ]
+   ],
+   "required_items": [
+    "N2",
+    "N3",
+    "N4",
+    "N6"
+   ],
+   "moves": [
+    {
+     "node": "N1",
+     "vertical": true,
+     "declared_depth": 0.32,
+     "preserved_depth": 0.79
+    },
+    {
+     "node": "N2",
+     "vertical": true,
+     "declared_depth": 0.78,
+     "preserved_depth": 0.4
+    },
+    {
+     "node": "N3",
+     "vertical": true,
+     "declared_depth": 0.77,
+     "preserved_depth": 0.38
+    },
+    {
+     "node": "N4",
+     "vertical": true,
+     "declared_depth": 0.61,
+     "preserved_depth": 0.73
+    }
+   ],
+   "min_vertical_moves": 1
+  },
+  "reconstruction": {
+   "child_id": "child-sk-gen-12-refactor",
+   "contract_id": "ct-sk-gen-12",
+   "skeleton_id": "sk-gen-12",
+   "parts": [
+    "N0",
+    "N1",
+    "N2",
+    "N3",
+    "N4",
+    "N5",
+    "N6"
+   ],
+   "coverage": {
+    "covered": [
+     "N2",
+     "N3",
+     "N4",
+     "N6"
+    ]
+   },
+   "signature": {
+    "signature_id": "sig-sk-gen-12-refactor",
+    "features": [
+     "N0-N1",
+     "N0-N2",
+     "N1-N3",
+     "N0-N4",
+     "N2-N5",
+     "N4-N6",
+     "N5-N6",
+     "N2-N3"
+    ],
+    "abstraction": false
+   },
+   "self_confidence": 0.86,
+   "content": {
+    "edges": [
+     [
+      "N0",
+      "N1"
+     ],
+     [
+      "N0",
+      "N2"
+     ],
+     [
+      "N1",
+      "N3"
+     ],
+     [
+      "N0",
+      "N4"
+     ],
+     [
+      "N2",
+      "N5"
+     ],
+     [
+      "N4",
+      "N6"
+     ],
+     [
+      "N5",
+      "N6"
+     ],
+     [
+      "N2",
+      "N3"
+     ]
+    ],
+    "vertical_moves": [
+     {
+      "node": "N1",
+      "preserved_depth": 0.79
+     },
+     {
+      "node": "N2",
+      "preserved_depth": 0.4
+     },
+     {
+      "node": "N3",
+      "preserved_depth": 0.38
+     },
+     {
+      "node": "N4",
+      "preserved_depth": 0.73
+     }
+    ],
+    "changed_nodes": [
+     "N1",
+     "N2",
+     "N3",
+     "N4"
+    ]
+   },
+   "summary": ""
+  },
+  "label": 1
+ },
+ {
+  "skeleton": {
+   "skeleton_id": "sk-gen-13",
+   "nodes": [
+    "N0",
+    "N1",
+    "N2",
+    "N3",
+    "N4",
+    "N5",
+    "N6",
+    "N7"
+   ],
+   "edges": [
+    [
+     "N0",
+     "N1"
+    ],
+    [
+     "N0",
+     "N2"
+    ],
+    [
+     "N0",
+     "N3"
+    ],
+    [
+     "N3",
+     "N4"
+    ],
+    [
+     "N4",
+     "N5"
+    ],
+    [
+     "N4",
+     "N6"
+    ],
+    [
+     "N2",
+     "N7"
+    ],
+    [
+     "N6",
+     "N7"
+    ],
+    [
+     "N4",
+     "N7"
+    ],
+    [
+     "N2",
+     "N6"
+    ]
+   ],
+   "required_items": [
+    "N1",
+    "N2",
+    "N3",
+    "N4",
+    "N7"
+   ],
+   "moves": [
+    {
+     "node": "N1",
+     "vertical": true,
+     "declared_depth": 0.42,
+     "preserved_depth": 0.62
+    },
+    {
+     "node": "N2",
+     "vertical": true,
+     "declared_depth": 0.66,
+     "preserved_depth": 0.32
+    },
+    {
+     "node": "N3",
+     "vertical": false,
+     "declared_depth": 0.0,
+     "preserved_depth": 0.0
+    },
+    {
+     "node": "N4",
+     "vertical": true,
+     "declared_depth": 0.54,
+     "preserved_depth": 0.78
+    },
+    {
+     "node": "N5",
+     "vertical": true,
+     "declared_depth": 0.59,
+     "preserved_depth": 0.71
+    }
+   ],
+   "min_vertical_moves": 1
+  },
+  "reconstruction": {
+   "child_id": "child-sk-gen-13-refactor",
+   "contract_id": "ct-sk-gen-13",
+   "skeleton_id": "sk-gen-13",
+   "parts": [
+    "N0",
+    "N1",
+    "N2",
+    "N3",
+    "N4",
+    "N5",
+    "N6",
+    "N7"
+   ],
+   "coverage": {
+    "covered": [
+     "N1",
+     "N2",
+     "N3",
+     "N4",
+     "N7"
+    ]
+   },
+   "signature": {
+    "signature_id": "sig-sk-gen-13-refactored",
+    "features": [
+     "N0->N1",
+     "N0->N2",
+     "N0->N3",
+     "N3->N4",
+     "N4->N5",
+     "N4->N6",
+     "N2->N7",
+     "N6->N7"
+    ],
+    "abstraction": false
+   },
+   "self_confidence": 0.88,
+   "content": {
+    "edges": [
+     [
+      "N0",
+      "N1"
+     ],
+     [
+      "N0",
+      "N2"
+     ],
+     [
+      "N0",
+      "N3"
+     ],
+     [
+      "N3",
+      "N4"
+     ],
+     [
+      "N4",
+      "N5"
+     ],
+     [
+      "N4",
+      "N6"
+     ],
+     [
+      "N2",
+      "N7"
+     ],
+     [
+      "N6",
+      "N7"
+     ]
+    ],
+    "vertical_moves": [
+     {
+      "node": "N1",
+      "preserved_depth": 0.62
+     },
+     {
+      "node": "N2",
+      "preserved_depth": 0.32
+     },
+     {
+      "node": "N4",
+      "preserved_depth": 0.78
+     },
+     {
+      "node": "N5",
+      "preserved_depth": 0.71
+     }
+    ],
+    "changed_nodes": [
+     "N1",
+     "N2",
+     "N3",
+     "N4",
+     "N5"
+    ]
+   },
+   "summary": ""
+  },
+  "label": 1
+ },
+ {
+  "skeleton": {
+   "skeleton_id": "sk-gen-14",
+   "nodes": [
+    "N0",
+    "N1",
+    "N2",
+    "N3",
+    "N4",
+    "N5",
+    "N6"
+   ],
+   "edges": [
+    [
+     "N0",
+     "N1"
+    ],
+    [
+     "N1",
+     "N2"
+    ],
+    [
+     "N1",
+     "N3"
+    ],
+    [
+     "N2",
+     "N4"
+    ],
+    [
+     "N1",
+     "N5"
+    ],
+    [
+     "N3",
+     "N6"
+    ],
+    [
+     "N3",
+     "N4"
+    ],
+    [
+     "N2",
+     "N6"
+    ],
+    [
+     "N2",
+     "N3"
+    ]
+   ],
+   "required_items": [
+    "N0",
+    "N1",
+    "N3",
+    "N6"
+   ],
+   "moves": [
+    {
+     "node": "N1",
+     "vertical": false,
+     "declared_depth": 0.0,
+     "preserved_depth": 0.0
+    },
+    {
+     "node": "N2",
+     "vertical": true,
+     "declared_depth": 0.77,
+     "preserved_depth": 0.31
+    },
+    {
+     "node": "N3",
+     "vertical": true,
+     "declared_depth": 0.44,
+     "preserved_depth": 0.71
+    },
+    {
+     "node": "N4",
+     "vertical": true,
+     "declared_depth": 0.51,
+     "preserved_depth": 0.67
+    }
+   ],
+   "min_vertical_moves": 1
+  },
+  "reconstruction": {
+   "child_id": "child-sk-gen-14-refactor",
+   "contract_id": "ct-sk-gen-14",
+   "skeleton_id": "sk-gen-14",
+   "parts": [
+    "N0",
+    "N1",
+    "N2",
+    "N3",
+    "N4",
+    "N5",
+    "N6"
+   ],
+   "coverage": {
+    "covered": [
+     "N0",
+     "N1",
+     "N3",
+     "N6"
+    ]
+   },
+   "signature": {
+    "signature_id": "sig-sk-gen-14-refactor",
+    "features": [
+     "rooted-dag",
+     "multi-parent-merge",
+     "required-node-coverage",
+     "depth-preserving-vertical-moves"
+    ],
+    "abstraction": false
+   },
+   "self_confidence": 0.86,
+   "content": {
+    "edges": [
+     [
+      "N0",
+      "N1"
+     ],
+     [
+      "N1",
+      "N2"
+     ],
+     [
+      "N1",
+      "N3"
+     ],
+     [
+      "N2",
+      "N4"
+     ],
+     [
+      "N1",
+      "N5"
+     ],
+     [
+      "N3",
+      "N6"
+     ],
+     [
+      "N3",
+      "N4"
+     ],
+     [
+      "N2",
+      "N6"
+     ],
+     [
+      "N2",
+      "N3"
+     ]
+    ],
+    "vertical_moves": [
+     {
+      "node": "N2",
+      "preserved_depth": 0.31
+     },
+     {
+      "node": "N3",
+      "preserved_depth": 0.71
+     },
+     {
+      "node": "N4",
+      "preserved_depth": 0.67
+     }
+    ],
+    "changed_nodes": [
+     "N1",
+     "N2",
+     "N3",
+     "N4"
+    ]
+   },
+   "summary": ""
+  },
+  "label": 1
+ },
+ {
+  "skeleton": {
+   "skeleton_id": "sk-gen-6",
+   "nodes": [
+    "N0",
+    "N1",
+    "N2",
+    "N3",
+    "N4",
+    "N5",
+    "N6"
+   ],
+   "edges": [
+    [
+     "N0",
+     "N1"
+    ],
+    [
+     "N0",
+     "N2"
+    ],
+    [
+     "N1",
+     "N3"
+    ],
+    [
+     "N0",
+     "N4"
+    ],
+    [
+     "N1",
+     "N5"
+    ],
+    [
+     "N0",
+     "N6"
+    ],
+    [
+     "N5",
+     "N6"
+    ],
+    [
+     "N1",
+     "N2"
+    ],
+    [
+     "N2",
+     "N4"
+    ],
+    [
+     "N2",
+     "N5"
+    ]
+   ],
+   "required_items": [
+    "N0",
+    "N1",
+    "N3",
+    "N4",
+    "N6"
+   ],
+   "moves": [
+    {
+     "node": "N1",
+     "vertical": true,
+     "declared_depth": 0.53,
+     "preserved_depth": 0.73
+    },
+    {
+     "node": "N2",
+     "vertical": true,
+     "declared_depth": 0.33,
+     "preserved_depth": 0.73
+    },
+    {
+     "node": "N3",
+     "vertical": false,
+     "declared_depth": 0.0,
+     "preserved_depth": 0.0
+    },
+    {
+     "node": "N4",
+     "vertical": false,
+     "declared_depth": 0.0,
+     "preserved_depth": 0.0
+    },
+    {
+     "node": "N5",
+     "vertical": false,
+     "declared_depth": 0.0,
+     "preserved_depth": 0.0
+    }
+   ],
+   "min_vertical_moves": 1
+  },
+  "reconstruction": {
+   "child_id": "child-sk-gen-6-refactor",
+   "contract_id": "ct-sk-gen-6",
+   "skeleton_id": "sk-gen-6",
+   "parts": [
+    "N0",
+    "N1",
+    "N3",
+    "N4",
+    "N6"
+   ],
+   "coverage": {
+    "covered": [
+     "N0",
+     "N1",
+     "N3",
+     "N4",
+     "N6"
+    ]
+   },
+   "signature": {
+    "signature_id": "sig-refactor-sk-gen-6",
+    "features": [
+     "N0-N1",
+     "N0-N2",
+     "N1-N3",
+     "N0-N4",
+     "N1-N5",
+     "N0-N6",
+     "N5-N6",
+     "N1-N2",
+     "N2-N4",
+     "N2-N5"
+    ],
+    "abstraction": false
+   },
+   "self_confidence": 0.86,
+   "content": {
+    "edges": [
+     [
+      "N0",
+      "N1"
+     ],
+     [
+      "N0",
+      "N2"
+     ],
+     [
+      "N1",
+      "N3"
+     ],
+     [
+      "N0",
+      "N4"
+     ],
+     [
+      "N1",
+      "N5"
+     ],
+     [
+      "N0",
+      "N6"
+     ],
+     [
+      "N5",
+      "N6"
+     ],
+     [
+      "N1",
+      "N2"
+     ],
+     [
+      "N2",
+      "N4"
+     ],
+     [
+      "N2",
+      "N5"
+     ]
+    ],
+    "vertical_moves": [
+     {
+      "node": "N1",
+      "preserved_depth": 0.73
+     },
+     {
+      "node": "N2",
+      "preserved_depth": 0.73
+     }
+    ],
+    "changed_nodes": [
+     "N1",
+     "N2",
+     "N3",
+     "N4",
+     "N5"
+    ]
+   },
+   "summary": ""
+  },
+  "label": 0.5
+ }
+]

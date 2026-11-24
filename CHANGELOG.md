@@ -2,6 +2,16 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [1.12.0] - 2026-11-24
+
+校准进 CI：验证器改动不能悄悄回退。
+
+### Added
+
+- `tests/fixtures/calibration.json`：19 题人工分级标注固化
+- `tests/test_calibration_regression.py`：ECE ≤ 0.05、二值 kappa ≥ 0.9、正负样本下限
+- 测试 234 → 237（CI 自动执行）
+
 ## [1.11.4] - 2026-11-24
 
 分级校准累计 19 题。
