@@ -13,9 +13,9 @@ from __future__ import annotations
 
 import argparse
 import json
-from typing import Any
 import shutil
 from pathlib import Path
+from typing import Any
 
 from . import __version__
 from .crypto import KeyRing
