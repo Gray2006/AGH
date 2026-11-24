@@ -23,6 +23,7 @@ from agh.evalstats import paired_bootstrap_ci  # noqa: E402
 from agh.llm import ChildOutputError, LlmChild  # noqa: E402
 from agh.pipeline import PARENT_SIG, faithful_child, m0_skeleton  # noqa: E402
 from agh.providers import make_client  # noqa: E402
+from agh.verifier import make_verifier  # noqa: E402
 
 
 def main() -> int:
@@ -35,6 +36,7 @@ def main() -> int:
     parser.add_argument("--include-reference", action="store_true", help="提示里附一个参考重构（消融）")
     parser.add_argument("--temperature", type=float, default=None)
     parser.add_argument("--with-hints", action="store_true", help="提示里给特征命名约定（结构标签）")
+    parser.add_argument("--verifier", choices=["structural", "coverage"], default=None)
     parser.add_argument("--samples", type=int, default=8)
     parser.add_argument("--out", type=Path, default=ROOT / "runs" / "g1" / "llm-experiment.json")
     args = parser.parse_args()
@@ -59,6 +61,7 @@ def main() -> int:
         with_hints=args.with_hints,
     )
 
+    verifier = make_verifier(args.verifier) if args.verifier else None
     scores: list[float] = []
     errors: list[dict] = []
     for index in range(args.samples):
@@ -71,13 +74,19 @@ def main() -> int:
         if not filt.passed:
             errors.append({"sample": index, "error": "hard_filter", "details": filt.reasons})
             continue
+        verifier_score = verifier.score(recon, skeleton) if verifier else None
         breakdown = score_candidate(
-            recon, skeleton, cfg, verifier_score=None, parent_signature=PARENT_SIG
+            recon, skeleton, cfg, verifier_score=verifier_score, parent_signature=PARENT_SIG
         )
         scores.append(breakdown.score)
 
+    rule_recon = faithful_child("ct-rule")
     rule_score = score_candidate(
-        faithful_child("ct-rule"), skeleton, cfg, verifier_score=None, parent_signature=PARENT_SIG
+        rule_recon,
+        skeleton,
+        cfg,
+        verifier_score=verifier.score(rule_recon, skeleton) if verifier else None,
+        parent_signature=PARENT_SIG,
     ).score
     deltas = [s - rule_score for s in scores]
     report = {
@@ -93,6 +102,7 @@ def main() -> int:
         "include_reference": bool(args.include_reference),
         "temperature": client.temperature,
         "with_hints": bool(args.with_hints),
+        "verifier": args.verifier,
         "scores": [round(x, 5) for x in scores],
         "delta_vs_rule": (
             {

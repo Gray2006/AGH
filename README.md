@@ -4,7 +4,7 @@
 
 **Agent Gestalt Hierarchy**：多智能体「整体重构」框架的 M0 垂直切片。母体发骨架与契约，子级按整体重构而不是拼零件，回传带签名与出处；写入门、竞技场、仲裁、治理机、预算账本、哈希链日志串成一条可跑、可测、可重放的链路。
 
-> 状态：M0（v1.4.0），子级是**规则重构器**，不接 LLM。所有数字都能在本地复现。
+> 状态：M0（v1.5.0），子级是**规则重构器**，不接 LLM。所有数字都能在本地复现。
 
 ```
 母体 M0
@@ -64,7 +64,7 @@ python -m agh                # 跑 M0，落盘 runs/m0/（等价 python scripts/
 {
   "winner": "child-faithful",
   "contested": true,
-  "scores": {"child-faithful": 0.55313, "child-dissent": 0.45975},
+  "scores": {"child-faithful": 0.80233, "child-dissent": 0.45975},
   "rejected": [
     "child-forged:rejected:payload_hash_mismatch",
     "child-shallow:hard_filter:parts 缺必需项: ['C2']"
@@ -143,11 +143,11 @@ agh evolve --llm-mutator --provider deepseek --generations 5
 python scripts/run_llm_experiment.py --provider command-code --samples 8
 ```
 
-实测（deepseek-v4.1-flash，12 次，垂直一致性已按验证器信号门控）：12/12 通过契约，均分 0.40187，规则子级基线 0.422，配对差 -0.02013（CI -0.02935–-0.01024）——真模型稳定合格，但低于手工规则子级。
+实测（deepseek-v4.1-flash，12 次，接 `StructuralVerifier` 核对结构证据）：12/12 通过契约，均分 0.79396，规则子级同验证器基线 0.80795，差 -0.014 —— 真模型稳定合格，仍略低于手工规则子级。
 
-提示消融（各 12 次）：不给结构提示均分 0.40187；给「特征命名约定」后 12 次全部落到 0.379（差 -0.043）。原因是模型照模板把 `vertical_moves:*` 也写进特征，结构距离变大，而垂直一致性没有验证器信号不计分——提示反而害了它。
+提示消融（各 12 次，同一验证器）：不给结构提示 0.79396；给「特征命名约定」0.76546（差 -0.043）——提示让模型把 `vertical_moves:*` 塞进特征，结构距离变大，反而更差。
 
-> 1.4.0 之前的真模型分数（0.49–0.51）包含「候选自报垂直移动」的加分，属于自报刷分，已被本版门控修正；旧数据作废。
+> 1.4.0 之前的真模型分数（0.49–0.51）包含「候选自报垂直移动」的加分，已被门控修正；旧数据作废。1.5.0 起分数由独立验证器核对，规则子级与被测模型用同一口径。
 
 多模型对比暂不可行：command-code 端点只支持 `deepseek/deepseek-v4.1-flash`，探测 `deepseek-v4.1`、`deepseek-v3.2`、`glm-4.7-flash`、`qwen3-max` 均返回 400。
 
@@ -304,7 +304,7 @@ python -m agh.supervisor --store runs/selfmod --gate "python -m pytest -q" -- py
 
 | 检查 | 结果 |
 |---|---|
-| 胜者 | `child-faithful`，0.55313 |
+| 胜者 | `child-faithful`，0.80233 |
 | 异议 | `child-dissent` 0.45975，novelty 1.0，结论标 `contested` |
 | 伪造 provenance | 拒收：`payload_hash_mismatch` |
 | 浅重构 | 硬过滤拒收：parts 缺 C2 |

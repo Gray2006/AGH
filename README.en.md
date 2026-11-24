@@ -4,7 +4,7 @@
 
 **Agent Gestalt Hierarchy** — an M0 vertical slice of a multi-agent "gestalt reconstruction" framework. A parent issues a skeleton and a contract; children reconstruct the whole rather than reassembling parts; every submission is signed and provenance-checked. Gate, arena, arbitration, governance, budget ledger and a hash-chained log form one runnable, testable, replayable pipeline.
 
-> Status: M0 (v1.4.0). Children are **rule-based reconstructors**, not LLMs. Every number below is reproducible locally.
+> Status: M0 (v1.5.0). Children are **rule-based reconstructors**, not LLMs. Every number below is reproducible locally.
 
 ```
 Parent M0
@@ -143,11 +143,11 @@ Contract-pass-rate experiment (repeated reconstructions from a real model):
 python scripts/run_llm_experiment.py --provider command-code --samples 8
 ```
 
-Measured with deepseek-v4.1-flash (12 samples, vertical consistency gated on a verifier signal): 12/12 passed the contract, mean score 0.40187 vs the rule baseline 0.422, paired delta -0.02013 (CI -0.02935 to -0.01024) — consistently valid but below the handcrafted rule child.
+Measured with deepseek-v4.1-flash (12 samples, `StructuralVerifier` checking structural evidence): 12/12 passed the contract, mean score 0.79396 vs the rule child under the same verifier at 0.80795, delta -0.014 — consistently valid, still slightly below the handcrafted rule child.
 
-Prompt ablation (12 samples each): without structural hints the mean is 0.40187; with a naming-convention hint all 12 collapse to 0.379 (delta -0.043). The hint makes the model stuff `vertical_moves:*` into features, increasing structural distance, while vertical consistency earns nothing without a verifier signal.
+Prompt ablation (12 samples each, same verifier): without structural hints 0.79396; with the naming-convention hint 0.76546 (delta -0.043) — the hint pushes `vertical_moves:*` into features, increasing structural distance and hurting the score.
 
-> Real-model scores before 1.4.0 (0.49–0.51) included self-reported vertical-move credit; that is gated out now and the old numbers are void.
+> Real-model scores before 1.4.0 (0.49–0.51) included self-reported vertical-move credit and are void. From 1.5.0 an independent verifier checks the evidence and both the rule child and the model are scored the same way.
 
 Multi-model comparison is not possible yet: the command-code endpoint only serves `deepseek/deepseek-v4.1-flash`; `deepseek-v4.1`, `deepseek-v3.2`, `glm-4.7-flash` and `qwen3-max` all return 400.
 

@@ -2,6 +2,26 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [1.5.0] - 2026-11-24
+
+独立验证器：自报指标改成可核对的结构证据。
+
+### Added
+
+- `agh/verifier.py`：`StructuralVerifier`（parts + edges 证据核对垂直移动）、`CoverageVerifier`、`make_verifier`
+- `run_llm_experiment.py --verifier structural|coverage`；规则基线与被测模型使用同一个验证器
+
+### Fixed
+
+- `faithful_child` 现在上报 `content.vertical_moves` 的保留深度（之前没报，接验证器后基线被自己扣分）
+
+### Measured
+
+- 无结构提示 12 次：0.79396 vs 规则 0.80795（差 -0.014）
+- 加结构提示 12 次：0.76546（差 -0.043），提示仍有害
+- M0：胜者 `child-faithful` 0.80233
+- 测试 208 → 213
+
 ## [1.4.0] - 2026-11-24
 
 门控自报垂直一致性，并修正由此暴露的假高分。

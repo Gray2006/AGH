@@ -130,6 +130,10 @@ def faithful_child(contract_id: str) -> GestaltReconstruction:
         self_confidence=0.9,
         content={
             "edges": [["M0", "P1"], ["P1", "C1"], ["P1", "C2"], ["P1", "C3"]],
+            "vertical_moves": [
+                {"node": "P1", "preserved_depth": 0.5},
+                {"node": "C1", "preserved_depth": 0.9},
+            ],
             "changed_nodes": ["C3"],
             "summary": "按父骨架补齐 C3，保留层级边",
         },
