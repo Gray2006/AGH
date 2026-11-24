@@ -2,6 +2,20 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [1.10.1] - 2026-11-24
+
+真实失败样本校准。
+
+### Added
+
+- `scripts/make_real_packet.py`：从真实模型输出里挑失败样本与正例
+- `score_labels.py --threshold`：验证器判为支持的阈值（默认 0.99）
+
+### Measured
+
+- 50 次难基准：45 满分、5 个部分失败（其中 1 个骨架无垂直移动，排除）
+- 9 题人工标注：二值一致率 1.0、kappa 1.0；ECE 0.241（验证器分级分 vs 人工二值，粒度不同）
+
 ## [1.10.0] - 2026-11-24
 
 加难基准：差距扩大，真实失败样本开始出现。

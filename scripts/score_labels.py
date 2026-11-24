@@ -26,6 +26,7 @@ def main() -> int:
     parser.add_argument("--labels", type=Path, default=ROOT / "runs" / "g1" / "label-template.json")
     parser.add_argument("--candidates", type=Path, default=ROOT / "runs" / "g1" / "llm-bench-candidates.json")
     parser.add_argument("--out", type=Path, default=ROOT / "runs" / "g1" / "human-calibration.json")
+    parser.add_argument("--threshold", type=float, default=0.99, help="验证器判为支持的阈值")
     args = parser.parse_args()
 
     labels = json.loads(args.labels.read_text(encoding="utf-8"))
@@ -52,10 +53,11 @@ def main() -> int:
     if not human:
         print("没有可校准的题目（全部缺少垂直移动）")
         return 1
-    report = evaluate(machine, human)
+    report = evaluate(machine, human, threshold=args.threshold)
     payload = {
         "n": len(human),
         "excluded_no_vertical": excluded,
+        "threshold": args.threshold,
         **report.as_dict(),
         "human": human,
         "machine": [round(x, 3) for x in machine],
