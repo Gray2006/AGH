@@ -2,6 +2,17 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [1.9.0] - 2026-11-24
+
+计费、NATS 适配、SQLite 日志。
+
+### Added
+
+- `agh/costs.py`：usage → BudgetVector（单价可配），接 `Ledger`
+- `agh/bus_nats.py`：JetStream 适配器（去重头、期望序号、ack/nak），客户端注入可测
+- `agh/sqlite_log.py`：SQLite 事件日志，与 JSONL 同语义
+- 测试 224 → 230
+
 ## [1.8.0] - 2026-11-24
 
 红队演练 + 真实 token 用量。

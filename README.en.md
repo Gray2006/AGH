@@ -4,7 +4,7 @@
 
 **Agent Gestalt Hierarchy** — an M0 vertical slice of a multi-agent "gestalt reconstruction" framework. A parent issues a skeleton and a contract; children reconstruct the whole rather than reassembling parts; every submission is signed and provenance-checked. Gate, arena, arbitration, governance, budget ledger and a hash-chained log form one runnable, testable, replayable pipeline.
 
-> Status: M0 (v1.8.0). Children are **rule-based reconstructors**, not LLMs. Every number below is reproducible locally.
+> Status: M0 (v1.9.0). Children are **rule-based reconstructors**, not LLMs. Every number below is reproducible locally.
 
 ```
 Parent M0
@@ -106,6 +106,9 @@ Expected output (excerpt):
 | `agh/supervisor.py` | Independent supervisor process: the only role allowed to switch versions |
 | `agh/verifier.py` | Independent verifiers: structural evidence, coverage, LLM judge |
 | `agh/calibration.py` | Rater calibration: agreement, Cohen's kappa, ECE |
+| `agh/costs.py` | Real token usage converted into budget (configurable prices) |
+| `agh/bus_nats.py` | NATS JetStream adapter (dedup header, expected sequence, at-least-once) |
+| `agh/sqlite_log.py` | SQLite event log (same semantics as JSONL, built for long runs) |
 | `agh/providers.py` | OpenAI-compatible model adapter (env key, JSON mode, retries) |
 | `agh/pipeline.py` | M0 orchestration, reducer, demo frozen layer |
 
@@ -285,6 +288,12 @@ agh evolve --mode meta --rounds 8
 Eight rounds: difficulty rose from 1 to 4, the curve dipped and recovered on each harder level, and parameters settled at `update=0, coverage≈0.41, vertical≈0.37`.
 
 With annealed step sizes (0.1 early, 0.02 late), up to two weight changes per mutation and weight normalization, six rounds lift the mean from 0.54253 to 0.67324, converging to `confidence=0.05, structural=0.172, update=0, vertical=0.356, coverage=0.422`, `dissent_tau=0.18`.
+
+## Billing and storage
+
+- `costs.usage_to_budget(usage, model)`: converts prompt/completion tokens into USD and compute units via `Price`, ready for `Ledger.reserve/settle`
+- `bus_nats.NatsBus`: maps the `Bus` protocol onto JetStream — `Nats-Msg-Id` dedup, `Nats-Expected-Last-Subject-Sequence` optimistic concurrency, at-least-once delivery, native ack/nak
+- `sqlite_log.SqliteEventLog`: SQLite implementation with the same chain semantics; `verify_against` still needs an external head
 
 ## Red team
 

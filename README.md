@@ -4,7 +4,7 @@
 
 **Agent Gestalt Hierarchy**：多智能体「整体重构」框架的 M0 垂直切片。母体发骨架与契约，子级按整体重构而不是拼零件，回传带签名与出处；写入门、竞技场、仲裁、治理机、预算账本、哈希链日志串成一条可跑、可测、可重放的链路。
 
-> 状态：M0（v1.8.0），子级是**规则重构器**，不接 LLM。所有数字都能在本地复现。
+> 状态：M0（v1.9.0），子级是**规则重构器**，不接 LLM。所有数字都能在本地复现。
 
 ```
 母体 M0
@@ -106,6 +106,9 @@ python -m agh                # 跑 M0，落盘 runs/m0/（等价 python scripts/
 | `agh/supervisor.py` | 独立监督者进程：唯一有权切换版本的角色 |
 | `agh/verifier.py` | 独立验证器：结构证据核对 / 覆盖率 / 模型裁判 |
 | `agh/calibration.py` | 评分器校准：一致率、Cohen's kappa、ECE |
+| `agh/costs.py` | 真实 token 用量折算预算（单价可配） |
+| `agh/bus_nats.py` | NATS JetStream 适配器（去重头、期望序号、at-least-once） |
+| `agh/sqlite_log.py` | SQLite 事件日志（与 JSONL 同语义，支持长跑查询） |
 | `agh/providers.py` | OpenAI 兼容模型适配器（环境变量取密钥，JSON 模式 + 重试） |
 | `agh/pipeline.py` | M0 编排、reducer、演示冻结层 |
 
@@ -286,6 +289,12 @@ agh evolve --mode meta --rounds 8
 实测 8 轮：难度从 1 升到 4，曲线在加难时回落再爬升，参数稳定在 `update=0, coverage≈0.41, vertical≈0.37`；老虎机最后偏向 `weight_up`。
 
 参数层用退火步长（前半程 0.1、后半程 0.02）、一次可动两个权重、并对权重做归一化后，6 轮把均值从 0.54253 推到 0.67324，收敛到 `confidence=0.05, structural=0.172, update=0, vertical=0.356, coverage=0.422`，`dissent_tau=0.18`。
+
+## 计费与存储
+
+- `costs.usage_to_budget(usage, model)`：按 `Price` 把 prompt/completion token 折算成 USD 与算力单位，可直接喂给 `Ledger.reserve/settle`
+- `bus_nats.NatsBus`：把 `Bus` 协议落到 JetStream——`Nats-Msg-Id` 去重、`Nats-Expected-Last-Subject-Sequence` 乐观并发、投递 at-least-once、ack/nak 走原始消息
+- `sqlite_log.SqliteEventLog`：与 `EventLog` 同语义的 SQLite 实现，适合长跑与查询；`verify_against` 同样需要外部链头
 
 ## 红队演练
 
