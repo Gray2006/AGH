@@ -125,8 +125,8 @@ def run_autonomous(
         from .providers import make_client
 
         client = make_client(settings.provider, model=settings.model, api_key_env=settings.api_key_env)
-        feature_pool = sorted({f"{a}-{b}" for b in benchmarks for a, b in b.skeleton.edges})
-        node_pool = sorted({n for b in benchmarks for n in b.skeleton.nodes})
+        feature_pool = sorted({f"{a}-{b}" for bench in benchmarks for a, b in bench.skeleton.edges})
+        node_pool = sorted({n for bench in benchmarks for n in bench.skeleton.nodes})
         base_mutator = LlmStrategyMutator(feature_pool, node_pool, complete=client)
 
         class BudgetedMutator:
