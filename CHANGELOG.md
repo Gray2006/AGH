@@ -2,6 +2,31 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [2.1.2] - 2026-11-24
+
+更强模型的对照：结论是没有实质差别。
+
+### Measured
+
+hard 族（`--seed-drop 0.4 --hide-gold`，2 代 × 1 群体）上三种变异器：
+
+| 变异器 | 曲线 | tokens |
+|---|---|---|
+| 规则 | 恒 0.55289 | 0 |
+| `deepseek-v4.1-flash`（command-code） | 0.58086 → 0.58222 | 20794 |
+| `deepseek-v4-pro-0813`（OpenRouter） | 0.55289 → 0.58751 | 22081 |
+| 同上，更大预算重跑 | 0.57248 → 0.58141 → 0.58367 | 49757 |
+
+- pro 两次 0.58751 / 0.58367，flash 0.58222，差距 ≤0.006，在单次运行噪声内
+- 两次 pro 的起点就不同（0.55289 vs 0.57248），说明首轮变异本身有随机性
+- 结论：换更强模型不改变天花板。当前瓶颈是候选生成的信息量，不是模型智力
+
+### Notes
+
+- command-code 通道实测只放行 `deepseek/deepseek-v4.1-flash`，其余模型名返回
+  `400 unsupported_model`；`/models` 端点 403
+- OpenRouter 通道可用；`anthropic/claude-sonnet-5.5` 返回 403（账号未获授权）
+
 ## [2.1.1] - 2026-11-24
 
 NATS 适配器与真实客户端对齐，集成测试进 CI。
