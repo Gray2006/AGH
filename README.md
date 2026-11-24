@@ -4,7 +4,7 @@
 
 **Agent Gestalt Hierarchy**：多智能体「整体重构」框架的 M0 垂直切片。母体发骨架与契约，子级按整体重构而不是拼零件，回传带签名与出处；写入门、竞技场、仲裁、治理机、预算账本、哈希链日志串成一条可跑、可测、可重放的链路。
 
-> 状态：M0（v1.5.0），子级是**规则重构器**，不接 LLM。所有数字都能在本地复现。
+> 状态：M0（v1.6.0），子级是**规则重构器**，不接 LLM。所有数字都能在本地复现。
 
 ```
 母体 M0
@@ -104,6 +104,8 @@ python -m agh                # 跑 M0，落盘 runs/m0/（等价 python scripts/
 | `agh/meta.py` | 元进化：算子老虎机 + 课程加难（meta 模式） |
 | `agh/selfmod.py` | 自我改写底座：不可变制品 + 门禁 + 原子切换 + 回滚 |
 | `agh/supervisor.py` | 独立监督者进程：唯一有权切换版本的角色 |
+| `agh/verifier.py` | 独立验证器：结构证据核对 / 覆盖率 / 模型裁判 |
+| `agh/calibration.py` | 评分器校准：一致率、Cohen's kappa、ECE |
 | `agh/providers.py` | OpenAI 兼容模型适配器（环境变量取密钥，JSON 模式 + 重试） |
 | `agh/pipeline.py` | M0 编排、reducer、演示冻结层 |
 
@@ -135,6 +137,8 @@ python scripts/run_llm_child.py --provider deepseek
 agh evolve --llm-mutator --provider deepseek --generations 5
 ```
 
+签名后端：`agh run --sign ed25519` 走 Ed25519（密钥由开发密钥确定性派生，可复现），默认仍是 HMAC。
+
 任何 OpenAI 兼容端点都行：`--base-url https://... --model xxx --api-key-env MY_KEY`。客户端带 JSON 模式与重试；解析失败会抛错，不会静默返回半成品。
 
 契约通过率实验（真模型重复重构，统计合格率与分数分布）：
@@ -148,6 +152,10 @@ python scripts/run_llm_experiment.py --provider command-code --samples 8
 提示消融（各 12 次，同一验证器）：不给结构提示 0.79396；给「特征命名约定」0.76546（差 -0.043）——提示让模型把 `vertical_moves:*` 塞进特征，结构距离变大，反而更差。
 
 > 1.4.0 之前的真模型分数（0.49–0.51）包含「候选自报垂直移动」的加分，已被门控修正；旧数据作废。1.5.0 起分数由独立验证器核对，规则子级与被测模型用同一口径。
+
+跨 10 个生成骨架（`scripts/run_llm_bench.py`）：真模型均分 0.62229，规则子级 0.69081，配对差 -0.06851（CI -0.11277–-0.02372）——单骨架上的 -0.014 在跨骨架时放大到 -0.07。
+
+验证器校准（`scripts/run_verifier_calibration.py`，10 个真实候选）：结构验证器与模型裁判一致率 1.0、kappa 1.0、ECE 0.0。注意：裁判提示里写明了同一套规则，这个一致是「规则复述」而非独立佐证，只能说明两者不冲突。
 
 多模型对比暂不可行：command-code 端点只支持 `deepseek/deepseek-v4.1-flash`，探测 `deepseek-v4.1`、`deepseek-v3.2`、`glm-4.7-flash`、`qwen3-max` 均返回 400。
 

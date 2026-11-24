@@ -65,8 +65,23 @@ class System:
     frozen: FrozenLayer
 
 
-def build_system(frozen_root: Path, run_dir: Path, *, budget: BudgetVector | None = None) -> System:
-    keyring = KeyRing.with_secret(DEV_KID, DEV_SECRET)
+def dev_keyring(kind: str = "hmac") -> KeyRing:
+    """开发用密钥环；ed25519 由 DEV_SECRET 确定性派生，保证可复现。"""
+    if kind == "ed25519":
+        import hashlib
+
+        return KeyRing.with_ed25519(DEV_KID, hashlib.sha256(DEV_SECRET).digest())
+    return KeyRing.with_secret(DEV_KID, DEV_SECRET)
+
+
+def build_system(
+    frozen_root: Path,
+    run_dir: Path,
+    *,
+    budget: BudgetVector | None = None,
+    key_kind: str = "hmac",
+) -> System:
+    keyring = dev_keyring(key_kind)
     gateway = ProvenanceGateway(keyring, DEV_KID)
     verifier = EnvelopeVerifier(keyring)
     store = MemoryStore()
@@ -273,9 +288,10 @@ def run_m0(
     include_dissent: bool = True,
     forge_attempt: bool = True,
     human_approved: bool = False,
+    key_kind: str = "hmac",
 ) -> M0Report:
     run_dir.mkdir(parents=True, exist_ok=True)
-    system = build_system(frozen_root, run_dir)
+    system = build_system(frozen_root, run_dir, key_kind=key_kind)
     state = json.loads(json.dumps(INITIAL_STATE))
 
     def emit(type_: str, payload: dict[str, Any]) -> None:

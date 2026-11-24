@@ -4,7 +4,7 @@
 
 **Agent Gestalt Hierarchy** — an M0 vertical slice of a multi-agent "gestalt reconstruction" framework. A parent issues a skeleton and a contract; children reconstruct the whole rather than reassembling parts; every submission is signed and provenance-checked. Gate, arena, arbitration, governance, budget ledger and a hash-chained log form one runnable, testable, replayable pipeline.
 
-> Status: M0 (v1.5.0). Children are **rule-based reconstructors**, not LLMs. Every number below is reproducible locally.
+> Status: M0 (v1.6.0). Children are **rule-based reconstructors**, not LLMs. Every number below is reproducible locally.
 
 ```
 Parent M0
@@ -104,6 +104,8 @@ Expected output (excerpt):
 | `agh/meta.py` | Meta-evolution: operator bandit plus curriculum (meta mode) |
 | `agh/selfmod.py` | Self-modification base: immutable artifacts, gates, atomic switch, rollback |
 | `agh/supervisor.py` | Independent supervisor process: the only role allowed to switch versions |
+| `agh/verifier.py` | Independent verifiers: structural evidence, coverage, LLM judge |
+| `agh/calibration.py` | Rater calibration: agreement, Cohen's kappa, ECE |
 | `agh/providers.py` | OpenAI-compatible model adapter (env key, JSON mode, retries) |
 | `agh/pipeline.py` | M0 orchestration, reducer, demo frozen layer |
 
@@ -135,6 +137,8 @@ python scripts/run_llm_child.py --provider deepseek
 agh evolve --llm-mutator --provider deepseek --generations 5
 ```
 
+Signing backend: `agh run --sign ed25519` uses Ed25519 (deterministically derived from the dev secret, reproducible); HMAC stays the default.
+
 Any OpenAI-compatible endpoint works: `--base-url https://... --model xxx --api-key-env MY_KEY`. The client enables JSON mode and retries; invalid output raises instead of silently returning a half-baked object.
 
 Contract-pass-rate experiment (repeated reconstructions from a real model):
@@ -148,6 +152,10 @@ Measured with deepseek-v4.1-flash (12 samples, `StructuralVerifier` checking str
 Prompt ablation (12 samples each, same verifier): without structural hints 0.79396; with the naming-convention hint 0.76546 (delta -0.043) — the hint pushes `vertical_moves:*` into features, increasing structural distance and hurting the score.
 
 > Real-model scores before 1.4.0 (0.49–0.51) included self-reported vertical-move credit and are void. From 1.5.0 an independent verifier checks the evidence and both the rule child and the model are scored the same way.
+
+Across 10 generated skeletons (`scripts/run_llm_bench.py`): the real model averages 0.62229 vs the rule child at 0.69081, paired delta -0.06851 (CI -0.11277 to -0.02372) — the single-skeleton -0.014 grows to -0.07 across skeletons.
+
+Verifier calibration (`scripts/run_verifier_calibration.py`, 10 real candidates): structural verifier and LLM judge agree 1.0, kappa 1.0, ECE 0.0. Caveat: the judge prompt restates the same rule, so this shows the two do not conflict rather than providing independent validation.
 
 Multi-model comparison is not possible yet: the command-code endpoint only serves `deepseek/deepseek-v4.1-flash`; `deepseek-v4.1`, `deepseek-v3.2`, `glm-4.7-flash` and `qwen3-max` all return 400.
 

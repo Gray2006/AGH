@@ -58,6 +58,7 @@ def cmd_run(args: argparse.Namespace) -> int:
         run_dir=run_dir,
         include_dissent=not args.no_dissent,
         human_approved=not args.no_approve,
+        key_kind=args.sign,
     )
     print(json.dumps(report.as_dict(), ensure_ascii=False, indent=2))
     print(f"\n事件日志: {run_dir / 'events.jsonl'}")
@@ -237,6 +238,7 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--refresh-anchor", action="store_true")
     run.add_argument("--no-dissent", action="store_true")
     run.add_argument("--no-approve", action="store_true")
+    run.add_argument("--sign", choices=["hmac", "ed25519"], default="hmac")
     run.set_defaults(func=cmd_run)
 
     verify = sub.add_parser("verify", help="校验事件日志哈希链")

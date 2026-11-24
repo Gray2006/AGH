@@ -62,3 +62,16 @@ def test_shallow_candidate_rejected_by_hard_filter(tmp_path: Path, frozen_root: 
 def test_initial_state_is_plain_data() -> None:
     assert INITIAL_STATE["winner"] is None
     assert INITIAL_STATE["scores"] == {}
+
+
+def test_run_m0_with_ed25519(frozen_root, tmp_path) -> None:
+    from agh.pipeline import run_m0
+
+    report = run_m0(
+        frozen_root=frozen_root,
+        run_dir=tmp_path / "ed",
+        key_kind="ed25519",
+        human_approved=True,
+    )
+    assert report.winner == "child-faithful"
+    assert report.l1_bit_exact

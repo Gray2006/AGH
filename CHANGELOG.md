@@ -2,6 +2,23 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [1.6.0] - 2026-11-24
+
+三件补齐：Ed25519 主链路、跨基准真模型实验、验证器校准。
+
+### Added
+
+- `agh run --sign ed25519`：主链路可用 Ed25519（开发密钥确定性派生）
+- `scripts/run_llm_bench.py`：真模型在 10 个生成骨架上一一重构，与同骨架规则子级对比，候选落盘
+- `agh/verifier.py`：`LlmJudgeVerifier`（模型裁判）
+- `agh/calibration.py`：一致率、Cohen's kappa、ECE；`scripts/run_verifier_calibration.py`
+- 测试 213 → 219
+
+### Measured
+
+- 跨 10 骨架：真模型 0.62229 vs 规则 0.69081，差 -0.06851（CI -0.11277–-0.02372）
+- 校准 10 个候选：一致率 1.0、kappa 1.0、ECE 0.0（裁判提示复述同一规则，属不冲突而非独立佐证）
+
 ## [1.5.0] - 2026-11-24
 
 独立验证器：自报指标改成可核对的结构证据。

@@ -12,10 +12,13 @@
 
 from __future__ import annotations
 
+import json
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Protocol
 
 from .contracts import GestaltReconstruction, Skeleton
+from .llm import extract_json
 
 
 class Verifier(Protocol):
@@ -64,6 +67,31 @@ class CoverageVerifier:
         if not required:
             return 0.0
         return len(required & set(candidate.parts)) / len(required)
+
+
+@dataclass(frozen=True)
+class LlmJudgeVerifier:
+    """让另一个模型判断「parts + edges 是否支持这些垂直移动」，返回 0–1。"""
+
+    complete: Callable[[str], str]
+    name: str = "llm-judge"
+
+    def score(self, candidate: GestaltReconstruction, skeleton: Skeleton) -> float:
+        vertical = [m.node for m in skeleton.moves if m.vertical]
+        prompt = (
+            "判断候选重构是否用结构证据支持了这些垂直移动。只输出 JSON。\n"
+            f"垂直移动节点：{vertical}\n"
+            f"候选 parts：{list(candidate.parts)}\n"
+            f"候选 edges：{json.dumps(candidate.content.get('edges', []), ensure_ascii=False)}\n"
+            "规则：节点在 parts 里、且有边指向它，才算支持。\n"
+            '输出：{"support": 0 到 1 的数}'
+        )
+        try:
+            data = extract_json(self.complete(prompt))
+            value = float(data.get("support", 0.0))
+        except Exception:
+            return 0.0
+        return min(1.0, max(0.0, value))
 
 
 def make_verifier(kind: str) -> Verifier:
