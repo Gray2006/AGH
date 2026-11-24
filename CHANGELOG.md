@@ -2,6 +2,15 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [1.11.2] - 2026-11-24
+
+分级校准扩到 9 题。
+
+### Measured
+
+- 9 题分级标注：ECE 0.019、MAE 0.019；验证器均值 0.796 vs 人工 0.778
+- 与上一轮 7 题（ECE 0.024）一致，概率校准结论稳定
+
 ## [1.11.1] - 2026-11-24
 
 分级标注：概率校准初步成立。
