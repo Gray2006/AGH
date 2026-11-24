@@ -29,7 +29,9 @@ def test_read_version_detects_mismatch(tmp_path: Path) -> None:
 
 
 def test_anchor_and_verify_release(tmp_path: Path) -> None:
-    result = anchor_release(ROOT, run_dir=tmp_path / "m0", create_tag=False)
+    result = anchor_release(
+            ROOT, run_dir=tmp_path / "m0", create_tag=False, store_path=tmp_path / "anchors.jsonl"
+        )
     assert result.anchor.size > 0
     assert result.local_store.exists()
 
@@ -47,7 +49,9 @@ def test_verify_release_rejects_tampered_log(tmp_path: Path) -> None:
     from agh.eventlog import EventLog
     from agh.pipeline import dev_keyring
 
-    result = anchor_release(ROOT, run_dir=tmp_path / "m0", create_tag=False)
+    result = anchor_release(
+            ROOT, run_dir=tmp_path / "m0", create_tag=False, store_path=tmp_path / "anchors.jsonl"
+        )
     path = result.run_dir / "events.jsonl"
     lines = path.read_text(encoding="utf-8").splitlines()
     lines[1] = lines[1].replace('"type": "', '"type": "x-')

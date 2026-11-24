@@ -82,6 +82,7 @@ def anchor_release(
     key: Key | None = None,
     git_store: GitTagStore | None = None,
     create_tag: bool = True,
+    store_path: Path | None = None,
 ) -> ReleaseResult:
     """跑一次 M0，把事件日志的链头锚定到本地 JSONL 与 git tag。"""
     root = Path(root)
@@ -112,7 +113,7 @@ def anchor_release(
         log, key=signing_key, label=f"m0-v{version}", log_path=f"{rel}/events.jsonl"
     )
 
-    local = AnchorStore(root / "runs" / "anchors" / f"v{version}.jsonl")
+    local = AnchorStore(store_path or root / "runs" / "anchors" / f"v{version}.jsonl")
     local.append(anchor)
 
     tag_name = ""
@@ -132,16 +133,22 @@ def verify_release(
     *,
     version: str | None = None,
     git_store: GitTagStore | None = None,
+    store_path: Path | None = None,
 ) -> dict[str, Any]:
     """按版本找最新锚点，校验事件日志是否仍是锚定时的样子。"""
     root = Path(root)
     version = version or read_version(root)
-    store = AnchorStore(root / "runs" / "anchors" / f"v{version}.jsonl")
+    store = AnchorStore(store_path or root / "runs" / "anchors" / f"v{version}.jsonl")
     anchors = store.read()
     if not anchors:
         raise ReleaseError(f"没有 v{version} 的锚点：{store.path}")
-    anchor = anchors[-1]
     log = EventLog(root / "runs" / "release" / f"v{version}" / "events.jsonl")
+    # 只认指向这份日志的锚点：别的运行（测试、临时目录）写的锚点不能拿来比
+    expected = log.path
+    matching = [a for a in anchors if (root / a.log_path).resolve() == expected.resolve()]
+    if not matching:
+        raise ReleaseError(f"没有指向 {expected} 的锚点")
+    anchor = matching[-1]
     keyring = dev_keyring("ed25519")
     signed = check_log(log, anchor, keyring=keyring)
     return {
