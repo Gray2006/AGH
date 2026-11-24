@@ -4,7 +4,7 @@
 
 **Agent Gestalt Hierarchy** — an M0 vertical slice of a multi-agent "gestalt reconstruction" framework. A parent issues a skeleton and a contract; children reconstruct the whole rather than reassembling parts; every submission is signed and provenance-checked. Gate, arena, arbitration, governance, budget ledger and a hash-chained log form one runnable, testable, replayable pipeline.
 
-> Status: M0 (v1.21.0). The default child is a **rule-based reconstructor**; LLM children and the LLM mutator are pluggable and already measured. Both the M0 pipeline and the LLM mutation path support bit-exact L1 replay.
+> Status: M0 (v1.22.0). The default child is a **rule-based reconstructor**; LLM children and the LLM mutator are pluggable and already measured. Both the M0 pipeline and the LLM mutation path support bit-exact L1 replay.
 
 ```
 Parent M0
@@ -77,7 +77,7 @@ git clone https://github.com/Gray2006/AGH.git
 cd AGH
 pip install -e ".[dev]"
 
-python -m pytest -q          # 265 tests + 1 skipped
+python -m pytest -q          # 266 tests + 1 skipped
 python -m agh                # run M0, writes runs/m0/ (same as python scripts/run_m0.py)
 ```
 
@@ -399,7 +399,7 @@ python -m agh.supervisor --store runs/selfmod --gate "python -m pytest -q" -- py
 | Governance | qualified dissent → T2, stops at `VERIFIED`; `RELEASED` after human approval |
 | Ledger | 0 violations |
 | Replay | L1 `bit_exact=true` |
-| Tests | 265 passed + 1 skipped |
+| Tests | 266 passed + 1 skipped |
 
 ## Design decisions
 
@@ -407,6 +407,8 @@ python -m agh.supervisor --store runs/selfmod --gate "python -m pytest -q" -- py
 2. **No exactly-once in the bus.** It follows real NATS JetStream semantics: at-least-once + publish-window dedup + consumer idempotency. See [NATS verification](docs/verification-nats.md).
 3. **Governance is risk-tiered.** All eight states are kept, but T0 is automatic, T1 auto-verified, T2 requires a human.
 4. **Confidence needs a verifier signal.** With only self-reported confidence, calibrated confidence returns 0.
+6. **Coverage = recall x precision.** Counting only required hits lets a candidate stuff every
+   node into `covered` for free; with precision in the score, over-coverage costs something.
 5. **Vertical consistency counts only `vertical=True` moves**; flat horizontal spread earns nothing.
 
 ## References

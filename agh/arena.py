@@ -246,8 +246,14 @@ def score_candidate(
     if vc_gated:
         # 垂直移动是候选自报的；没有验证器信号就不计分，否则自报即可刷分
         vc = 0.0
-    covered = len({c for c in candidate.coverage.covered if c in set(skeleton.required_items)})
-    coverage = covered / len(skeleton.required_items)
+    # coverage = recall * precision: counting only required hits lets a candidate
+    # stuff every node into covered and take full marks for free.
+    required = set(skeleton.required_items)
+    covered_set = {c for c in candidate.coverage.covered if c in nodes}
+    hit = len(covered_set & required)
+    recall = hit / len(required)
+    precision = hit / len(covered_set) if covered_set else 0.0
+    coverage = recall * precision
 
     w = cfg.weights
     score = (
@@ -262,6 +268,8 @@ def score_candidate(
         notes.append("无独立验证信号，置信分记 0")
     if n_vertical == 0:
         notes.append("无垂直移动，vc 记 0（不是 1）")
+    if covered_set and precision < 1.0:
+        notes.append(f"over-coverage penalty: precision {precision:.2f}")
     return ScoreBreakdown(
         candidate_id=candidate.child_id,
         confidence=confidence,

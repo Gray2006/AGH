@@ -4,7 +4,7 @@
 
 **Agent Gestalt Hierarchy**：多智能体「整体重构」框架的 M0 垂直切片。母体发骨架与契约，子级按整体重构而不是拼零件，回传带签名与出处；写入门、竞技场、仲裁、治理机、预算账本、哈希链日志串成一条可跑、可测、可重放的链路。
 
-> 状态：M0（v1.21.0）。子级默认是**规则重构器**；LLM 子级与 LLM 变异器是可插拔的，已有实测数据。M0 管线与 LLM 变异路径都支持 L1 逐位重放。
+> 状态：M0（v1.22.0）。子级默认是**规则重构器**；LLM 子级与 LLM 变异器是可插拔的，已有实测数据。M0 管线与 LLM 变异路径都支持 L1 逐位重放。
 
 ```
 母体 M0
@@ -73,7 +73,7 @@ git clone https://github.com/Gray2006/AGH.git
 cd AGH
 pip install -e ".[dev]"
 
-python -m pytest -q          # 265 条测试 + 1 skipped
+python -m pytest -q          # 266 条测试 + 1 skipped
 python -m agh                # 跑 M0，落盘 runs/m0/（等价 python scripts/run_m0.py）
 ```
 
@@ -403,7 +403,7 @@ python -m agh.supervisor --store runs/selfmod --gate "python -m pytest -q" -- py
 | 治理 | 有合格异议 → 升 T2 停在 `VERIFIED`；人工批准后 `RELEASED` |
 | 账本 | 违规 0 |
 | 重放 | L1 `bit_exact=true` |
-| 测试 | 265 passed + 1 skipped |
+| 测试 | 266 passed + 1 skipped |
 
 ## 设计取舍
 
@@ -412,6 +412,7 @@ python -m agh.supervisor --store runs/selfmod --gate "python -m pytest -q" -- py
 3. **治理按风险分级**。八状态全保留，但 T0 自动、T1 自动验证、T2 人工。全部强制八状态会把技能固化卡死。
 4. **置信必须有验证器信号**。只有自报 confidence 时校准置信返回 0，避免自报高分。
 5. **垂直一致性只算 `vertical=True` 的移动**，横向平铺不给分。
+6. **覆盖 = 召回 × 精确率**。只数必需项交集会让「把节点全塞进 covered」免费拿满分；精确率进分后，多余覆盖要付代价。
 
 ## 引用核验
 

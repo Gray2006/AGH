@@ -281,3 +281,24 @@ def test_vertical_consistency_accepts_node_names() -> None:
     vc, n = vertical_consistency(sk, cand)
     assert n == 2
     assert vc == pytest.approx(1.0)
+
+
+def test_over_coverage_is_penalized(cfg: ArenaConfig) -> None:
+    """全塞 covered 不再免费：精确率必须进分。"""
+    exact = score_candidate(
+        recon(covered=["P1", "C1"], child_id="exact"),
+        skeleton(),
+        cfg,
+        verifier_score=0.8,
+        parent_signature=PARENT,
+    )
+    stuffed = score_candidate(
+        recon(covered=["M0", "P1", "C1", "C2"], child_id="stuffed"),
+        skeleton(),
+        cfg,
+        verifier_score=0.8,
+        parent_signature=PARENT,
+    )
+    assert exact.coverage == pytest.approx(1.0)
+    assert stuffed.coverage == pytest.approx(0.5)
+    assert stuffed.score < exact.score
