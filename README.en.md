@@ -4,7 +4,7 @@
 
 **Agent Gestalt Hierarchy** — an M0 vertical slice of a multi-agent "gestalt reconstruction" framework. A parent issues a skeleton and a contract; children reconstruct the whole rather than reassembling parts; every submission is signed and provenance-checked. Gate, arena, arbitration, governance, budget ledger and a hash-chained log form one runnable, testable, replayable pipeline.
 
-> Status: M0 (v2.5.0). The default child is a **rule-based reconstructor**; LLM children and the LLM mutator are pluggable and already measured. Both the M0 pipeline and the LLM mutation path support bit-exact L1 replay.
+> Status: M0 (v2.6.0). The default child is a **rule-based reconstructor**; LLM children and the LLM mutator are pluggable and already measured. Both the M0 pipeline and the LLM mutation path support bit-exact L1 replay.
 
 ```
 Parent M0
@@ -77,7 +77,7 @@ git clone https://github.com/Gray2006/AGH.git
 cd AGH
 pip install -e ".[dev]"   # 或 pip install agh-gestalt
 
-python -m pytest -q          # 276 tests + 1 skipped
+python -m pytest -q          # 307 tests + 1 skipped
 python -m agh                # run M0, writes runs/m0/ (same as python scripts/run_m0.py)
 ```
 
@@ -399,7 +399,7 @@ python -m agh.supervisor --store runs/selfmod --gate "python -m pytest -q" -- py
 | Governance | qualified dissent → T2, stops at `VERIFIED`; `RELEASED` after human approval |
 | Ledger | 0 violations |
 | Replay | L1 `bit_exact=true` |
-| Tests | 303 passed + 1 skipped |
+| Tests | 307 passed + 1 skipped |
 
 ## Governance effectiveness
 
@@ -464,6 +464,26 @@ python scripts/run_code_bench.py --provider deepseek --budget 400   # real model
 
 The offline result is negative: evolution and random search tie in a 45-policy space, held-out has 4 tasks, and the
 interval crosses zero. The pipeline works; the method is not shown to work.
+
+## Code arena: governance plus a real signal
+
+The two lines used to be separate: the main path had governance but self-defined scores, the code tasks had a
+real signal but bypassed governance. `agh/code_arena.py` joins them.
+
+Candidates still go through gateway signing, the write gate, the budget ledger and the hash-chained log; only the
+score now comes from running real tests in a subprocess.
+
+A deliberate design choice: **arbitration looks only at visible scores** (the realistic case — only public cases
+are visible), while hidden scores are reported for true quality. When `visible - hidden` exceeds 0.25 a warning is
+recorded: it exposes whether the winner is memorizing visible cases.
+
+```bash
+python scripts/run_code_arena.py --task dedupe --simulate
+python scripts/run_code_arena.py --task dedupe --provider deepseek --samples 3
+```
+
+The offline example reliably triggers the warning: visible 1.0, hidden 0.5, gap 0.50. That is exactly what the
+governance layer should make visible — **the winner picked on public cases may not be the genuinely best one**.
 
 ## Design decisions
 

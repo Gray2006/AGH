@@ -4,7 +4,7 @@
 
 **Agent Gestalt Hierarchy**：多智能体「整体重构」框架的 M0 垂直切片。母体发骨架与契约，子级按整体重构而不是拼零件，回传带签名与出处；写入门、竞技场、仲裁、治理机、预算账本、哈希链日志串成一条可跑、可测、可重放的链路。
 
-> 状态：M0（v2.5.0）。子级默认是**规则重构器**；LLM 子级与 LLM 变异器是可插拔的，已有实测数据。M0 管线与 LLM 变异路径都支持 L1 逐位重放。
+> 状态：M0（v2.6.0）。子级默认是**规则重构器**；LLM 子级与 LLM 变异器是可插拔的，已有实测数据。M0 管线与 LLM 变异路径都支持 L1 逐位重放。
 
 ```
 母体 M0
@@ -73,7 +73,7 @@ git clone https://github.com/Gray2006/AGH.git
 cd AGH
 pip install -e ".[dev]"   # 或 pip install agh-gestalt
 
-python -m pytest -q          # 276 条测试 + 1 skipped
+python -m pytest -q          # 307 条测试 + 1 skipped
 python -m agh                # 跑 M0，落盘 runs/m0/（等价 python scripts/run_m0.py）
 ```
 
@@ -403,7 +403,7 @@ python -m agh.supervisor --store runs/selfmod --gate "python -m pytest -q" -- py
 | 治理 | 有合格异议 → 升 T2 停在 `VERIFIED`；人工批准后 `RELEASED` |
 | 账本 | 违规 0 |
 | 重放 | L1 `bit_exact=true` |
-| 测试 | 303 passed + 1 skipped |
+| 测试 | 307 passed + 1 skipped |
 
 ## 治理有效性
 
@@ -456,6 +456,21 @@ python scripts/run_code_bench.py --provider deepseek --budget 400   # 真模型
 ```
 
 离线模拟的结论是负面的：进化与随机搜索在 45 种策略的小空间里打平，held-out 只有 4 题、区间跨零。这说明流水线通了，不说明方法有效。
+
+## 代码竞技场：治理层 + 真实信号
+
+前面两条线是分开的：主链路有治理但信号自定，代码任务有真信号但绕开治理。`agh/code_arena.py` 把它们接起来。
+
+候选仍然要过网关签名、写入门、预算账本、哈希链日志，只是分数来自子进程里真跑测试。
+
+一个刻意的设计：**仲裁只看 visible 分**（模拟真实场景：只有公开用例），hidden 分只用于报告真实质量。两者的差距 `visible - hidden` 超过 0.25 就记一条警告——它暴露「被选中的候选是不是在背可见答案」。
+
+```bash
+python scripts/run_code_arena.py --task dedupe --simulate
+python scripts/run_code_arena.py --task dedupe --provider deepseek --samples 3
+```
+
+离线示例（模拟模型）会稳定触发警告：visible 1.0、hidden 0.5、差距 0.50。这正是治理层该让人看见的东西——**按公开用例选出来的赢家，可能不是真实最好的那个**。
 
 ## 设计取舍
 

@@ -2,6 +2,29 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [2.6.0] - 2026-11-24
+
+代码竞技场：把治理层接到真实测试信号上。
+
+### Added
+
+- `agh/code_arena.py`：`run_code_arena(task, solvers, ...)` —— 候选过网关签名、写入门、
+  预算账本、哈希链日志，分数来自子进程真跑测试
+- 仲裁只看 visible 分（模拟只公开用例的真实场景），hidden 分只用于报告；
+  `visible - hidden > 0.25` 时记 overfit 警告
+- `scripts/run_code_arena.py`：`--simulate` 离线跑，或接真模型
+- 4 条测试：按 visible 选赢家、求解器异常不中断、overfit 警告触发、日志可校验
+
+### Measured
+
+- 离线（模拟模型，2 个子级）：visible 均 1.0，hidden 均 0.5，差距 0.50，警告触发，
+  日志校验通过
+
+### Notes
+
+- 这补上了 AGH 缺的那一环：治理层不再是「给自定规则打分」，而是「给可执行的真信号打分」
+- 已知局限仍是题库难度（三个模型 0.94–1.0）与策略空间（只有采样/选择/提示三个旋钮）
+
 ## [2.5.0] - 2026-11-24
 
 三个模型通道上的代码基准对照，结论是策略空间本身没有区分度。
