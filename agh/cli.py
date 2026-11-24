@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Any
 
 from . import __version__
+from .autonomous import AutonomousConfig, run_autonomous
 from .crypto import KeyRing
 from .eventlog import EventLog
 from .evolution import EvolutionConfig, Strategy, default_benchmarks, evolve
@@ -230,6 +231,28 @@ def cmd_evolve(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_daemon(args: argparse.Namespace) -> int:
+    root = (args.root or repo_root()).resolve()
+    frozen = root / "config" / "frozen"
+    log_path = args.out
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    report = run_autonomous(
+        frozen,
+        AutonomousConfig(
+            rounds=args.rounds,
+            generations=args.generations,
+            population=args.population,
+            benchmarks=args.benchmarks,
+            patience=args.patience,
+            write_back=not args.no_write_back,
+            seed=args.seed,
+        ),
+        log=EventLog(log_path),
+    )
+    print(json.dumps(report.as_dict(), ensure_ascii=False, indent=2))
+    return 0
+
+
 def cmd_report(args: argparse.Namespace) -> int:
     payload = collect(args.runs)
     print(render(payload))
@@ -291,6 +314,18 @@ def build_parser() -> argparse.ArgumentParser:
     evolve_cmd.add_argument("--model", default=None)
     evolve_cmd.add_argument("--api-key-env", default=None)
     evolve_cmd.set_defaults(func=cmd_evolve)
+
+    daemon = sub.add_parser("daemon", help="自主迭代：进化 → 门禁 → 回写冻结层")
+    daemon.add_argument("--root", type=Path, default=None)
+    daemon.add_argument("--rounds", type=int, default=4)
+    daemon.add_argument("--generations", type=int, default=2)
+    daemon.add_argument("--population", type=int, default=2)
+    daemon.add_argument("--benchmarks", type=int, default=6)
+    daemon.add_argument("--patience", type=int, default=2)
+    daemon.add_argument("--seed", type=int, default=0)
+    daemon.add_argument("--no-write-back", action="store_true")
+    daemon.add_argument("--out", type=Path, default=Path("runs") / "daemon" / "events.jsonl")
+    daemon.set_defaults(func=cmd_daemon)
 
     report = sub.add_parser("report", help="汇总 runs/ 下的实验结果")
     report.add_argument("--runs", type=Path, default=Path("runs"))

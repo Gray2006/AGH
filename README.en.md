@@ -4,7 +4,7 @@
 
 **Agent Gestalt Hierarchy** — an M0 vertical slice of a multi-agent "gestalt reconstruction" framework. A parent issues a skeleton and a contract; children reconstruct the whole rather than reassembling parts; every submission is signed and provenance-checked. Gate, arena, arbitration, governance, budget ledger and a hash-chained log form one runnable, testable, replayable pipeline.
 
-> Status: M0 (v1.14.0). Children are **rule-based reconstructors**, not LLMs. Every number below is reproducible locally.
+> Status: M0 (v1.15.0). Children are **rule-based reconstructors**, not LLMs. Every number below is reproducible locally.
 
 ```
 Parent M0
@@ -304,6 +304,18 @@ With annealed step sizes (0.1 early, 0.02 late), up to two weight changes per mu
 - `costs.usage_to_budget(usage, model)`: converts prompt/completion tokens into USD and compute units via `Price`, ready for `Ledger.reserve/settle`
 - `bus_nats.NatsBus`: maps the `Bus` protocol onto JetStream — `Nats-Msg-Id` dedup, `Nats-Expected-Last-Subject-Sequence` optimistic concurrency, at-least-once delivery, native ack/nak
 - `sqlite_log.SqliteEventLog`: SQLite implementation with the same chain semantics; `verify_against` still needs an external head
+
+## Autonomous iteration (zero tokens by default)
+
+```bash
+agh daemon --rounds 4 --benchmarks 6 --patience 2
+```
+
+Each round: generate benchmarks → sharded + parameter evolution → calibration gate → write back to the frozen layer and rebuild the anchor; if calibration fails, the backup is restored and the write-back rolls back. Stops after `patience` rounds without improvement.
+
+- Rule-based mutations and local scoring only by default: **0 tokens**; the LLM mutator must be enabled explicitly
+- `--no-write-back` iterates without touching disk
+- Write-back only touches `arena.weights` and `dissent_tau`
 
 ## Red team
 

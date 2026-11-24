@@ -4,7 +4,7 @@
 
 **Agent Gestalt Hierarchy**：多智能体「整体重构」框架的 M0 垂直切片。母体发骨架与契约，子级按整体重构而不是拼零件，回传带签名与出处；写入门、竞技场、仲裁、治理机、预算账本、哈希链日志串成一条可跑、可测、可重放的链路。
 
-> 状态：M0（v1.14.0），子级是**规则重构器**，不接 LLM。所有数字都能在本地复现。
+> 状态：M0（v1.15.0），子级是**规则重构器**，不接 LLM。所有数字都能在本地复现。
 
 ```
 母体 M0
@@ -305,6 +305,18 @@ agh evolve --mode meta --rounds 8
 - `costs.usage_to_budget(usage, model)`：按 `Price` 把 prompt/completion token 折算成 USD 与算力单位，可直接喂给 `Ledger.reserve/settle`
 - `bus_nats.NatsBus`：把 `Bus` 协议落到 JetStream——`Nats-Msg-Id` 去重、`Nats-Expected-Last-Subject-Sequence` 乐观并发、投递 at-least-once、ack/nak 走原始消息
 - `sqlite_log.SqliteEventLog`：与 `EventLog` 同语义的 SQLite 实现，适合长跑与查询；`verify_against` 同样需要外部链头
+
+## 自主迭代（默认零 token）
+
+```bash
+agh daemon --rounds 4 --benchmarks 6 --patience 2
+```
+
+每轮：生成基准 → 分片进化 + 参数进化 → 门禁（校准回归）→ 回写冻结层并重建锚点；校准不达标自动恢复备份并回滚。连续 `patience` 轮无改进即停。
+
+- 默认只用规则变异器与本地打分，**0 token**；LLM 变异器需显式开启
+- `--no-write-back` 只迭代不落盘，适合观察
+- 回写只碰 `arena.weights` 与 `dissent_tau`，不碰代码
 
 ## 红队演练
 

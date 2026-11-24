@@ -2,6 +2,16 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [1.15.0] - 2026-11-24
+
+自主迭代闭环。
+
+### Added
+
+- `agh/autonomous.py` + `agh daemon`：多轮进化 → 校准门禁 → 回写冻结层 → 失败回滚；plateau 自动停
+- 默认零 token（规则变异 + 本地打分）；`--no-write-back` 只观察不落盘
+- 测试 238 → 241
+
 ## [1.14.0] - 2026-11-24
 
 工程化收尾：类型检查、文档站、构建产物。

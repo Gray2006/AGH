@@ -2,11 +2,11 @@
   "schema_version": "agh-3.1",
   "arena": {
     "weights": {
-      "confidence": 0.05,
-      "structural": 0.172,
+      "confidence": 0.0476,
+      "structural": 0.1638,
       "update": 0.0,
-      "vertical": 0.356,
-      "coverage": 0.422
+      "vertical": 0.339,
+      "coverage": 0.4496
     },
     "dissent_tau": 0.18,
     "dissent_score_floor": 0.05,
