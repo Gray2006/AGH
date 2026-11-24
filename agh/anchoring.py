@@ -183,6 +183,69 @@ class AnchorStore:
         return check_log(log, anchor, keyring=keyring)
 
 
+
+class GitTagStore:
+    """把锚点写成 git tag：远程仓库就是外部存储。
+
+    本地文件可以被删、被改；推送过的 tag 想无声改写，得先改远程仓库。
+    这不是第三方时间戳，但比「同一个目录里的另一个文件」离「外部」更近一步。
+    """
+
+    def __init__(self, repo: str | Path, prefix: str = "agh-anchor") -> None:
+        self.repo = Path(repo)
+        self.prefix = prefix
+
+    def _run(self, *args: str) -> str:
+        import subprocess
+
+        proc = subprocess.run(
+            ["git", "-C", str(self.repo), *args],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        return proc.stdout
+
+    def append(self, anchor: Anchor) -> str:
+        name = f"{self.prefix}/{digest_of(anchor)[:16]}"
+        message = json.dumps(anchor.as_dict(), ensure_ascii=False, sort_keys=True)
+        self._run("tag", "-a", name, "-m", message, "--cleanup=verbatim")
+        return name
+
+    def read(self) -> list[Anchor]:
+        out = self._run(
+            "for-each-ref",
+            "--format=%(contents:subject)%00%(contents:body)",
+            f"refs/tags/{self.prefix}/*",
+        )
+        anchors: list[Anchor] = []
+        for line in out.splitlines():
+            if not line.strip():
+                continue
+            payload = line.replace("\x00", "\n").strip()
+            try:
+                data = json.loads(payload)
+            except json.JSONDecodeError:
+                continue
+            anchors.append(
+                Anchor(
+                    head=data["head"],
+                    size=int(data["size"]),
+                    log_path=data.get("log_path", ""),
+                    label=data.get("label", ""),
+                    created_at=data.get("created_at", ""),
+                    signer=data.get("signer", ""),
+                    signature=data.get("signature", ""),
+                    version=int(data.get("version", ANCHOR_VERSION)),
+                )
+            )
+        return anchors
+
+    def latest(self, log_path: str | None = None) -> Anchor | None:
+        target = _resolved(log_path)
+        candidates = [a for a in self.read() if log_path is None or _resolved(a.log_path) == target]
+        return candidates[-1] if candidates else None
+
 def digest_of(anchor: Anchor) -> str:
     """锚点自身的摘要，方便把它写进别处（issue tracker、另一份日志）。"""
     return sha256_hex(anchor.as_dict())
@@ -192,6 +255,7 @@ __all__ = [
     "ANCHOR_VERSION",
     "Anchor",
     "AnchorStore",
+    "GitTagStore",
     "anchor_log",
     "check_log",
     "digest_of",

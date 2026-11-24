@@ -261,6 +261,7 @@ def cmd_daemon(args: argparse.Namespace) -> int:
             seed_degrade=args.seed_drop,
             hide_gold=args.hide_gold,
             replay_mutations=args.replay_mutations,
+            failures=args.failures,
         ),
         log=EventLog(log_path),
     )
@@ -361,6 +362,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="信息降质：变异器只看得到降质后保留的边，缺的边得靠推断（默认给全集）",
     )
     daemon.add_argument(
+        "--failures",
+        default=None,
+        help="real failure fixtures: evolve from a model's wrong reconstruction back toward the seed",
+    )
+    daemon.add_argument(
         "--replay-mutations",
         default=None,
         help="L1 重放：从事件日志读 llm.mutation 记录，不调用模型，逐位复现进化轨迹",
@@ -375,7 +381,12 @@ def build_parser() -> argparse.ArgumentParser:
 
     anchor = sub.add_parser("anchor", help="事件日志外部锚定：写链头 / 校验是否被替换")
     anchor.add_argument("--events", required=True)
-    anchor.add_argument("--store", required=True)
+    anchor.add_argument("--store", default=None)
+    anchor.add_argument(
+        "--store-git",
+        default=None,
+        help="use git tags as the anchor store (the remote becomes the external location)",
+    )
     anchor.add_argument("--label", default="")
     anchor.add_argument("--sign", choices=["none", "ed25519"], default="ed25519")
     anchor.add_argument("--verify", action="store_true")
@@ -388,7 +399,14 @@ def build_parser() -> argparse.ArgumentParser:
 
 def cmd_anchor(args: argparse.Namespace) -> int:
     log = EventLog(Path(args.events))
-    store = AnchorStore(args.store)
+    if args.store_git:
+        from .anchoring import GitTagStore
+
+        store = GitTagStore(args.store_git)  # type: ignore[assignment]
+    elif args.store:
+        store = AnchorStore(args.store)
+    else:
+        raise SystemExit("需要 --store 或 --store-git")
     if args.verify:
         keyring = dev_keyring("ed25519") if args.sign == "ed25519" else None
         anchored = store.check(log, keyring=keyring)

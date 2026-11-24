@@ -1,4 +1,4 @@
-# AGH 状态交接（v1.22.0，2026-11-24）
+# AGH 状态交接（v2.0.0，2026-11-24）
 
 > 新会话先读这个文件，再读 `README.md` 的「版本与兼容」与 `memory/agh.md`。
 
@@ -8,7 +8,7 @@
 
 ## 当前版本
 
-- v1.22.0，`266 passed + 1 skipped`（NATS 需服务），ruff 干净，mypy 38 文件零错误
+- v2.0.0，`271 passed + 1 skipped`（NATS 需服务），ruff 干净，mypy 38 文件零错误
 - 仓库 <https://github.com/Gray2006/AGH>，CI 双版本绿
 - 依赖：pydantic v2、numpy、jsonschema、cryptography；Python 3.12+
 
@@ -64,6 +64,8 @@ python scripts/score_labels.py --labels ... --candidates ...
 | 跨 seed 配对（3 seed × 6 基准 = 18 对） | LLM − 规则 +0.0950，95% CI [0.0496, 0.1402] | 高（17720 tokens） |
 | LLM 进化 L1 重放 | 曲线 `[0.66079, 0.66168]` 逐位一致，0 token | 高 |
 | 锚定篡改检出 | 改一条 payload → `LogTampered: 数据被改动于 seq=6`；未篡改 → `signature_verified: true` | 高 |
+| 真实失败样本（8 条） | 种子均值 0.37887 → 规则/LLM 均 0.42151 后停滞；LLM 20107 tokens | 中高（各 1 次） |
+| git tag 锚点 | 写 tag 后读回 head/size/label 一致 | 高（单测） |
 | daemon 的「改进」主要来自换权重 | 同批种子换权重 0.65792 → 0.75488 | 高（1.17.0） |
 
 校准已固化进 CI：`tests/fixtures/calibration.json` + `tests/test_calibration_regression.py`（ECE ≤ 0.05、kappa ≥ 0.9）。
@@ -86,9 +88,9 @@ python scripts/score_labels.py --labels ... --candidates ...
 
 1. 回写仍暂缓：参数权重在参照打分下不动，写回只会写回同值并重建锚点；要回写就得先让权重本身有梯度（比如把权重放进带真实验证信号的搜索）
 2. 把 AnchorStore 接到真正的第三方时间戳/异地存储；本地签名锚点只解决「没有密钥的人改不了」
-3. 接入真实失败样本作为任务族，替代人工降质；`--hide-gold` 只是第一层
+4. 真实失败样本已接入，但规则与 LLM 都在 0.42151 停滞：下一步要换更强的变异器或换任务难度
 4. 回写路径要么接真实验证信号，要么在 README 里标成未验证（已标）
-5. 新口径下 LLM 只剩 +0.07 且不增长，下一步要么加真任务难度，要么承认当前任务族已到顶
+5. 新口径下 LLM 只剩 +0.07 且不增长；真实失败样本上两者同分且停滞——当前变异器已到顶
 3. PyPI 发布（需 token，先查 `AGH` 名字是否被占）
 4. NATS 联调（`docker compose up -d nats` + `NATS_URL=... pytest tests/test_nats_integration.py`）
 5. 多模型对比（需别的 key）

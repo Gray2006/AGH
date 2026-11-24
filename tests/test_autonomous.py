@@ -42,7 +42,9 @@ def test_write_back_applies_changed_params(frozen_copy: Path, monkeypatch) -> No
             weights={"confidence": 0.1, "structural": 0.1, "update": 0.1, "vertical": 0.35, "coverage": 0.35},
             dissent_tau=0.25,
         )
-        return SimpleNamespace(objective=0.6, best_params=params, carry={})
+        return SimpleNamespace(
+            objective=0.6, best_params=params, carry={}, sharded=SimpleNamespace(mean_fitness=0.55)
+        )
 
     monkeypatch.setattr(mod, "combined_evolve", fake_combined)
     report = run_autonomous(

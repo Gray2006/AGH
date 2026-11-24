@@ -51,6 +51,7 @@ class AutonomousConfig:
     seed_degrade: float = 0.0
     hide_gold: bool = False
     replay_mutations: str | None = None
+    failures: str | None = None
 
 
 @dataclass
@@ -58,6 +59,7 @@ class AutonomousReport:
     rounds_run: int
     best_fitness: float
     curve: list[float]
+    strategy_curve: list[float]
     written_back: bool
     rolled_back: bool
     params: dict[str, Any]
@@ -70,6 +72,7 @@ class AutonomousReport:
             "rounds_run": self.rounds_run,
             "best_fitness": round(self.best_fitness, 5),
             "curve": [round(x, 5) for x in self.curve],
+            "strategy_curve": [round(x, 5) for x in self.strategy_curve],
             "written_back": self.written_back,
             "rolled_back": self.rolled_back,
             "params": self.params,
@@ -129,7 +132,16 @@ def run_autonomous(
     settings = config or AutonomousConfig()
     frozen_root = Path(frozen_root)
     notes: list[str] = []
-    benchmarks = generate_benchmarks(settings.benchmarks, seed=settings.bench_seed)
+    if settings.failures:
+        from .failures import load_failures
+
+        cases = load_failures(settings.failures)
+        benchmarks = [case.to_benchmark() for case in cases]
+        initial_carry = {case.skeleton.skeleton_id: case.seed for case in cases}
+        notes.append(f"真实失败样本：{len(cases)} 条")
+    else:
+        benchmarks = generate_benchmarks(settings.benchmarks, seed=settings.bench_seed)
+        initial_carry = {}
 
     tokens_used = 0
     mutator_factory = None
@@ -181,6 +193,7 @@ def run_autonomous(
 
     best = -1.0
     curve: list[float] = []
+    strategy_curve: list[float] = []
     stale = 0
     written = False
     rolled = False
@@ -190,7 +203,7 @@ def run_autonomous(
     # 曲线必然是一条水平线，观察模式就永远看不到「持续改进」。
     frozen_cfg = ArenaConfig.from_frozen(frozen_root)
     carried = ParamGenome.from_config(frozen_cfg)
-    elite: dict[str, Any] = {}
+    elite: dict[str, Any] = dict(initial_carry)
 
     for round_index in range(settings.rounds):
         rounds_run += 1
@@ -212,6 +225,7 @@ def run_autonomous(
         carried = report.best_params
         elite = dict(getattr(report, "carry", {}) or {})
         curve.append(fitness)
+        strategy_curve.append(report.sharded.mean_fitness)
         params = report.best_params.as_dict()
         if log is not None:
             log.append(
@@ -253,6 +267,7 @@ def run_autonomous(
         rounds_run=rounds_run,
         best_fitness=best if best >= 0 else (curve[-1] if curve else 0.0),
         curve=curve,
+        strategy_curve=strategy_curve,
         written_back=written,
         rolled_back=rolled,
         params=params,

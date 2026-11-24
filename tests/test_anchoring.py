@@ -83,3 +83,33 @@ def test_anchor_store_latest_and_check(tmp_path: Path) -> None:
     assert store.latest(str(log.path)).label == "v2"  # type: ignore[union-attr]
     assert store.check(log) is False
     assert len(digest_of(store.read()[0])) == 64
+
+
+def test_git_tag_store(tmp_path: Path) -> None:
+    import shutil
+    import subprocess
+
+    if shutil.which("git") is None:
+        pytest.skip("git not available")
+    from agh.anchoring import GitTagStore
+
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    for args in (
+        ("git", "init", "-q"),
+        ("git", "config", "user.email", "t@t"),
+        ("git", "config", "user.name", "t"),
+    ):
+        subprocess.run(args, cwd=repo, check=True)
+    (repo / "f.txt").write_text("x", encoding="utf-8")
+    subprocess.run(["git", "add", "."], cwd=repo, check=True)
+    subprocess.run(["git", "commit", "-qm", "init"], cwd=repo, check=True)
+
+    log = _log(tmp_path)
+    anchor = anchor_log(log, label="git")
+    store = GitTagStore(repo)
+    name = store.append(anchor)
+    assert "agh-anchor/" in name
+    back = store.latest(str(log.path))
+    assert back is not None
+    assert (back.head, back.size, back.label) == (anchor.head, anchor.size, "git")

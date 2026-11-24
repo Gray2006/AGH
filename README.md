@@ -4,7 +4,7 @@
 
 **Agent Gestalt Hierarchy**：多智能体「整体重构」框架的 M0 垂直切片。母体发骨架与契约，子级按整体重构而不是拼零件，回传带签名与出处；写入门、竞技场、仲裁、治理机、预算账本、哈希链日志串成一条可跑、可测、可重放的链路。
 
-> 状态：M0（v1.22.0）。子级默认是**规则重构器**；LLM 子级与 LLM 变异器是可插拔的，已有实测数据。M0 管线与 LLM 变异路径都支持 L1 逐位重放。
+> 状态：M0（v2.0.0）。子级默认是**规则重构器**；LLM 子级与 LLM 变异器是可插拔的，已有实测数据。M0 管线与 LLM 变异路径都支持 L1 逐位重放。
 
 ```
 母体 M0
@@ -73,7 +73,7 @@ git clone https://github.com/Gray2006/AGH.git
 cd AGH
 pip install -e ".[dev]"
 
-python -m pytest -q          # 266 条测试 + 1 skipped
+python -m pytest -q          # 271 条测试 + 1 skipped
 python -m agh                # 跑 M0，落盘 runs/m0/（等价 python scripts/run_m0.py）
 ```
 
@@ -403,7 +403,7 @@ python -m agh.supervisor --store runs/selfmod --gate "python -m pytest -q" -- py
 | 治理 | 有合格异议 → 升 T2 停在 `VERIFIED`；人工批准后 `RELEASED` |
 | 账本 | 违规 0 |
 | 重放 | L1 `bit_exact=true` |
-| 测试 | 266 passed + 1 skipped |
+| 测试 | 271 passed + 1 skipped |
 
 ## 设计取舍
 
@@ -447,9 +447,11 @@ python -m pytest
 提交前请跑 lint 与全量测试；改动冻结配置后用 `python -m agh --refresh-anchor` 重建锚点，并在提交说明里写清理由。详见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 ## 版本与兼容
 
-- **1.x**：公开 API 冻结（`agh.contracts`、`crypto`、`arena`、`experiment`、`evolution*`、`selfmod`、`supervisor`、`sdk`、CLI 子命令与 JSON 报告字段）；破坏性改动走 2.0
-- **1.x.y**：只修 bug 与文档，不改签名、不删字段；新增能力以可选参数/新模块形式加入
-- 0.x 期间接口多次变动，1.0 起以此为准
+- **2.x**：字段与签名兼容走 minor；分数语义变更也走 minor，但必须在 CHANGELOG 标 `Semantics`
+  并在 STATUS/证据表里注明口径；删字段、改签名走 major
+- 1.x 期间字段层面确实冻结了，但分数语义变过三次（信息降质、覆盖口径、策略/参数分开报告）。
+  2.0 把这件事写进规则，而不是假装没发生
+- 引用历史数字时保留原口径标签；不重算旧报告，也不把不同口径的数字并列比较
 
 ## 许可
 

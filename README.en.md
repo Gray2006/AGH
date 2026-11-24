@@ -4,7 +4,7 @@
 
 **Agent Gestalt Hierarchy** — an M0 vertical slice of a multi-agent "gestalt reconstruction" framework. A parent issues a skeleton and a contract; children reconstruct the whole rather than reassembling parts; every submission is signed and provenance-checked. Gate, arena, arbitration, governance, budget ledger and a hash-chained log form one runnable, testable, replayable pipeline.
 
-> Status: M0 (v1.22.0). The default child is a **rule-based reconstructor**; LLM children and the LLM mutator are pluggable and already measured. Both the M0 pipeline and the LLM mutation path support bit-exact L1 replay.
+> Status: M0 (v2.0.0). The default child is a **rule-based reconstructor**; LLM children and the LLM mutator are pluggable and already measured. Both the M0 pipeline and the LLM mutation path support bit-exact L1 replay.
 
 ```
 Parent M0
@@ -77,7 +77,7 @@ git clone https://github.com/Gray2006/AGH.git
 cd AGH
 pip install -e ".[dev]"
 
-python -m pytest -q          # 266 tests + 1 skipped
+python -m pytest -q          # 271 tests + 1 skipped
 python -m agh                # run M0, writes runs/m0/ (same as python scripts/run_m0.py)
 ```
 
@@ -399,7 +399,7 @@ python -m agh.supervisor --store runs/selfmod --gate "python -m pytest -q" -- py
 | Governance | qualified dissent → T2, stops at `VERIFIED`; `RELEASED` after human approval |
 | Ledger | 0 violations |
 | Replay | L1 `bit_exact=true` |
-| Tests | 266 passed + 1 skipped |
+| Tests | 271 passed + 1 skipped |
 
 ## Design decisions
 
@@ -450,9 +450,14 @@ python -m pytest
 Run lint and the full suite before committing. After changing frozen config, rebuild the anchor with `python -m agh --refresh-anchor` and state the reason. See [CONTRIBUTING.md](CONTRIBUTING.md).
 ## Versioning and compatibility
 
-- **1.x**: public API is frozen (`agh.contracts`, `crypto`, `arena`, `experiment`, `evolution*`, `selfmod`, `supervisor`, `sdk`, CLI subcommands and JSON report fields); breaking changes go to 2.0
-- **1.x.y**: bug fixes and docs only, no signature changes, no field removals; new capabilities arrive as optional arguments or new modules
-- The 0.x line changed interfaces often; 1.0 is the reference
+- **2.x**: field and signature compatibility goes to a minor bump; score-semantics changes also go to a
+  minor bump but must be tagged `Semantics` in the CHANGELOG and carry a calibration note in STATUS.
+  Removing fields or changing signatures requires a major bump
+- During 1.x fields were frozen, but score semantics changed three times (information degradation,
+  coverage formula, strategy vs parameter reporting). 2.0 writes that into the rules instead of
+  pretending otherwise
+- Historical numbers keep their calibration label; old reports are not recomputed and numbers from
+  different calibrations are never compared side by side
 
 ## License
 

@@ -1,0 +1,643 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "version": 1,
+      "case_id": "sk-gen-0-a0",
+      "skeleton": {
+        "skeleton_id": "sk-gen-0",
+        "nodes": [
+          "N0",
+          "N1",
+          "N2",
+          "N3",
+          "N4"
+        ],
+        "edges": [
+          [
+            "N0",
+            "N1"
+          ],
+          [
+            "N0",
+            "N2"
+          ],
+          [
+            "N1",
+            "N3"
+          ],
+          [
+            "N3",
+            "N4"
+          ]
+        ],
+        "required_items": [
+          "N1",
+          "N4"
+        ],
+        "moves": [
+          {
+            "node": "N1",
+            "vertical": true,
+            "declared_depth": 0.47,
+            "preserved_depth": 0.75
+          },
+          {
+            "node": "N2",
+            "vertical": false,
+            "declared_depth": 0.0,
+            "preserved_depth": 0.0
+          }
+        ],
+        "min_vertical_moves": 1
+      },
+      "seed": {
+        "name": "llm-0",
+        "features": [
+          "N0-N1",
+          "N0-N2",
+          "N1-N3",
+          "N3-N4"
+        ],
+        "parts": [
+          "N0",
+          "N1",
+          "N2",
+          "N3",
+          "N4"
+        ],
+        "covered": [
+          "N0",
+          "N1",
+          "N2",
+          "N3",
+          "N4"
+        ],
+        "confidence": 0.75,
+        "depth": 0.8
+      },
+      "failed_score": 0.45331999999999995,
+      "note": "seed=0.7392 llm=0.4533"
+    },
+    {
+      "version": 1,
+      "case_id": "sk-gen-0-a1",
+      "skeleton": {
+        "skeleton_id": "sk-gen-0",
+        "nodes": [
+          "N0",
+          "N1",
+          "N2",
+          "N3",
+          "N4"
+        ],
+        "edges": [
+          [
+            "N0",
+            "N1"
+          ],
+          [
+            "N0",
+            "N2"
+          ],
+          [
+            "N1",
+            "N3"
+          ],
+          [
+            "N3",
+            "N4"
+          ]
+        ],
+        "required_items": [
+          "N1",
+          "N4"
+        ],
+        "moves": [
+          {
+            "node": "N1",
+            "vertical": true,
+            "declared_depth": 0.47,
+            "preserved_depth": 0.75
+          },
+          {
+            "node": "N2",
+            "vertical": false,
+            "declared_depth": 0.0,
+            "preserved_depth": 0.0
+          }
+        ],
+        "min_vertical_moves": 1
+      },
+      "seed": {
+        "name": "llm-1",
+        "features": [
+          "N0-N1",
+          "N0-N2",
+          "N1-N3",
+          "N3-N4"
+        ],
+        "parts": [
+          "N0",
+          "N1",
+          "N2",
+          "N3",
+          "N4"
+        ],
+        "covered": [
+          "N1",
+          "N3",
+          "N4"
+        ],
+        "confidence": 0.7,
+        "depth": 0.8
+      },
+      "failed_score": 0.5658533333333333,
+      "note": "seed=0.7392 llm=0.5659"
+    },
+    {
+      "version": 1,
+      "case_id": "sk-gen-1-a0",
+      "skeleton": {
+        "skeleton_id": "sk-gen-1",
+        "nodes": [
+          "N0",
+          "N1",
+          "N2",
+          "N3",
+          "N4"
+        ],
+        "edges": [
+          [
+            "N0",
+            "N1"
+          ],
+          [
+            "N1",
+            "N2"
+          ],
+          [
+            "N0",
+            "N3"
+          ],
+          [
+            "N0",
+            "N4"
+          ],
+          [
+            "N2",
+            "N4"
+          ]
+        ],
+        "required_items": [
+          "N2",
+          "N4"
+        ],
+        "moves": [
+          {
+            "node": "N1",
+            "vertical": false,
+            "declared_depth": 0.0,
+            "preserved_depth": 0.0
+          },
+          {
+            "node": "N2",
+            "vertical": false,
+            "declared_depth": 0.0,
+            "preserved_depth": 0.0
+          }
+        ],
+        "min_vertical_moves": 0
+      },
+      "seed": {
+        "name": "llm-0",
+        "features": [
+          "N0-N1",
+          "N0-N3",
+          "N0-N4",
+          "N1-N2",
+          "N2-N4"
+        ],
+        "parts": [
+          "N0",
+          "N1",
+          "N2",
+          "N3",
+          "N4"
+        ],
+        "covered": [
+          "N0",
+          "N1",
+          "N2",
+          "N3",
+          "N4"
+        ],
+        "confidence": 0.8,
+        "depth": 0.8
+      },
+      "failed_score": 0.1773,
+      "note": "seed=0.4276 llm=0.1773"
+    },
+    {
+      "version": 1,
+      "case_id": "sk-gen-1-a1",
+      "skeleton": {
+        "skeleton_id": "sk-gen-1",
+        "nodes": [
+          "N0",
+          "N1",
+          "N2",
+          "N3",
+          "N4"
+        ],
+        "edges": [
+          [
+            "N0",
+            "N1"
+          ],
+          [
+            "N1",
+            "N2"
+          ],
+          [
+            "N0",
+            "N3"
+          ],
+          [
+            "N0",
+            "N4"
+          ],
+          [
+            "N2",
+            "N4"
+          ]
+        ],
+        "required_items": [
+          "N2",
+          "N4"
+        ],
+        "moves": [
+          {
+            "node": "N1",
+            "vertical": false,
+            "declared_depth": 0.0,
+            "preserved_depth": 0.0
+          },
+          {
+            "node": "N2",
+            "vertical": false,
+            "declared_depth": 0.0,
+            "preserved_depth": 0.0
+          }
+        ],
+        "min_vertical_moves": 0
+      },
+      "seed": {
+        "name": "llm-1",
+        "features": [
+          "N0-N1",
+          "N0-N3",
+          "N0-N4",
+          "N1-N2",
+          "N2-N4"
+        ],
+        "parts": [
+          "N0",
+          "N1",
+          "N2",
+          "N3",
+          "N4"
+        ],
+        "covered": [
+          "N0",
+          "N1",
+          "N2",
+          "N3",
+          "N4"
+        ],
+        "confidence": 0.75,
+        "depth": 0.8
+      },
+      "failed_score": 0.1773,
+      "note": "seed=0.4276 llm=0.1773"
+    },
+    {
+      "version": 1,
+      "case_id": "sk-gen-2-a0",
+      "skeleton": {
+        "skeleton_id": "sk-gen-2",
+        "nodes": [
+          "N0",
+          "N1",
+          "N2",
+          "N3",
+          "N4"
+        ],
+        "edges": [
+          [
+            "N0",
+            "N1"
+          ],
+          [
+            "N1",
+            "N2"
+          ],
+          [
+            "N0",
+            "N3"
+          ],
+          [
+            "N0",
+            "N4"
+          ]
+        ],
+        "required_items": [
+          "N1",
+          "N4"
+        ],
+        "moves": [
+          {
+            "node": "N1",
+            "vertical": false,
+            "declared_depth": 0.0,
+            "preserved_depth": 0.0
+          },
+          {
+            "node": "N2",
+            "vertical": false,
+            "declared_depth": 0.0,
+            "preserved_depth": 0.0
+          }
+        ],
+        "min_vertical_moves": 0
+      },
+      "seed": {
+        "name": "llm-0",
+        "features": [
+          "N0-N1",
+          "N0-N3",
+          "N0-N4",
+          "N1-N2"
+        ],
+        "parts": [
+          "N0",
+          "N1",
+          "N2",
+          "N3",
+          "N4"
+        ],
+        "covered": [
+          "N0",
+          "N1",
+          "N2",
+          "N3",
+          "N4"
+        ],
+        "confidence": 0.75,
+        "depth": 0.8
+      },
+      "failed_score": 0.1773,
+      "note": "seed=0.4276 llm=0.1773"
+    },
+    {
+      "version": 1,
+      "case_id": "sk-gen-2-a1",
+      "skeleton": {
+        "skeleton_id": "sk-gen-2",
+        "nodes": [
+          "N0",
+          "N1",
+          "N2",
+          "N3",
+          "N4"
+        ],
+        "edges": [
+          [
+            "N0",
+            "N1"
+          ],
+          [
+            "N1",
+            "N2"
+          ],
+          [
+            "N0",
+            "N3"
+          ],
+          [
+            "N0",
+            "N4"
+          ]
+        ],
+        "required_items": [
+          "N1",
+          "N4"
+        ],
+        "moves": [
+          {
+            "node": "N1",
+            "vertical": false,
+            "declared_depth": 0.0,
+            "preserved_depth": 0.0
+          },
+          {
+            "node": "N2",
+            "vertical": false,
+            "declared_depth": 0.0,
+            "preserved_depth": 0.0
+          }
+        ],
+        "min_vertical_moves": 0
+      },
+      "seed": {
+        "name": "llm-1",
+        "features": [
+          "N0-N1",
+          "N0-N3",
+          "N0-N4",
+          "N1-N2"
+        ],
+        "parts": [
+          "N0",
+          "N1",
+          "N2",
+          "N3",
+          "N4"
+        ],
+        "covered": [
+          "N1",
+          "N2",
+          "N4"
+        ],
+        "confidence": 0.7,
+        "depth": 0.75
+      },
+      "failed_score": 0.28983333333333333,
+      "note": "seed=0.4276 llm=0.2898"
+    },
+    {
+      "version": 1,
+      "case_id": "sk-gen-3-a0",
+      "skeleton": {
+        "skeleton_id": "sk-gen-3",
+        "nodes": [
+          "N0",
+          "N1",
+          "N2",
+          "N3",
+          "N4"
+        ],
+        "edges": [
+          [
+            "N0",
+            "N1"
+          ],
+          [
+            "N0",
+            "N2"
+          ],
+          [
+            "N0",
+            "N3"
+          ],
+          [
+            "N1",
+            "N4"
+          ],
+          [
+            "N3",
+            "N4"
+          ]
+        ],
+        "required_items": [
+          "N3",
+          "N4"
+        ],
+        "moves": [
+          {
+            "node": "N1",
+            "vertical": true,
+            "declared_depth": 0.63,
+            "preserved_depth": 0.72
+          },
+          {
+            "node": "N2",
+            "vertical": true,
+            "declared_depth": 0.79,
+            "preserved_depth": 0.62
+          }
+        ],
+        "min_vertical_moves": 1
+      },
+      "seed": {
+        "name": "llm-0",
+        "features": [
+          "N0-N1",
+          "N0-N2",
+          "N0-N3",
+          "N1-N4",
+          "N3-N4"
+        ],
+        "parts": [
+          "N0",
+          "N1",
+          "N2",
+          "N3",
+          "N4"
+        ],
+        "covered": [
+          "N0",
+          "N1",
+          "N2",
+          "N3",
+          "N4"
+        ],
+        "confidence": 0.8,
+        "depth": 0.8
+      },
+      "failed_score": 0.5387599999999999,
+      "note": "seed=0.7926 llm=0.5388"
+    },
+    {
+      "version": 1,
+      "case_id": "sk-gen-3-a1",
+      "skeleton": {
+        "skeleton_id": "sk-gen-3",
+        "nodes": [
+          "N0",
+          "N1",
+          "N2",
+          "N3",
+          "N4"
+        ],
+        "edges": [
+          [
+            "N0",
+            "N1"
+          ],
+          [
+            "N0",
+            "N2"
+          ],
+          [
+            "N0",
+            "N3"
+          ],
+          [
+            "N1",
+            "N4"
+          ],
+          [
+            "N3",
+            "N4"
+          ]
+        ],
+        "required_items": [
+          "N3",
+          "N4"
+        ],
+        "moves": [
+          {
+            "node": "N1",
+            "vertical": true,
+            "declared_depth": 0.63,
+            "preserved_depth": 0.72
+          },
+          {
+            "node": "N2",
+            "vertical": true,
+            "declared_depth": 0.79,
+            "preserved_depth": 0.62
+          }
+        ],
+        "min_vertical_moves": 1
+      },
+      "seed": {
+        "name": "llm-1",
+        "features": [
+          "N0-N1",
+          "N0-N2",
+          "N0-N3",
+          "N1-N4",
+          "N3-N4"
+        ],
+        "parts": [
+          "N0",
+          "N1",
+          "N2",
+          "N3",
+          "N4"
+        ],
+        "covered": [
+          "N2",
+          "N3",
+          "N4"
+        ],
+        "confidence": 0.7,
+        "depth": 0.8
+      },
+      "failed_score": 0.6512933333333333,
+      "note": "seed=0.7926 llm=0.6513"
+    }
+  ]
+}

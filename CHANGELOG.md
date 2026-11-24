@@ -2,6 +2,42 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [2.0.0] - 2026-11-24
+
+2.0 不是新增功能的分界线，而是承认：1.x 承诺「公开 API 冻结」，字段层面做到了，
+分数语义没有。这一版把语义变更集中声明，并把版本规则改成能容纳研究演进的样子。
+
+### Semantics（字段不变，数字口径变了）
+
+- **覆盖率 = 召回 × 精确率**（1.22）：全塞 `covered` 不再免费。凡引用旧口径
+  `0.57681` 的数字必须标注口径，不能与新数字并列比较
+- **`--hide-gold` 信息降质**（1.19）：变异器只看降质后保留的边；`--seed-drop`
+  同时影响起点与可见池。旧「只降起点」的曲线与现在不可比
+- **LLM 变异进日志**（1.20）：`llm.mutation` 记录会让事件日志变大，换来 LLM 路径
+  可 L1 重放
+- `AutonomousReport` 新增 `strategy_curve`：策略进化与参数搜索分开报告，
+  此前两者的贡献混在一个 `curve` 里
+
+### Added
+
+- 真实失败样本任务族：`agh/failures.py`、`scripts/collect_failures.py`、
+  `agh daemon --failures PATH`；样本以 JSON fixture 提交，CI 不调模型
+- `GitTagStore`：用 git tag 存锚点，远程仓库即外部位置；`agh anchor --store-git REPO`
+- `tests/fixtures/real_failures.json`：8 条真实模型失败重构
+
+### Measured
+
+- 真实失败样本（8 条，种子均值 0.37887）：规则与 LLM 都爬到 0.42151 后停滞；
+  LLM 花 20107 tokens 没有换来更好的结果
+- `GitTagStore`：写 tag 后读回 head/size/label 一致
+- 覆盖口径：精确覆盖 1.0，全塞 0.5，总分确实更低（单测）
+
+### 迁移
+
+- 2.x 规则：字段/签名兼容走 minor；分数语义变更走 minor 但必须在 CHANGELOG 标
+  `Semantics`；删字段或改签名走 major
+- 旧报告与旧数字保留原样，不重算；新数字在 CHANGELOG 里带口径标签
+
 ## [1.22.0] - 2026-11-24
 
 覆盖口径修复：多余覆盖不再免费。
