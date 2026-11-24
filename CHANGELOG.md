@@ -2,6 +2,12 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [1.10.2] - 2026-11-24
+
+### Added
+
+- `docs/STATUS.md`：交接文档，按可信度列出证据、限制与下一步优先级
+
 ## [1.10.1] - 2026-11-24
 
 真实失败样本校准。
