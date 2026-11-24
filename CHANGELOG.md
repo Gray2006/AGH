@@ -2,6 +2,37 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [2.12.0] - 2026-11-25
+
+动机理论落地：设计文档 + 学习进步（LP）奖励。
+
+### Added
+
+- `docs/motivation.md`：SDT / SRL / 目标设定 / 实施意图 / 计算内在动机五个理论到 AGH 机制的映射，
+  标注哪些可测、哪些不该做
+- `code_evolution` 支持 `reward="progress"`：父代选择按「相对上一步的进步」而不是绝对分数
+  （Oudeyer 的学习进步假设）
+- `scripts/run_code_bench.py --reward {absolute,progress}`
+- 测试：progress 模式选进步大的做父代，absolute 模式选分数高的
+
+### Measured
+
+离线模拟模型，budget 300，15 题：
+
+| 奖励 | baseline | evolution | random |
+|---|---|---|---|
+| absolute | 0.5625 | 0.875 | 0.875 |
+| progress | 0.5 | 0.9375 | 1.0 |
+
+progress 模式下随机搜索更好——探索变多、利用变少。这不是 LP 无效的证据，是
+「策略空间太小（45 种）」的重复；要真测 LP，需要存在明显局部最优、且策略空间足够大的任务。
+
+### Notes
+
+- 五个理论里只落地了一个（LP），因为它是唯一能在现有任务族上直接测的
+- 目标分级、if-then 策略、自主选择三项写进了文档，但没实现——它们需要先有合适的任务族，
+  否则会和前面七八个负面结果一样，测不出东西
+
 ## [2.11.2] - 2026-11-25
 
 第三轮自检：渲染层的边界，最严重的一条会让整份日志读不回来。

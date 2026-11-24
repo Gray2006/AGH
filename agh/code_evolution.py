@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import random
 from collections.abc import Callable, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Any
 
 from .codesolve import (
@@ -35,6 +35,9 @@ class PolicyEval:
     calls: int
     lam: float
     call_errors: int = 0
+    # 相对「评估前的最好分数」的增量。Oudeyer 的学习进步假设：内在奖励应是
+    # 误差的下降，而不是绝对水平或新奇度。
+    progress: float = 0.0
 
     @property
     def score(self) -> float:
@@ -105,6 +108,7 @@ def _search(
     seed: int,
     lam: float,
     start: SolverPolicy,
+    reward: str = "absolute",
 ) -> SearchResult:
     rng = random.Random(seed)
     cache: dict[str, PolicyEval] = {}
@@ -123,6 +127,8 @@ def _search(
                 break
             ev = evaluate_policy(candidate, train, complete, lam)
             cache[key] = ev
+            best_before = max((e.fitness for e in archive), default=0.0)
+            ev = replace(ev, progress=ev.fitness - best_before)
             archive.append(ev)
             spent += ev.calls
             history.append((key, ev.fitness))
@@ -133,24 +139,49 @@ def _search(
     return SearchResult(method, best, len(archive), spent, history)
 
 
-def _evolve_propose(archive: list[PolicyEval], rng: random.Random) -> SolverPolicy:
-    # 3 选 1 锦标赛选父代，再单基因变异
+def _pick_parent(archive: list[PolicyEval], rng: random.Random, reward: str) -> PolicyEval:
+    """3 选 1 锦标赛。progress 模式选「进步最大」的，而不是「分数最高」的：
+    分数最高的往往已到局部最优，继续变异只会退化。"""
     pool = rng.sample(archive, min(3, len(archive)))
-    parent = max(pool, key=lambda e: e.fitness).policy
-    return mutate(parent, rng)
+    if reward == "progress":
+        return max(pool, key=lambda e: (e.progress, e.fitness))
+    return max(pool, key=lambda e: e.fitness)
+
+
+def _make_evolve_propose(reward: str):
+    def propose(archive: list[PolicyEval], rng: random.Random) -> SolverPolicy:
+        return mutate(_pick_parent(archive, rng, reward).policy, rng)
+
+    return propose
 
 
 def _random_propose(_archive: list[PolicyEval], rng: random.Random) -> SolverPolicy:
     return random_policy(rng)
 
 
-def evolve_policy(train, complete, call_budget, seed=0, lam=0.01, start=None) -> SearchResult:
-    return _search("evolution", _evolve_propose, train, complete, call_budget, seed, lam, start or SolverPolicy())
+def evolve_policy(
+    train, complete, call_budget, seed=0, lam=0.01, start=None, reward="absolute"
+) -> SearchResult:
+    return _search(
+        "evolution",
+        _make_evolve_propose(reward),
+        train,
+        complete,
+        call_budget,
+        seed,
+        lam,
+        start or SolverPolicy(),
+        reward,
+    )
 
 
-def random_search(train, complete, call_budget, seed=0, lam=0.01) -> SearchResult:
+def random_search(
+    train, complete, call_budget, seed=0, lam=0.01, reward="absolute"
+) -> SearchResult:
     start = random_policy(random.Random(seed))
-    return _search("random", _random_propose, train, complete, call_budget, seed, lam, start)
+    return _search(
+        "random", _random_propose, train, complete, call_budget, seed, lam, start, reward
+    )
 
 
 def split_tasks(tasks: Sequence[CodeTask], held_out: int, seed: int = 0) -> tuple[list[CodeTask], list[CodeTask]]:

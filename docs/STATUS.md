@@ -1,4 +1,4 @@
-# AGH 状态交接（v2.11.2，2026-11-25）
+# AGH 状态交接（v2.12.0，2026-11-25）
 
 > 新会话先读这个文件，再读 `README.md` 的「版本与兼容」与 `memory/agh.md`。
 
@@ -85,6 +85,7 @@ python scripts/score_labels.py --labels ... --candidates ...
 | 接入已有日志（agh import） | 5 条测试：可验证输出、字段映射、坏行跳过 | 高 |
 | 自检（2.11.1） | 修 4 处静默成功：缺文件返回 ok、坏行 KeyError、重复导入追加、参数冲突 | 高 |
 | 自检（2.11.2） | 修 splitlines 切坏日志、feedback note 未清理、围栏未适配 | 高 |
+| 学习进步奖励（LP） | 离线：absolute 0.5625/0.875/0.875 vs progress 0.5/0.9375/1.0，随机更好 | 中（模拟模型） |
 | 锚定篡改检出 | 改一条 payload → `LogTampered: 数据被改动于 seq=6`；未篡改 → `signature_verified: true` | 高 |
 | 真实失败样本（8 条） | 种子均值 0.37887 → 规则/LLM 均 0.42151 后停滞；LLM 20107 tokens | 中高（各 1 次） |
 | git tag 锚点 | 写 tag 后读回 head/size/label 一致 | 高（单测） |

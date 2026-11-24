@@ -51,3 +51,20 @@ def test_call_errors_are_not_scored_as_wrong_answers() -> None:
     outcome = solve_task(TASKS["dedupe"], broken, SolverPolicy(n_samples=3))
     assert outcome.call_errors == 3
     assert outcome.hidden_score == 0.0
+
+
+def test_progress_reward_picks_improving_parent() -> None:
+    """progress 模式选「进步大」的做父代，absolute 模式选「分数高」的。"""
+    import random
+
+    from agh.code_evolution import PolicyEval, _pick_parent
+    from agh.codesolve import SolverPolicy
+
+    high = PolicyEval(SolverPolicy(n_samples=1), (0.9,), 1, 0.0, 0, progress=0.0)
+    rising = PolicyEval(SolverPolicy(n_samples=5), (0.6,), 5, 0.0, 0, progress=0.3)
+    archive = [high, rising]
+
+    picked_abs = _pick_parent(archive, random.Random(0), "absolute")
+    picked_prog = _pick_parent(archive, random.Random(0), "progress")
+    assert picked_abs.policy.n_samples == 1
+    assert picked_prog.policy.n_samples == 5

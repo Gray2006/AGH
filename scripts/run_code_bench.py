@@ -33,6 +33,12 @@ def main() -> int:
     p.add_argument("--api-key-env", default=None)
     p.add_argument("--max-tokens", type=int, default=1024)
     p.add_argument("--budget", type=int, default=400, help="每种方法在 train 上可用的模型调用次数")
+    p.add_argument(
+        "--reward",
+        choices=["absolute", "progress"],
+        default="absolute",
+        help="父代选择依据：绝对分数，还是相对上一步的进步（Oudeyer 学习进步假设）",
+    )
     p.add_argument("--held-out", type=int, default=4)
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--p-correct", type=float, default=0.4, help="仅 --simulate")
@@ -51,8 +57,12 @@ def main() -> int:
 
     train, test = split_tasks(list(TASKS.values()), args.held_out, seed=args.seed)
     results = {
-        "evolution": evolve_policy(train, complete, args.budget, seed=args.seed),
-        "random": random_search(train, complete, args.budget, seed=args.seed),
+        "evolution": evolve_policy(
+            train, complete, args.budget, seed=args.seed, reward=args.reward
+        ),
+        "random": random_search(
+            train, complete, args.budget, seed=args.seed, reward=args.reward
+        ),
     }
     report = held_out_report(results, SolverPolicy(), test, complete)
     report["mode"] = "simulated" if args.simulate else f"real:{args.provider}"
