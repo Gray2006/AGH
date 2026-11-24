@@ -251,6 +251,7 @@ def cmd_daemon(args: argparse.Namespace) -> int:
             model=args.model,
             api_key_env=args.api_key_env,
             daily_token_budget=args.daily_budget,
+            seed_degrade=args.seed_drop,
         ),
         log=EventLog(log_path),
     )
@@ -334,6 +335,12 @@ def build_parser() -> argparse.ArgumentParser:
     daemon.add_argument("--model", default=None)
     daemon.add_argument("--api-key-env", default=None)
     daemon.add_argument("--daily-budget", type=int, default=0, help="token 预算，0 不限")
+    daemon.add_argument(
+        "--seed-drop",
+        type=float,
+        default=0.0,
+        help="把种子策略的边/必需项随机抽掉这个比例（0-0.9），制造可爬的梯度",
+    )
     daemon.add_argument("--out", type=Path, default=Path("runs") / "daemon" / "events.jsonl")
     daemon.set_defaults(func=cmd_daemon)
 

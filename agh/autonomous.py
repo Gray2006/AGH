@@ -48,6 +48,7 @@ class AutonomousConfig:
     model: str | None = None
     api_key_env: str | None = None
     daily_token_budget: int = 0
+    seed_degrade: float = 0.0
 
 
 @dataclass
@@ -155,6 +156,7 @@ def run_autonomous(
     # 曲线必然是一条水平线，观察模式就永远看不到「持续改进」。
     frozen_cfg = ArenaConfig.from_frozen(frozen_root)
     carried = ParamGenome.from_config(frozen_cfg)
+    elite: dict[str, Any] = {}
 
     for round_index in range(settings.rounds):
         rounds_run += 1
@@ -168,9 +170,12 @@ def run_autonomous(
             mutator=active_mutator,
             verifier=StructuralVerifier(),
             reference_cfg=frozen_cfg,
+            seed_degrade=settings.seed_degrade,
+            carry=elite,
         )
         fitness = report.objective if report.objective is not None else report.sharded.mean_fitness
         carried = report.best_params
+        elite = dict(getattr(report, "carry", {}) or {})
         curve.append(fitness)
         params = report.best_params.as_dict()
         if log is not None:

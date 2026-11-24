@@ -103,13 +103,33 @@ def anneal_scale(round_index: int, rounds: int) -> float:
     return 0.1 if round_index < max(1, rounds // 2) else 0.02
 
 
-def seed_for(bench: Benchmark) -> Strategy:
+def seed_for(
+    bench: Benchmark,
+    *,
+    degrade: float = 0.0,
+    rng: random.Random | None = None,
+) -> Strategy:
+    """种子策略。
+
+    degrade > 0 时随机抽掉一部分边特征与必需项：全集种子是适应度上界，
+    搜索没有梯度；降质后进化才有「补回来」的空间。降质必须确定（给定 rng），
+    否则同一参数候选每次评估的种子都不同，比较失去意义。
+    """
     sk = bench.skeleton
+    features = [f"{a}-{b}" for a, b in sk.edges]
+    covered = list(sk.required_items)
+    if degrade > 0 and rng is not None:
+        keep_f = max(1, round(len(features) * (1.0 - degrade)))
+        keep_c = max(1, round(len(covered) * (1.0 - degrade)))
+        rng.shuffle(features)
+        rng.shuffle(covered)
+        features = sorted(features[:keep_f])
+        covered = sorted(covered[:keep_c])
     return Strategy(
         name=f"seed-{sk.skeleton_id}",
-        features=tuple(f"{a}-{b}" for a, b in sk.edges),
+        features=tuple(features),
         parts=tuple(sk.nodes),
-        covered=tuple(sk.required_items),
+        covered=tuple(covered),
         confidence=0.6,
         depth=0.7,
     )
@@ -152,15 +172,30 @@ def sharded_evolve(
     config: EvolutionConfig,
     mutator: Any | None = None,
     verifier: Any | None = None,
+    *,
+    seed_degrade: float = 0.0,
+    carry: dict[str, Strategy] | None = None,
 ) -> ShardedReport:
+    """carry: 上一轮的每基准精英，作为本轮起点。
+
+    跨轮精英延续是「持续改进」的前提：每轮都从同一个降质种子重跑，
+    结果确定，曲线只能是水平线。
+    """
     shards: list[ShardResult] = []
     evaluations = 0
     for bench in benchmarks:
+        carried = carry.get(bench.skeleton.skeleton_id) if carry else None
+        bench_seed = carried or seed_for(
+            bench,
+            degrade=seed_degrade,
+            rng=random.Random(f"{config.seed}:{bench.skeleton.skeleton_id}"),
+        )
         key = None
         if mutator is None and verifier is None:
             key = (
                 bench.skeleton.skeleton_id,
-                tuple(seed_for(bench).features),
+                tuple(bench_seed.features),
+                tuple(bench_seed.covered),
                 tuple(sorted(cfg.weights.items())),
                 cfg.dissent_tau,
                 config.generations,
@@ -179,7 +214,7 @@ def sharded_evolve(
                 )
                 continue
         report = evolve(
-            seed_for(bench),
+            bench_seed,
             [bench],
             cfg,
             EvolutionConfig(
@@ -219,6 +254,7 @@ class CombinedReport:
     deltas: Interval | None
     params_history: list[dict[str, Any]] = field(default_factory=list)
     objective: float | None = None
+    carry: dict[str, Strategy] = field(default_factory=dict)
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -258,6 +294,8 @@ def combined_evolve(
     mutator: Any | None = None,
     verifier: Any | None = None,
     reference_cfg: ArenaConfig | None = None,
+    seed_degrade: float = 0.0,
+    carry: dict[str, Strategy] | None = None,
 ) -> CombinedReport:
     """分片精英 + 参数进化。
 
@@ -283,7 +321,15 @@ def combined_evolve(
         return sum(scores) / len(scores) if scores else 0.0
 
     params = ParamGenome.from_config(cfg)
-    sharded = sharded_evolve(benchmarks, params.config(cfg), config, mutator=mutator, verifier=verifier)
+    sharded = sharded_evolve(
+        benchmarks,
+        params.config(cfg),
+        config,
+        mutator=mutator,
+        verifier=verifier,
+        seed_degrade=seed_degrade,
+        carry=carry,
+    )
     best_mean = objective(sharded)
     curve = [best_mean]
     history: list[dict[str, Any]] = []
@@ -293,7 +339,14 @@ def combined_evolve(
         scale = anneal_scale(_round, rounds)
         for _ in range(params_per_round):
             candidate = mutate_params(params, rng, scale=scale)
-            candidate_sharded = sharded_evolve(benchmarks, candidate.config(cfg), config, verifier=verifier)
+            candidate_sharded = sharded_evolve(
+                benchmarks,
+                candidate.config(cfg),
+                config,
+                verifier=verifier,
+                seed_degrade=seed_degrade,
+                carry=carry,
+            )
             score = objective(candidate_sharded)
             if score > best_mean:
                 params = candidate
@@ -335,6 +388,7 @@ def combined_evolve(
         deltas=deltas,
         params_history=history,
         objective=best_mean,
+        carry={s.skeleton_id: s.strategy for s in sharded.shards},
     )
 
 
