@@ -69,6 +69,9 @@ def import_jsonl(
 
     imported = 0
     skipped = 0
+    # 覆盖而不是追加：重复导入同一份源，不应产生重复条目
+    if dst.exists():
+        dst.unlink()
     audit = AuditSession(dst, label=label)
     with audit:
         for lineno, line in enumerate(src.read_text(encoding="utf-8").splitlines(), 1):

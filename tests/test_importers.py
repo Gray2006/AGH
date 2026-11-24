@@ -73,3 +73,14 @@ def test_import_cli(tmp_path: Path) -> None:
     assert code == 0
     assert out.exists()
     EventLog(out).verify()
+
+
+def test_reimport_overwrites(tmp_path: Path) -> None:
+    """重复导入同一份源不应追加出重复条目。"""
+    src = _src(tmp_path)
+    out = tmp_path / "out.jsonl"
+    import_jsonl(src, out)
+    import_jsonl(src, out)
+    log = EventLog(out)
+    calls = [e for e in log.entries if e.type == "llm.call"]
+    assert len(calls) == 2

@@ -2,6 +2,24 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [2.11.1] - 2026-11-25
+
+第二轮自检：四个「静默成功」类问题。
+
+### Fixed
+
+- **不存在的日志返回 `ok: true`**（最严重）：`audit verify/summary/export-failures`、`ui`、`feedback`、`import`
+  对不存在的文件静默返回成功。审计工具对空输入说「通过」，等于自己撒谎。现在统一报错退出
+- **损坏日志抛 `KeyError: 'seq'`**：坏行/坏 JSON 现在抛 `LogTampered("日志格式损坏（第 N 条）")`，
+  CLI 捕获后打印友好消息并返回 2，不再甩 traceback
+- **重复导入会追加**：`agh import` 两次得到 4 条而不是 2 条。现在默认覆盖目标文件
+- `ui --log` 与 `--from-run` 同时给时行为未定义，现在明确报错
+
+### Tests
+
+- 8 条 CLI 错误路径测试（缺文件、目录当文件、参数冲突、空日志仍合法）
+- 坏行 → `LogTampered`、重复导入不追加
+
 ## [2.11.0] - 2026-11-25
 
 接入已有日志：不改代码，把别处的调用记录搬进可验证格式。

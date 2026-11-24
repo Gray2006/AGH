@@ -98,17 +98,21 @@ class EventLog:
         for line in self.path.read_text(encoding="utf-8").splitlines():
             if not line.strip():
                 continue
-            raw = json.loads(line)
-            out.append(
-                LogEntry(
-                    seq=raw["seq"],
-                    ts=raw["ts"],
-                    type=raw["type"],
-                    payload=raw["payload"],
-                    prev_hash=raw["prev_hash"],
-                    hash=raw["hash"],
+            try:
+                raw = json.loads(line)
+                out.append(
+                    LogEntry(
+                        seq=raw["seq"],
+                        ts=raw["ts"],
+                        type=raw["type"],
+                        payload=raw["payload"],
+                        prev_hash=raw["prev_hash"],
+                        hash=raw["hash"],
+                    )
                 )
-            )
+            except (ValueError, KeyError, TypeError) as exc:
+                # 解析不了的行就是损坏，不能让它以 KeyError 的形式冒到用户面前
+                raise LogTampered(f"日志格式损坏（第 {len(out) + 1} 条）：{exc}") from exc
         return out
 
     def head(self) -> str:

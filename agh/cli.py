@@ -14,6 +14,7 @@ from __future__ import annotations
 import argparse
 import json
 import shutil
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -48,6 +49,15 @@ def _prepare(root: Path, refresh_anchor: bool) -> Path:
         layer.write_anchor(anchor, keyring, DEV_KID)
         print(f"锚点已{'重建' if anchor.exists() else '生成'}: {anchor}")
     return frozen
+
+
+def _require_file(path: str | Path, what: str = "日志") -> Path:
+    target = Path(path)
+    if not target.exists():
+        raise SystemExit(f"找不到{what}：{target}")
+    if not target.is_file():
+        raise SystemExit(f"{what}不是文件：{target}")
+    return target
 
 
 def cmd_run(args: argparse.Namespace) -> int:
@@ -470,6 +480,7 @@ def cmd_anchor(args: argparse.Namespace) -> int:
 def cmd_audit(args: argparse.Namespace) -> int:
     from .audit import AuditSession, export_failures
 
+    _require_file(args.log)
     if args.action == "summary":
         audit = AuditSession.__new__(AuditSession)
         audit.path = Path(args.log)
@@ -491,6 +502,7 @@ def cmd_audit(args: argparse.Namespace) -> int:
 def cmd_feedback(args: argparse.Namespace) -> int:
     from .feedback import build_feedback
 
+    _require_file(args.log)
     text = build_feedback(args.log, with_payload=args.with_payload)
     if args.out:
         out = Path(args.out)
@@ -516,12 +528,15 @@ def cmd_ui(args: argparse.Namespace) -> int:
     from .ui import render_html
 
     log = args.log
+    if args.from_run and args.log:
+        raise SystemExit("--log 与 --from-run 只能给一个")
     if args.from_run or log is None:
         default = Path("agh-quickstart") / "run.jsonl"
         if args.from_run or default.exists():
             log = str(default)
         else:
             raise SystemExit(f"找不到 {default}，先跑一次 agh quickstart，或用 --log 指定日志")
+    _require_file(log)
     out = Path(args.out) if args.out else Path(log).with_suffix(".report.html")
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(render_html(log), encoding="utf-8")
@@ -534,6 +549,7 @@ def cmd_ui(args: argparse.Namespace) -> int:
 def cmd_import(args: argparse.Namespace) -> int:
     from .importers import import_jsonl, parse_map
 
+    _require_file(args.from_jsonl, "源日志")
     out = args.out or str(Path(args.from_jsonl).with_suffix(".agh.jsonl"))
     result = import_jsonl(args.from_jsonl, out, mapping=parse_map(args.map))
     print(json.dumps(result.as_dict(), ensure_ascii=False, indent=2))
@@ -541,11 +557,18 @@ def cmd_import(args: argparse.Namespace) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
+    from .eventlog import LogTampered
+
     parser = build_parser()
     args = parser.parse_args(argv)
     if not getattr(args, "command", None):
         args = parser.parse_args(["run", *(argv or [])])
-    return int(args.func(args))
+    try:
+        return int(args.func(args))
+    except LogTampered as exc:
+        # 校验失败是预期内的结论，不该以 traceback 的形式甩给用户
+        print(f"日志校验失败：{exc}", file=sys.stderr)
+        return 2
 
 
 if __name__ == "__main__":

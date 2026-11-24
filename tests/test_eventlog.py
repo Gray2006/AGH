@@ -81,3 +81,14 @@ def test_l2_statistical_equivalence() -> None:
     assert report["within_tolerance"]
     far = l2_statistical_equivalence(a, [0.1, 0.2], tolerance=0.05)
     assert not far["within_tolerance"]
+
+
+def test_broken_line_raises_logtampered(tmp_path: Path) -> None:
+    import pytest
+
+    from agh.eventlog import EventLog, LogTampered
+
+    path = tmp_path / "broken.jsonl"
+    path.write_text('{"type":"a"}\nnot-json\n', encoding="utf-8")
+    with pytest.raises(LogTampered, match="损坏"):
+        EventLog(path)
