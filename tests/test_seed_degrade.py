@@ -136,3 +136,14 @@ def test_shard_cache_is_bounded() -> None:
         mod._cache_put((i,), (float(i), None))  # type: ignore[arg-type]
     assert len(mod._SHARD_CACHE) <= mod._SHARD_CACHE_MAX
     assert (0,) not in mod._SHARD_CACHE
+
+
+def test_family_hard_is_bigger() -> None:
+    default = generate_benchmarks(1, seed=0)[0]
+    hard = generate_benchmarks(1, seed=0, family="hard")[0]
+    assert len(hard.skeleton.nodes) > len(default.skeleton.nodes)
+
+
+def test_unknown_family_raises() -> None:
+    with pytest.raises(ValueError):
+        generate_benchmarks(1, seed=0, family="nope")

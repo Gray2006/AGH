@@ -1,4 +1,4 @@
-# AGH 状态交接（v2.0.1，2026-11-24）
+# AGH 状态交接（v2.1.0，2026-11-24）
 
 > 新会话先读这个文件，再读 `README.md` 的「版本与兼容」与 `memory/agh.md`。
 
@@ -8,7 +8,7 @@
 
 ## 当前版本
 
-- v2.0.0，`273 passed + 1 skipped`（NATS 需服务），ruff 干净，mypy 38 文件零错误
+- v2.0.0，`276 passed + 1 skipped`（NATS 需服务），ruff 干净，mypy 38 文件零错误
 - 仓库 <https://github.com/Gray2006/AGH>，CI 双版本绿
 - 依赖：pydantic v2、numpy、jsonschema、cryptography；Python 3.12+
 
@@ -63,6 +63,8 @@ python scripts/score_labels.py --labels ... --candidates ...
 | 多余覆盖惩罚 | 精确覆盖 1.0 vs 全塞 0.5，总分确实更低 | 高（单测） |
 | 跨 seed 配对（3 seed × 6 基准 = 18 对） | LLM − 规则 +0.0950，95% CI [0.0496, 0.1402] | 高（17720 tokens） |
 | LLM 进化 L1 重放 | 曲线 `[0.66079, 0.66168]` 逐位一致，0 token | 高 |
+| hard 骨架族（信息降质） | 规则 4 轮恒 0.55289；LLM 0.58086 → 0.58222（20794 tokens） | 高 |
+| 搜索旋钮（tournament 3→6 / elite_only） | 6 基准分数完全不变 | 高（负面结果） |
 | 锚定篡改检出 | 改一条 payload → `LogTampered: 数据被改动于 seq=6`；未篡改 → `signature_verified: true` | 高 |
 | 真实失败样本（8 条） | 种子均值 0.37887 → 规则/LLM 均 0.42151 后停滞；LLM 20107 tokens | 中高（各 1 次） |
 | git tag 锚点 | 写 tag 后读回 head/size/label 一致 | 高（单测） |

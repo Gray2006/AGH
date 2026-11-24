@@ -71,6 +71,14 @@ def make_skeleton(
     )
 
 
+FAMILIES: dict[str, dict[str, float | int]] = {
+    "default": {},
+    "hard": {"min_nodes": 7, "max_nodes": 9, "extra_edges": 4, "required_ratio": 0.6},
+    "wide": {"min_nodes": 8, "max_nodes": 10, "extra_edges": 6, "required_ratio": 0.5},
+    "deep": {"min_nodes": 10, "max_nodes": 12, "extra_edges": 3, "required_ratio": 0.7},
+}
+
+
 def generate_benchmarks(
     count: int = 10,
     *,
@@ -79,7 +87,16 @@ def generate_benchmarks(
     max_nodes: int = 5,
     extra_edges: int = 2,
     required_ratio: float = 0.5,
+    family: str = "default",
 ) -> list[Benchmark]:
+    if family != "default":
+        preset = FAMILIES.get(family)
+        if preset is None:
+            raise ValueError(f"未知骨架族: {family}（可选: {', '.join(FAMILIES)}）")
+        min_nodes = int(preset.get("min_nodes", min_nodes))
+        max_nodes = int(preset.get("max_nodes", max_nodes))
+        extra_edges = int(preset.get("extra_edges", extra_edges))
+        required_ratio = float(preset.get("required_ratio", required_ratio))
     if count <= 0:
         raise ValueError("count 必须为正")
     rng = random.Random(seed)

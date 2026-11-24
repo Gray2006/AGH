@@ -205,10 +205,15 @@ class Archive:
             return None
         return max(self._variants, key=lambda v: (v.fitness, v.novelty))
 
-    def select(self, rng: random.Random, k: int = 3) -> Variant:
-        if not self._variants:
+    def select(
+        self, rng: random.Random, k: int = 3, *, elite_only: bool = False
+    ) -> Variant:
+        pool = [v for v in self._variants if v.accepted] if elite_only else self._variants
+        if not pool:
+            pool = self._variants
+        if not pool:
             raise ValueError("档案为空")
-        sample = rng.sample(self._variants, min(k, len(self._variants)))
+        sample = rng.sample(pool, min(k, len(pool)))
         return max(sample, key=lambda v: (v.fitness + 0.2 * v.novelty, v.fitness))
 
 
@@ -231,6 +236,8 @@ class EvolutionConfig:
     budget_calls: int = 500
     min_delta: float = 0.0
     seed: int = 7
+    tournament: int = 3
+    elite_only: bool = False
     resamples: int = 500
     alpha: float = 0.05
 
@@ -359,7 +366,9 @@ def evolve(
         for generation in range(1, settings.generations + 1):
             generation_best = curve[-1]
             for _ in range(settings.population):
-                parent = archive.select(rng)
+                parent = archive.select(
+                    rng, settings.tournament, elite_only=settings.elite_only
+                )
                 child_strategy = active_mutator.mutate(parent.strategy, rng, f"v{counter}-g{generation}")
                 lease = ledger.reserve(
                     owner=child_strategy.name,

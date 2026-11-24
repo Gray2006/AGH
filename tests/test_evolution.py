@@ -153,3 +153,14 @@ def test_reference_rewards_completing_missing_edge(cfg: ArenaConfig) -> None:
     )
     benches = benchmarks()
     assert evaluate_strategy(full, benches, cfg).fitness > evaluate_strategy(partial, benches, cfg).fitness
+
+
+def test_archive_select_elite_only_skips_rejected() -> None:
+    from agh.evolution import Archive, Variant
+
+    archive = Archive()
+    strategy = Strategy("r", ("a-b",), ("a",), ("a",), 0.5, 0.5)
+    archive.add(Variant("rejected", None, 1, strategy, 0.9, [], accepted=False))
+    archive.add(Variant("accepted", None, 1, strategy, 0.1, [], accepted=True))
+    picked = archive.select(random.Random(0), 3, elite_only=True)
+    assert picked.variant_id == "accepted"

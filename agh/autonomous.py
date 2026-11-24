@@ -52,6 +52,7 @@ class AutonomousConfig:
     hide_gold: bool = False
     replay_mutations: str | None = None
     failures: str | None = None
+    family: str = "default"
 
 
 @dataclass
@@ -143,7 +144,9 @@ def run_autonomous(
             notes.append("失败样本自带种子，--seed-drop 被忽略")
         settings = replace(settings, seed_degrade=0.0)
     else:
-        benchmarks = generate_benchmarks(settings.benchmarks, seed=settings.bench_seed)
+        benchmarks = generate_benchmarks(
+            settings.benchmarks, seed=settings.bench_seed, family=settings.family
+        )
         initial_carry = {}
 
     tokens_used = 0

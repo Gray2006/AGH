@@ -4,7 +4,7 @@
 
 **Agent Gestalt Hierarchy** — an M0 vertical slice of a multi-agent "gestalt reconstruction" framework. A parent issues a skeleton and a contract; children reconstruct the whole rather than reassembling parts; every submission is signed and provenance-checked. Gate, arena, arbitration, governance, budget ledger and a hash-chained log form one runnable, testable, replayable pipeline.
 
-> Status: M0 (v2.0.1). The default child is a **rule-based reconstructor**; LLM children and the LLM mutator are pluggable and already measured. Both the M0 pipeline and the LLM mutation path support bit-exact L1 replay.
+> Status: M0 (v2.1.0). The default child is a **rule-based reconstructor**; LLM children and the LLM mutator are pluggable and already measured. Both the M0 pipeline and the LLM mutation path support bit-exact L1 replay.
 
 ```
 Parent M0
@@ -75,9 +75,9 @@ Python 3.12+.
 ```bash
 git clone https://github.com/Gray2006/AGH.git
 cd AGH
-pip install -e ".[dev]"
+pip install -e ".[dev]"   # 或 pip install agh-gestalt
 
-python -m pytest -q          # 273 tests + 1 skipped
+python -m pytest -q          # 276 tests + 1 skipped
 python -m agh                # run M0, writes runs/m0/ (same as python scripts/run_m0.py)
 ```
 
@@ -399,7 +399,7 @@ python -m agh.supervisor --store runs/selfmod --gate "python -m pytest -q" -- py
 | Governance | qualified dissent → T2, stops at `VERIFIED`; `RELEASED` after human approval |
 | Ledger | 0 violations |
 | Replay | L1 `bit_exact=true` |
-| Tests | 273 passed + 1 skipped |
+| Tests | 276 passed + 1 skipped |
 
 ## Design decisions
 
@@ -442,7 +442,7 @@ See [`docs/verification-references.md`](docs/verification-references.md) and [`d
 ## Contributing
 
 `ash
-pip install -e ".[dev]"
+pip install -e ".[dev]"   # 或 pip install agh-gestalt
 python -m ruff check .
 python -m pytest
 `

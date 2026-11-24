@@ -2,6 +2,30 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [2.1.0] - 2026-11-24
+
+骨架难度、搜索旋钮、打包发布。
+
+### Added
+
+- `--family {default,hard,wide,deep}`：更难的骨架族（更多节点、更密边、更严垂直约束）
+- `EvolutionConfig(tournament=, elite_only=)`：父代选择的锦标赛宽度与「只从已接受变体里选」
+- `scripts/publish.py`：构建 + `twine check`，`--upload` 才真正上传
+- 发行名改为 `agh-gestalt`（PyPI 的 `agh` 已被 Agent Guidance Hub 占用）；import 名与 CLI 仍是 `agh`
+
+### Measured
+
+- hard 族（--seed-drop 0.4 --hide-gold）：规则 4 轮恒 0.55289；LLM 4 轮 0.58086 → 0.58222
+  （20794 tokens），首轮后就平
+- 搜索旋钮对照（hard 族 6 基准）：tournament 3 → 6、elite_only 开启，分数完全不变
+- 结论：规则变异器在信息不足时没有梯度，调父代选择不是瓶颈；LLM 的增益也只有首轮
+
+### Notes
+
+- `agh` / `agh-gestalt` 的 PyPI 上传需要 `TWINE_PASSWORD`，CI 不持有该 token，
+  因此只做到「可构建、可校验」
+- 本地无 docker，NATS 集成测试保持 skipped
+
 ## [2.0.1] - 2026-11-24
 
 两处工程卫生，都是长跑才会暴露的问题。

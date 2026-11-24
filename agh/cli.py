@@ -262,6 +262,7 @@ def cmd_daemon(args: argparse.Namespace) -> int:
             hide_gold=args.hide_gold,
             replay_mutations=args.replay_mutations,
             failures=args.failures,
+            family=args.family,
         ),
         log=EventLog(log_path),
     )
@@ -360,6 +361,12 @@ def build_parser() -> argparse.ArgumentParser:
         "--hide-gold",
         action="store_true",
         help="信息降质：变异器只看得到降质后保留的边，缺的边得靠推断（默认给全集）",
+    )
+    daemon.add_argument(
+        "--family",
+        choices=["default", "hard", "wide", "deep"],
+        default="default",
+        help="skeleton family: bigger/denser graphs with stricter vertical moves",
     )
     daemon.add_argument(
         "--failures",
