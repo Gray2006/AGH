@@ -2,6 +2,21 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [1.18.1] - 2026-11-24
+
+修掉降质模式下单基因组基线的信息优势。
+
+### Fixed
+
+- `combined_evolve` 的单基因组基线在 `--seed-drop > 0` 时仍拿全集特征池，而分片只拿到降质子集，
+  `per_benchmark_delta` 比的不是「分片 vs 单基因组」而是「信息少 vs 信息多」
+- 新增 `single_seed_features(benchmarks, degrade=, seed=)`：降质时基线取各分片降质种子的并集，保持同等信息预算
+
+### Measured
+
+- 6 基准、`seed_degrade=0.4`、2 代 × 1 个体：分片 0.42113 vs 单基因组 0.61556（delta -0.19444）
+- 无降质同设置：分片 0.66079 vs 单基因组 0.60059（与 1.16 的 +0.0689 一致）
+
 ## [1.18.0] - 2026-11-24
 
 让自主迭代在「更难的任务族」上有真实梯度。

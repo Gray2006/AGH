@@ -1,4 +1,4 @@
-# AGH 状态交接（v1.18.0，2026-11-24）
+# AGH 状态交接（v1.18.1，2026-11-24）
 
 > 新会话先读这个文件，再读 `README.md` 的「版本与兼容」与 `memory/agh.md`。
 
@@ -8,7 +8,7 @@
 
 ## 当前版本
 
-- v1.18.0，`251 passed + 1 skipped`（NATS 需服务），ruff 干净，mypy 38 文件零错误
+- v1.18.1，`252 passed + 1 skipped`（NATS 需服务），ruff 干净，mypy 38 文件零错误
 - 仓库 <https://github.com/Gray2006/AGH>，CI 双版本绿
 - 依赖：pydantic v2、numpy、jsonschema、cryptography；Python 3.12+
 
@@ -52,6 +52,7 @@ python scripts/score_labels.py --labels ... --candidates ...
 | 降质种子（--seed-drop 0.4）上 LLM 变异 | 5 轮 0.47869 → 0.56534 单调上升，30271 tokens | 中高（1 次） |
 | 同设置规则变异对照 | 4 轮恒 0.42113 | 高 |
 | 单基准对照（6 基准 6556 tokens） | LLM 0.5696 vs 规则 0.4211 vs 种子 0.4082 | 中 |
+| 降质下分片 vs 单基因组（公平基线） | 0.42113 vs 0.61556，delta -0.19444 | 高（1 次） |
 | daemon 的「改进」主要来自换权重 | 同批种子换权重 0.65792 → 0.75488 | 高（1.17.0） |
 
 校准已固化进 CI：`tests/fixtures/calibration.json` + `tests/test_calibration_regression.py`（ECE ≤ 0.05、kappa ≥ 0.9）。
@@ -87,3 +88,4 @@ python scripts/score_labels.py --labels ... --candidates ...
 - `git tag -d` 被安全网拦；改 tag 用 `--force-with-lease=<远程 tag 对象 sha>`
 - 跑 daemon 冒烟会回写仓库冻结层，务必带 `--no-write-back`
 - 测试里用 `frozen_src` 跑回写会改仓库冻结层并重建锚点；回写测试必须用 `frozen_copy`
+- 任何「对照组」都要核对信息预算：基线拿全集、实验组拿子集，比较的就是信息不是方法

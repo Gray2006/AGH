@@ -8,9 +8,14 @@ from pathlib import Path
 import pytest
 
 from agh.arena import ArenaConfig
-from agh.benchmarks import generate_benchmarks
+from agh.benchmarks import feature_pool, generate_benchmarks
 from agh.evolution import EvolutionConfig
-from agh.evolution_sharded import combined_evolve, seed_for, sharded_evolve
+from agh.evolution_sharded import (
+    combined_evolve,
+    seed_for,
+    sharded_evolve,
+    single_seed_features,
+)
 from agh.verifier import StructuralVerifier
 
 
@@ -69,3 +74,10 @@ def test_combined_evolve_reports_carry(cfg: ArenaConfig) -> None:
         seed_degrade=0.4,
     )
     assert set(report.carry) == {b.skeleton.skeleton_id for b in benches}
+
+
+def test_single_baseline_uses_degraded_budget() -> None:
+    benches = generate_benchmarks(3, seed=0)
+    full = set(feature_pool(benches))
+    reduced = set(single_seed_features(benches, degrade=0.4, seed=0))
+    assert reduced and reduced < full

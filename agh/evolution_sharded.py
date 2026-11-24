@@ -284,6 +284,26 @@ class CombinedReport:
         return target
 
 
+def single_seed_features(
+    benchmarks: list[Benchmark],
+    *,
+    degrade: float = 0.0,
+    seed: int = 0,
+) -> list[str]:
+    """单基因组基线的特征集：降质时取各分片降质种子的并集，保持同等信息预算。"""
+    if degrade <= 0:
+        return feature_pool(benchmarks)
+    feats: set[str] = set()
+    for bench in benchmarks:
+        degraded = seed_for(
+            bench,
+            degrade=degrade,
+            rng=random.Random(f"{seed}:{bench.skeleton.skeleton_id}"),
+        )
+        feats.update(degraded.features)
+    return sorted(feats)
+
+
 def combined_evolve(
     benchmarks: list[Benchmark],
     cfg: ArenaConfig,
@@ -358,8 +378,10 @@ def combined_evolve(
             history.append({"round": _round, "accepted": False, "note": "本轮无改进"})
         curve.append(best_mean)
 
-    # 单基因组基线：同一套评估预算，一个策略跨全部基准
-    pool = feature_pool(benchmarks)
+    # 单基因组基线：同一套评估预算，一个策略跨全部基准。
+    # 降质时必须用同一信息预算：否则基线拿到全集、分片只拿到降质子集，
+    # 两者的差值就不是「分片 vs 单基因组」，而是「信息多 vs 信息少」。
+    pool = single_seed_features(benchmarks, degrade=seed_degrade, seed=config.seed)
     nodes = sorted({n for b in benchmarks for n in b.skeleton.nodes})
     single_seed = Strategy(
         name="single",
@@ -399,5 +421,7 @@ __all__ = [
     "ShardedReport",
     "combined_evolve",
     "mutate_params",
+    "seed_for",
     "sharded_evolve",
+    "single_seed_features",
 ]
