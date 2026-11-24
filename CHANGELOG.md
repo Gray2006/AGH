@@ -2,6 +2,26 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [2.6.1] - 2026-11-24
+
+把 overfit 警告变成治理动作：hidden 决定发布等级，不参与选择。
+
+### Changed
+
+- `CodeArenaReport.release_tier`：visible 冠军的 `visible - hidden > 0.25` 时降级为 `T2`
+  （停在 VERIFIED 等人工），否则 `T1` 自动发布
+- 仲裁排序只用 visible，平局按 child_id。此前用 hidden 做 tie-break，等于让 hidden
+  悄悄参与了选择——测试抓到了这个问题
+
+### Added
+
+- 3 条测试：overfit 候选降 T2、干净候选 T1、hidden 不改变赢家
+
+### Notes
+
+- 这条修的是设计原则：hidden 一旦参与选择就不再是独立度量，会被选择函数优化掉。
+  现在它只回答「这个赢家能不能自动发布」，不回答「谁是赢家」
+
 ## [2.6.0] - 2026-11-24
 
 代码竞技场：把治理层接到真实测试信号上。

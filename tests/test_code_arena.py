@@ -62,9 +62,43 @@ def test_arena_warns_on_overfit(tmp_path: Path) -> None:
     report = run_code_arena(
         task, [("child-cheat", cheater)], run_dir=tmp_path, frozen_root=ROOT / "config" / "frozen"
     )
-    assert report.winner == "child-cheat"
-    assert any("visible-hidden" in note for note in report.notes)
+    assert report.winner == "child-cheat"  # 仲裁仍按 visible 选，hidden 不参与
+    assert report.release_tier == "T2"  # 但降级等人工，不自动发布
+    assert any("T2" in note or "人工" in note for note in report.notes)
     assert report.candidates[0].overfit_gap > OVERFIT_WARN
+
+
+def test_clean_winner_gets_t1(tmp_path: Path) -> None:
+    report = run_code_arena(
+        TASKS["dedupe"], [("child-good", _good)], run_dir=tmp_path, frozen_root=ROOT / "config" / "frozen"
+    )
+    assert report.release_tier == "T1"
+
+
+def test_hidden_never_changes_the_winner(tmp_path: Path) -> None:
+    """hidden 只决定发布等级，绝不改变选择：visible 高的那个永远是赢家。"""
+    task = TASKS["dedupe"]
+    vis = task.spec.visible[0]
+    cheat = (
+        "def dedupe(items):\n"
+        f"    if items == {vis.args[0]!r}:\n"
+        f"        return {vis.expected!r}\n"
+        "    return []\n"
+    )
+
+    def cheater(_task):
+        return cheat
+
+    report = run_code_arena(
+        task,
+        [("child-cheat", cheater), ("child-good", _good)],
+        run_dir=tmp_path,
+        frozen_root=ROOT / "config" / "frozen",
+    )
+    by_id = {c.child_id: c for c in report.candidates}
+    assert by_id["child-cheat"].visible >= by_id["child-good"].visible
+    assert report.winner == "child-cheat"
+    assert report.release_tier == "T2"
 
 
 def test_arena_log_is_replayable(tmp_path: Path) -> None:

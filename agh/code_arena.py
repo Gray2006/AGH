@@ -13,7 +13,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from .contracts import AbstractSignature, CoverageClaim, GestaltReconstruction
 from .crypto import EnvelopeVerifier, KeyRing, ProvenanceGateway
@@ -60,6 +60,7 @@ class CodeArenaReport:
     rejected: int
     log_head: str
     log_ok: bool
+    release_tier: str = "T1"
     notes: list[str] = field(default_factory=list)
 
     def as_dict(self) -> dict[str, Any]:
@@ -72,6 +73,7 @@ class CodeArenaReport:
             "rejected": self.rejected,
             "log_head": self.log_head,
             "log_ok": self.log_ok,
+            "release_tier": self.release_tier,
             "notes": list(self.notes),
         }
 
@@ -170,21 +172,43 @@ def run_code_arena(
     if not candidates:
         notes.append("没有候选通过写入门")
         return CodeArenaReport(
-            task_id, "", (), (), admitted, rejected, log.head(), _log_ok(log), notes
+            task_id=task_id,
+            winner="",
+            ranking=(),
+            candidates=(),
+            admitted=admitted,
+            rejected=rejected,
+            log_head=log.head(),
+            log_ok=_log_ok(log),
+            notes=notes,
         )
 
     # 仲裁只看 visible；hidden 只用于报告
-    ranking = tuple(c.child_id for c in sorted(candidates, key=lambda c: (-c.visible, -c.hidden)))
+    # 只用 visible 排序，平局按 child_id；hidden 绝不能参与选择，连 tie-break 也不行
+    ranking = tuple(c.child_id for c in sorted(candidates, key=lambda c: (-c.visible, c.child_id)))
     winner = next(c for c in candidates if c.child_id == ranking[0])
     emit("arbitration", {"winner": winner.child_id, "ranking": list(ranking)})
-    if winner.overfit_gap > OVERFIT_WARN:
+
+    # hidden 不参与选择，只决定发布等级：
+    #   gap 小 → T1 自动发布；gap 大 → T2 停在 VERIFIED 等人工。
+    # 这样 hidden 始终是「独立度量」，不会被选择函数优化掉。
+    overfit = winner.overfit_gap > OVERFIT_WARN
+    tier: Literal["T1", "T2"] = "T2" if overfit else "T1"
+    if overfit:
         notes.append(
             f"{winner.child_id} 的 visible-hidden 差距 {winner.overfit_gap:.2f} > {OVERFIT_WARN}："
-            "可能在被可见用例，hidden 分才是真实质量"
+            "可能在被可见用例，降级为 T2 等人工复核"
         )
     gov.transition("VERIFIED", tier="T1", reason="执行验证通过")
-    gov.transition("RELEASED", tier="T1", human_approved=True, reason="仲裁完成")
-    emit("governance.transition", {"from": "VERIFIED", "to": "RELEASED", "tier": "T1"})
+    emit("governance.transition", {"from": "VALIDATING", "to": "VERIFIED", "tier": "T1"})
+    if overfit:
+        emit(
+            "governance.pending",
+            {"to": "RELEASED", "tier": tier, "reason": "hidden 复核未过，需人工"},
+        )
+    else:
+        gov.transition("RELEASED", tier=tier, human_approved=True, reason="仲裁完成")
+        emit("governance.transition", {"from": "VERIFIED", "to": "RELEASED", "tier": tier})
 
     log_ok = _log_ok(log)
     return CodeArenaReport(
@@ -196,6 +220,7 @@ def run_code_arena(
         rejected=rejected,
         log_head=log.head(),
         log_ok=log_ok,
+        release_tier=tier,
         notes=notes,
     )
 
