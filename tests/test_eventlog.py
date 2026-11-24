@@ -92,3 +92,18 @@ def test_broken_line_raises_logtampered(tmp_path: Path) -> None:
     path.write_text('{"type":"a"}\nnot-json\n', encoding="utf-8")
     with pytest.raises(LogTampered, match="损坏"):
         EventLog(path)
+
+
+def test_unicode_line_separators_survive(tmp_path: Path) -> None:
+    """内容里的 U+2028 不能把一条记录切成两半（splitlines 会这么做）。"""
+    from agh.eventlog import EventLog
+
+    path = tmp_path / "log.jsonl"
+    log = EventLog(path)
+    log.append("t", {"text": "前\u2028后"})
+    log.append("t", {"text": "垂直制表\u000b结束"})
+
+    fresh = EventLog(path)
+    fresh.verify()
+    assert len(fresh.entries) == 2
+    assert fresh.entries[0].payload["text"] == "前\u2028后"

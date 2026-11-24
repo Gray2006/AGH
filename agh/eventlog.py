@@ -95,7 +95,9 @@ class EventLog:
     def read(self) -> list[LogEntry]:
         assert self.path is not None
         out: list[LogEntry] = []
-        for line in self.path.read_text(encoding="utf-8").splitlines():
+        # 只按 \n 分：JSONL 的换行就是 \n。splitlines() 还会认 U+2028/VT/FF，
+        # 日志内容里带这些字符时会把一条记录切成两半。
+        for line in self.path.read_text(encoding="utf-8").split("\n"):
             if not line.strip():
                 continue
             try:

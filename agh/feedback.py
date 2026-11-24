@@ -15,6 +15,27 @@ from . import __version__
 from .audit import AuditSession
 from .eventlog import EventLog
 
+_CTRL = {c for c in range(0x20) if chr(c) not in "\n\t"}
+
+
+def _clean(text: str, limit: int = 400) -> str:
+    """去掉控制字符（NUL 等），并截断——note 是自由文本，可能被塞进原文。"""
+    cleaned = "".join(ch for ch in str(text) if ord(ch) not in _CTRL)
+    return cleaned if len(cleaned) <= limit else cleaned[:limit] + "…"
+
+
+def _fence_for(text: str) -> str:
+    """内容里已有 ``` 时，用更长的反引号围栏，避免把 markdown 结构撑破。"""
+    longest = 0
+    run = 0
+    for ch in text:
+        if ch == "`":
+            run += 1
+            longest = max(longest, run)
+        else:
+            run = 0
+    return "`" * max(3, longest + 1)
+
 
 def _session_summary(log_path: Path) -> dict[str, Any]:
     audit = AuditSession.__new__(AuditSession)
@@ -38,13 +59,14 @@ def _flagged(log_path: Path, *, with_payload: bool) -> list[dict[str, Any]]:
         row: dict[str, Any] = {
             "call_id": entry.payload.get("call_id", ""),
             "model": call.get("model", ""),
-            "reason": entry.payload.get("reason", ""),
-            "note": entry.payload.get("note", ""),
+            "reason": _clean(entry.payload.get("reason", ""), 120),
+            "note": _clean(entry.payload.get("note", ""), 120),
             "prompt_sha256": call.get("prompt_sha256", "")[:16],
         }
         if with_payload:
-            row["prompt"] = call.get("prompt", "")
-            row["response"] = call.get("response", "")
+            # 只去控制字符，不截断：带原文的目的就是完整复现
+            row["prompt"] = _clean(call.get("prompt", ""), 200_000)
+            row["response"] = _clean(call.get("response", ""), 200_000)
         rows.append(row)
     return rows
 
@@ -83,17 +105,20 @@ def build_feedback(log_path: str | Path, *, with_payload: bool = False) -> str:
         lines.append("")
         if with_payload:
             for i, row in enumerate(rows[:5], 1):
+                prompt_text = str(row.get("prompt", ""))
+                response_text = str(row.get("response", ""))
+                fence = _fence_for(prompt_text + response_text)
                 lines += [
                     f"<details><summary>样本 {i}：{row['reason']}</summary>",
                     "",
                     "输入：",
-                    "```",
-                    str(row.get("prompt", "")),
-                    "```",
+                    fence,
+                    prompt_text,
+                    fence,
                     "输出：",
-                    "```",
-                    str(row.get("response", "")),
-                    "```",
+                    fence,
+                    response_text,
+                    fence,
                     "</details>",
                     "",
                 ]

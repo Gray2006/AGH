@@ -74,7 +74,7 @@ def import_jsonl(
         dst.unlink()
     audit = AuditSession(dst, label=label)
     with audit:
-        for lineno, line in enumerate(src.read_text(encoding="utf-8").splitlines(), 1):
+        for lineno, line in enumerate(src.read_text(encoding="utf-8").split("\n"), 1):
             if not line.strip():
                 continue
             try:

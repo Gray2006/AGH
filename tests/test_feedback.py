@@ -40,3 +40,24 @@ def test_feedback_without_flags(tmp_path: Path) -> None:
     AuditSession(path).call(model="m", prompt="p", response="r")
     text = build_feedback(path)
     assert "没有标记过的调用" in text
+
+
+def test_note_is_sanitized(tmp_path: Path) -> None:
+    """note 是自由文本，控制字符必须清掉、长度要收。"""
+    path = tmp_path / "run.jsonl"
+    audit = AuditSession(path)
+    cid = audit.call(model="m", prompt="p", response="r")
+    audit.flag(cid, reason="wrong", note="带\x00空字节" + "长" * 800)
+    text = build_feedback(path)
+    assert "\x00" not in text
+    assert "长" * 200 not in text
+
+
+def test_fence_adapts_to_content(tmp_path: Path) -> None:
+    """内容里有 ``` 时，围栏要更长，不能把 markdown 撑破。"""
+    path = tmp_path / "run.jsonl"
+    audit = AuditSession(path)
+    cid = audit.call(model="m", prompt="```\n代码\n```", response="ok")
+    audit.flag(cid, reason="wrong")
+    text = build_feedback(path, with_payload=True)
+    assert "````" in text
