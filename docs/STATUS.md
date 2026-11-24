@@ -86,14 +86,12 @@ python scripts/score_labels.py --labels ... --candidates ...
 
 ## 下一步（按优先级）
 
-1. 回写仍暂缓：参数权重在参照打分下不动，写回只会写回同值并重建锚点；要回写就得先让权重本身有梯度（比如把权重放进带真实验证信号的搜索）
-2. 把 AnchorStore 接到真正的第三方时间戳/异地存储；本地签名锚点只解决「没有密钥的人改不了」
-4. 真实失败样本已接入，但规则与 LLM 都在 0.42151 停滞：下一步要换更强的变异器或换任务难度
-4. 回写路径要么接真实验证信号，要么在 README 里标成未验证（已标）
-5. 新口径下 LLM 只剩 +0.07 且不增长；真实失败样本上两者同分且停滞——当前变异器已到顶
-3. PyPI 发布（需 token，先查 `AGH` 名字是否被占）
-4. NATS 联调（`docker compose up -d nats` + `NATS_URL=... pytest tests/test_nats_integration.py`）
-5. 多模型对比（需别的 key）
+1. 回写路径：参数不动时已跳过；要真回写得让参数有梯度，先接真实验证信号再谈
+2. 把 GitTagStore 用于发布流程（tag 推送即外部锚定），再考虑第三方时间戳服务
+3. 真实失败样本上规则与 LLM 都在 0.42151 停滞：换更强的变异器，或换更难的骨架族
+4. 发布：PyPI 名称 `AGH` 是否被占用、token 就绪
+5. NATS 集成测试：`docker compose up -d nats` + `NATS_URL=... pytest tests/test_nats_integration.py`
+6. 大模型横向对比（需要各家 key）
 
 ## 踩坑清单
 
