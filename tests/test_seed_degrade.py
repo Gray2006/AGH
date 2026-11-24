@@ -15,6 +15,7 @@ from agh.evolution_sharded import (
     seed_for,
     sharded_evolve,
     single_seed_features,
+    visible_pool_for,
 )
 from agh.verifier import StructuralVerifier
 
@@ -81,3 +82,47 @@ def test_single_baseline_uses_degraded_budget() -> None:
     full = set(feature_pool(benches))
     reduced = set(single_seed_features(benches, degrade=0.4, seed=0))
     assert reduced and reduced < full
+
+
+def test_visible_pool_is_reduced_seed_features() -> None:
+    bench = generate_benchmarks(1, seed=0)[0]
+    degraded = seed_for(bench, degrade=0.4, rng=random.Random("0:sk-gen-0"))
+    pool = visible_pool_for(bench, degrade=0.4, seed=0)
+    assert pool == sorted(degraded.features)
+    assert len(pool) < len(bench.skeleton.edges)
+
+
+def test_hide_gold_gives_mutator_only_visible_pool(cfg: ArenaConfig) -> None:
+    benches = generate_benchmarks(2, seed=0)
+    seen: list[list[str]] = []
+
+    def factory(features, nodes):
+        seen.append(list(features))
+        from agh.evolution import StrategyMutator
+
+        return StrategyMutator(features, nodes)
+
+    sharded_evolve(
+        benches,
+        cfg,
+        EvolutionConfig(generations=1, population=1, seed=0),
+        verifier=StructuralVerifier(),
+        seed_degrade=0.4,
+        hide_gold=True,
+        mutator_factory=factory,
+    )
+    assert len(seen) == len(benches)
+    for pool, bench in zip(seen, benches, strict=True):
+        assert pool == visible_pool_for(bench, degrade=0.4, seed=0)
+
+
+def test_shard_cache_reused_with_verifier(cfg: ArenaConfig) -> None:
+    from agh import evolution_sharded as mod
+
+    mod._SHARD_CACHE.clear()
+    benches = generate_benchmarks(2, seed=3)
+    evo = EvolutionConfig(generations=1, population=1, seed=0)
+    first = sharded_evolve(benches, cfg, evo, verifier=StructuralVerifier())
+    second = sharded_evolve(benches, cfg, evo, verifier=StructuralVerifier())
+    assert first.mean_fitness == second.mean_fitness
+    assert mod._SHARD_CACHE

@@ -298,8 +298,15 @@ def evolve(
     log: EventLog | None = None,
     mutator: Any | None = None,
     verifier: Any | None = None,
+    *,
+    feature_pool: Sequence[str] | None = None,
+    node_pool: Sequence[str] | None = None,
 ) -> EvolutionReport:
-    """档案式进化主循环：变异 → 评估 → 接受/拒绝 → 入档。"""
+    """档案式进化主循环：变异 → 评估 → 接受/拒绝 → 入档。
+
+    feature_pool / node_pool 非空时覆盖默认池：默认池取自基准的参照签名，
+    等于把「正确答案集合」交给变异器；需要信息不足的任务族时，由调用方收紧。
+    """
     settings = config or EvolutionConfig()
     if not benchmarks:
         raise ValueError("至少需要一个基准")
@@ -310,9 +317,17 @@ def evolve(
     governance = GovernanceMachine(frozen=None)
     governance.transition("VALIDATING", tier="T1")
 
-    feature_pool = sorted({f for b in benchmarks for f in b.parent.features})
-    node_pool = sorted({n for b in benchmarks for n in b.skeleton.nodes})
-    active_mutator = mutator if mutator is not None else StrategyMutator(feature_pool, node_pool)
+    pool = (
+        sorted(set(feature_pool))
+        if feature_pool is not None
+        else sorted({f for b in benchmarks for f in b.parent.features})
+    )
+    nodes = (
+        sorted(set(node_pool))
+        if node_pool is not None
+        else sorted({n for b in benchmarks for n in b.skeleton.nodes})
+    )
+    active_mutator = mutator if mutator is not None else StrategyMutator(pool, nodes)
     archive = Archive()
     notes: list[str] = []
 

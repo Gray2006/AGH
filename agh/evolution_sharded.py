@@ -103,6 +103,18 @@ def anneal_scale(round_index: int, rounds: int) -> float:
     return 0.1 if round_index < max(1, rounds // 2) else 0.02
 
 
+def visible_pool_for(bench: Benchmark, *, degrade: float, seed: int) -> list[str]:
+    """信息降质：变异器只看得到降质后仍保留的边，缺的边得靠推断补。"""
+    if degrade <= 0:
+        return sorted(f"{a}-{b}" for a, b in bench.skeleton.edges)
+    degraded = seed_for(
+        bench,
+        degrade=degrade,
+        rng=random.Random(f"{seed}:{bench.skeleton.skeleton_id}"),
+    )
+    return sorted(degraded.features)
+
+
 def seed_for(
     bench: Benchmark,
     *,
@@ -175,6 +187,8 @@ def sharded_evolve(
     *,
     seed_degrade: float = 0.0,
     carry: dict[str, Strategy] | None = None,
+    hide_gold: bool = False,
+    mutator_factory: Any | None = None,
 ) -> ShardedReport:
     """carry: 上一轮的每基准精英，作为本轮起点。
 
@@ -190,17 +204,32 @@ def sharded_evolve(
             degrade=seed_degrade,
             rng=random.Random(f"{config.seed}:{bench.skeleton.skeleton_id}"),
         )
+        bench_mutator = mutator
+        if mutator_factory is not None:
+            bench_mutator = mutator_factory(
+                visible_pool_for(bench, degrade=seed_degrade, seed=config.seed)
+                if hide_gold
+                else sorted(f"{a}-{b}" for a, b in bench.skeleton.edges),
+                sorted(bench.skeleton.nodes),
+            )
+        pool = (
+            visible_pool_for(bench, degrade=seed_degrade, seed=config.seed)
+            if hide_gold
+            else None
+        )
         key = None
-        if mutator is None and verifier is None:
+        if bench_mutator is None:
             key = (
                 bench.skeleton.skeleton_id,
                 tuple(bench_seed.features),
                 tuple(bench_seed.covered),
+                tuple(pool) if pool is not None else (),
                 tuple(sorted(cfg.weights.items())),
                 cfg.dissent_tau,
                 config.generations,
                 config.population,
                 config.seed,
+                type(verifier).__name__ if verifier is not None else "",
             )
             if key in _SHARD_CACHE:
                 evaluations += config.generations * config.population + 1
@@ -226,8 +255,9 @@ def sharded_evolve(
                 resamples=config.resamples,
                 alpha=config.alpha,
             ),
-            mutator=mutator,
+            mutator=bench_mutator,
             verifier=verifier,
+            feature_pool=pool,
         )
         evaluations += config.generations * config.population + 1
         if key is not None and report.best is not None:
@@ -316,6 +346,8 @@ def combined_evolve(
     reference_cfg: ArenaConfig | None = None,
     seed_degrade: float = 0.0,
     carry: dict[str, Strategy] | None = None,
+    hide_gold: bool = False,
+    mutator_factory: Any | None = None,
 ) -> CombinedReport:
     """分片精英 + 参数进化。
 
@@ -349,6 +381,8 @@ def combined_evolve(
         verifier=verifier,
         seed_degrade=seed_degrade,
         carry=carry,
+        hide_gold=hide_gold,
+        mutator_factory=mutator_factory,
     )
     best_mean = objective(sharded)
     curve = [best_mean]
@@ -366,6 +400,7 @@ def combined_evolve(
                 verifier=verifier,
                 seed_degrade=seed_degrade,
                 carry=carry,
+                hide_gold=hide_gold,
             )
             score = objective(candidate_sharded)
             if score > best_mean:

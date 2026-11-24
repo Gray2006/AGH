@@ -252,6 +252,7 @@ def cmd_daemon(args: argparse.Namespace) -> int:
             api_key_env=args.api_key_env,
             daily_token_budget=args.daily_budget,
             seed_degrade=args.seed_drop,
+            hide_gold=args.hide_gold,
         ),
         log=EventLog(log_path),
     )
@@ -340,6 +341,11 @@ def build_parser() -> argparse.ArgumentParser:
         type=float,
         default=0.0,
         help="把种子策略的边/必需项随机抽掉这个比例（0-0.9），制造可爬的梯度",
+    )
+    daemon.add_argument(
+        "--hide-gold",
+        action="store_true",
+        help="信息降质：变异器只看得到降质后保留的边，缺的边得靠推断（默认给全集）",
     )
     daemon.add_argument("--out", type=Path, default=Path("runs") / "daemon" / "events.jsonl")
     daemon.set_defaults(func=cmd_daemon)

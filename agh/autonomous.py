@@ -49,6 +49,7 @@ class AutonomousConfig:
     api_key_env: str | None = None
     daily_token_budget: int = 0
     seed_degrade: float = 0.0
+    hide_gold: bool = False
 
 
 @dataclass
@@ -109,6 +110,16 @@ def _reanchor(frozen_root: Path) -> None:
     FrozenLayer(frozen_root).write_anchor(frozen_root.parent / "anchor.json", keyring, DEV_KID)
 
 
+
+def _params_changed(frozen_cfg: ArenaConfig, params: ParamGenome) -> bool:
+    """权重与 τ 与冻结层完全一致时，回写没有信息，只会重建锚点。"""
+    current = {k: round(float(v), 4) for k, v in frozen_cfg.weights.items()}
+    proposed = {k: round(float(v), 4) for k, v in params.weights.items()}
+    if current != proposed:
+        return True
+    return round(float(params.dissent_tau), 3) != round(float(frozen_cfg.dissent_tau), 3)
+
+
 def run_autonomous(
     frozen_root: Path,
     config: AutonomousConfig | None = None,
@@ -120,27 +131,27 @@ def run_autonomous(
     benchmarks = generate_benchmarks(settings.benchmarks, seed=settings.bench_seed)
 
     tokens_used = 0
-    active_mutator = None
+    mutator_factory = None
     if settings.llm_mutator:
         from .evolution_llm import LlmStrategyMutator
         from .providers import make_client
 
         client = make_client(settings.provider, model=settings.model, api_key_env=settings.api_key_env)
-        feature_pool = sorted({f"{a}-{b}" for bench in benchmarks for a, b in bench.skeleton.edges})
-        node_pool = sorted({n for bench in benchmarks for n in bench.skeleton.nodes})
-        base_mutator = LlmStrategyMutator(feature_pool, node_pool, complete=client)
 
         class BudgetedMutator:
+            def __init__(self, feature_pool, node_pool):
+                self.inner = LlmStrategyMutator(feature_pool, node_pool, complete=client)
+
             def mutate(self, parent, rng, name):
                 nonlocal tokens_used
                 if settings.daily_token_budget and tokens_used >= settings.daily_token_budget:
-                    return base_mutator.fallback.mutate(parent, rng, name)
-                strategy = base_mutator.mutate(parent, rng, name)
+                    return self.inner.fallback.mutate(parent, rng, name)
+                strategy = self.inner.mutate(parent, rng, name)
                 usage = client.last_usage or {}
                 tokens_used += int(usage.get("total_tokens", 0) or 0)
                 return strategy
 
-        active_mutator = BudgetedMutator()
+        mutator_factory = BudgetedMutator
     evo_config = EvolutionConfig(
         generations=settings.generations, population=settings.population, seed=settings.seed
     )
@@ -167,11 +178,12 @@ def run_autonomous(
             evo_config,
             rounds=max(1, settings.generations),
             params_per_round=3,
-            mutator=active_mutator,
             verifier=StructuralVerifier(),
             reference_cfg=frozen_cfg,
             seed_degrade=settings.seed_degrade,
             carry=elite,
+            hide_gold=settings.hide_gold,
+            mutator_factory=mutator_factory,
         )
         fitness = report.objective if report.objective is not None else report.sharded.mean_fitness
         carried = report.best_params
@@ -197,19 +209,22 @@ def run_autonomous(
             break
 
         if settings.write_back and fitness > 0:
-            backup = frozen_root / "thresholds.json.bak"
-            shutil.copy2(frozen_root / "thresholds.json", backup)
-            _write_back(frozen_root, report.best_params.weights, report.best_params.dissent_tau)
-            ok, detail = calibration_ok()
-            if not ok:
-                shutil.copy2(backup, frozen_root / "thresholds.json")
-                _reanchor(frozen_root)
-                rolled = True
-                notes.append(f"回写被回滚：{detail}")
+            if not _params_changed(frozen_cfg, report.best_params):
+                notes.append("参数与冻结层一致，跳过回写（写回同值只会重建锚点）")
             else:
-                _reanchor(frozen_root)
-                written = True
-                notes.append(f"回写成功：{detail}")
+                backup = frozen_root / "thresholds.json.bak"
+                shutil.copy2(frozen_root / "thresholds.json", backup)
+                _write_back(frozen_root, report.best_params.weights, report.best_params.dissent_tau)
+                ok, detail = calibration_ok()
+                if not ok:
+                    shutil.copy2(backup, frozen_root / "thresholds.json")
+                    _reanchor(frozen_root)
+                    rolled = True
+                    notes.append(f"回写被回滚：{detail}")
+                else:
+                    _reanchor(frozen_root)
+                    written = True
+                    notes.append(f"回写成功：{detail}")
 
     return AutonomousReport(
         rounds_run=rounds_run,

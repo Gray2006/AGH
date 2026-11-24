@@ -1,4 +1,4 @@
-# AGH 状态交接（v1.18.1，2026-11-24）
+# AGH 状态交接（v1.19.0，2026-11-24）
 
 > 新会话先读这个文件，再读 `README.md` 的「版本与兼容」与 `memory/agh.md`。
 
@@ -8,7 +8,7 @@
 
 ## 当前版本
 
-- v1.18.1，`252 passed + 1 skipped`（NATS 需服务），ruff 干净，mypy 38 文件零错误
+- v1.19.0，`256 passed + 1 skipped`（NATS 需服务），ruff 干净，mypy 38 文件零错误
 - 仓库 <https://github.com/Gray2006/AGH>，CI 双版本绿
 - 依赖：pydantic v2、numpy、jsonschema、cryptography；Python 3.12+
 
@@ -23,6 +23,7 @@ python -m agh ablation --seeds 30
 python -m agh evolve --mode meta --rounds 8
 python -m agh daemon --rounds 4     # 自主迭代（默认 0 token）
 python -m agh daemon --seed-drop 0.4 --llm-mutator --daily-budget 30000  # 降质任务族 + LLM 变异
+python -m agh daemon --seed-drop 0.4 --hide-gold --llm-mutator     # 信息不足：缺的边得推断
 python -m agh report --runs runs
 python scripts/red_team.py          # 7 类攻击
 ```
@@ -53,6 +54,9 @@ python scripts/score_labels.py --labels ... --candidates ...
 | 同设置规则变异对照 | 4 轮恒 0.42113 | 高 |
 | 单基准对照（6 基准 6556 tokens） | LLM 0.5696 vs 规则 0.4211 vs 种子 0.4082 | 中 |
 | 降质下分片 vs 单基因组（公平基线） | 0.42113 vs 0.61556，delta -0.19444 | 高（1 次） |
+| 信息降质（--hide-gold）规则变异 | 4 轮恒 0.41109，无梯度 | 高 |
+| 信息降质 LLM 变异 | 4 轮 0.47501 → 0.57681，22222 tokens | 中高（1 次） |
+| 跨 seed 配对（3 seed × 6 基准 = 18 对） | LLM − 规则 +0.0950，95% CI [0.0496, 0.1402] | 高（17720 tokens） |
 | daemon 的「改进」主要来自换权重 | 同批种子换权重 0.65792 → 0.75488 | 高（1.17.0） |
 
 校准已固化进 CI：`tests/fixtures/calibration.json` + `tests/test_calibration_regression.py`（ECE ≤ 0.05、kappa ≥ 0.9）。
@@ -66,13 +70,15 @@ python scripts/score_labels.py --labels ... --candidates ...
 5. 代码级自改只有底座（selfmod + supervisor），未启用
 6. daemon 默认 0 token；LLM 变异器要显式开并设预算
 7. 完美种子上种子策略即适应度上界（0.66625 / 0.68212），没有持续改进空间；只有降质种子（--seed-drop）才有梯度
-8. 降质任务族的改进来自策略恢复，参数权重在参照打分下不动，写回因此是空操作
+8. 降质任务族的改进来自策略恢复，参数权重在参照打分下不动；回写分支已加「参数未变则跳过」，但它仍不是可持久化路径
+9. 覆盖项只数必需项交集，多覆盖不扣分：LLM 可以靠「把节点全塞进 covered」刷覆盖率，这条口径漏洞还没堵
 
 ## 下一步（按优先级）
 
 1. 回写仍暂缓：参数权重在参照打分下不动，写回只会写回同值并重建锚点；要回写就得先让权重本身有梯度（比如把权重放进带真实验证信号的搜索）
-2. 把降质任务族接入正式实验脚本（`--seed-drop` 已有，缺一个跨 seed 的显著性对照）
-3. 接入真实失败样本（50 次难基准里的部分失败）作为任务族，替代人工降质
+2. 堵覆盖口径漏洞：多余覆盖要么扣分，要么把必需项藏起来，否则「全塞」就是最优解
+3. 接入真实失败样本作为任务族，替代人工降质；`--hide-gold` 只是第一层
+4. 回写路径要么接真实验证信号，要么在 README 里标成未验证
 3. PyPI 发布（需 token，先查 `AGH` 名字是否被占）
 4. NATS 联调（`docker compose up -d nats` + `NATS_URL=... pytest tests/test_nats_integration.py`）
 5. 多模型对比（需别的 key）

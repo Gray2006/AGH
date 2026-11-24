@@ -2,6 +2,37 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [1.19.0] - 2026-11-24
+
+真难度任务族、显著性证据、缓存与回写卫生。
+
+### Added
+
+- `agh daemon --hide-gold`：信息降质。变异器只看得到降质后保留的边，缺的边必须靠推断，
+  堵住「特征池泄漏正确答案」这条路（此前 `--seed-drop` 只降起点、不降信息）
+- `visible_pool_for(bench, degrade=, seed=)`：信息降质后的可见边池
+- `sharded_evolve/combined_evolve(hide_gold=, mutator_factory=)`：按基准构造变异器，
+  让 LLM 变异器也吃同一份受限池
+- `evolve(feature_pool=, node_pool=)`：显式覆盖变异池
+- `_params_changed`：参数与冻结层一致时跳过回写，只留说明，不再「写回同值 + 重建锚点」
+
+### Changed
+
+- `_SHARD_CACHE` 不再要求 `verifier is None`：验证器是确定性的，缓存键补上可见池与验证器类型
+- 缓存键含 `bench_seed.features/covered`，跨轮精英延续不会串味
+
+### Measured
+
+- `--seed-drop 0.4 --hide-gold` 规则变异 4 轮：恒 0.41109（无梯度）
+- 同设置 LLM 变异 4 轮（22222 tokens）：0.47501 → 0.54593 → 0.57593 → 0.57681
+- 跨 seed 配对（3 个基准 seed × 6 基准 = 18 对，17720 tokens）：LLM - 规则均值 +0.0950，
+  95% CI [0.0496, 0.1402]，不跨 0
+
+### 结论
+
+- 信息不足时 LLM 仍能改进：它补不了缺的边，但能把覆盖补满、把深度校准到位；规则变异完全爬不动
+- 覆盖项不惩罚多余节点（over-cover 免费）仍是打分口径的漏洞，下一版要么加惩罚，要么把必需项藏起来
+
 ## [1.18.1] - 2026-11-24
 
 修掉降质模式下单基因组基线的信息优势。
