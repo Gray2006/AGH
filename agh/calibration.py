@@ -29,7 +29,7 @@ def cohen_kappa(a: list[bool], b: list[bool]) -> float:
     return (po - pe) / (1 - pe)
 
 
-def ece(scores: list[float], labels: list[bool], bins: int = 5) -> float:
+def ece(scores: list[float], labels: list[float] | list[bool], bins: int = 5) -> float:
     """期望校准误差：每个箱里 |平均分 - 正例比例| 按样本数加权。"""
     if not scores or len(scores) != len(labels):
         raise ValueError("样本为空或长度不一致")
@@ -46,7 +46,7 @@ def ece(scores: list[float], labels: list[bool], bins: int = 5) -> float:
         if not members:
             continue
         avg = sum(s for s, _ in members) / len(members)
-        pos = sum(1 for _, y in members if y) / len(members)
+        pos = sum(float(y) for _, y in members) / len(members)
         error += len(members) / total * abs(avg - pos)
     return error
 

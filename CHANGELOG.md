@@ -2,6 +2,20 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [1.11.1] - 2026-11-24
+
+分级标注：概率校准初步成立。
+
+### Added
+
+- `scripts/make_graded_packet.py`：0/0.5/1 分级标注包
+- `score_labels.py` 支持分级标签（ECE + MAE）；`calibration.ece` 支持浮点标签
+
+### Measured
+
+- 7 题分级标注：ECE 0.024、MAE 0.024，验证器均值 0.738 vs 人工 0.714
+- 样本小，需扩大
+
 ## [1.11.0] - 2026-11-24
 
 ### Added

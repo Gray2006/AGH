@@ -31,7 +31,7 @@ def main() -> int:
 
     labels = json.loads(args.labels.read_text(encoding="utf-8"))
     items = json.loads(args.candidates.read_text(encoding="utf-8"))
-    missing = [row["index"] for row in labels if row.get("label") not in (0, 1)]
+    missing = [row["index"] for row in labels if row.get("label") not in (0, 0.5, 1)]
     if missing:
         print(f"还有 {len(missing)} 题没填：{missing}")
         return 1
@@ -53,6 +53,26 @@ def main() -> int:
     if not human:
         print("没有可校准的题目（全部缺少垂直移动）")
         return 1
+    graded = any(float(v) not in (0.0, 1.0) for v in human)
+    if graded:
+        from agh.calibration import ece
+
+        mae = sum(abs(m - h) for m, h in zip(machine, human, strict=False)) / len(human)
+        payload = {
+            "n": len(human),
+            "excluded_no_vertical": excluded,
+            "graded": True,
+            "ece": round(ece(machine, human), 3),
+            "mae": round(mae, 3),
+            "mean_machine": round(sum(machine) / len(machine), 3),
+            "mean_human": round(sum(human) / len(human), 3),
+            "human": human,
+            "machine": [round(x, 3) for x in machine],
+        }
+        args.out.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+        print(json.dumps(payload, ensure_ascii=False, indent=2))
+        print(f"\n报告: {args.out}")
+        return 0
     report = evaluate(machine, human, threshold=args.threshold)
     payload = {
         "n": len(human),

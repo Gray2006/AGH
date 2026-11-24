@@ -4,7 +4,7 @@
 
 **Agent Gestalt Hierarchy** — an M0 vertical slice of a multi-agent "gestalt reconstruction" framework. A parent issues a skeleton and a contract; children reconstruct the whole rather than reassembling parts; every submission is signed and provenance-checked. Gate, arena, arbitration, governance, budget ledger and a hash-chained log form one runnable, testable, replayable pipeline.
 
-> Status: M0 (v1.11.0). Children are **rule-based reconstructors**, not LLMs. Every number below is reproducible locally.
+> Status: M0 (v1.11.1). Children are **rule-based reconstructors**, not LLMs. Every number below is reproducible locally.
 
 ```
 Parent M0
@@ -170,7 +170,9 @@ Verifier calibration (`scripts/run_verifier_calibration.py`, 10 real candidates)
 
 Conclusion: on a balanced set the structural verifier matches human judgement completely.
 
-Real-failure calibration (4 partial failures + 5 positives drawn from 50 hard runs, 9 items): binary agreement 1.0, kappa 1.0; ECE 0.241 — the verifier returns graded scores (0.5/0.667) while the human labels are binary, so the probability calibration is not established even though the decisions match. Caveat: negatives were built by the same rule (removing an edge or node), so this validates that the rule is implemented as stated and understood the same way — not that the rule is semantically right. That needs negatives from real model failures.
+Real-failure calibration (4 partial failures + 5 positives drawn from 50 hard runs, 9 items): binary agreement 1.0, kappa 1.0; ECE 0.241 — the verifier returns graded scores (0.5/0.667) while the human labels are binary, so the probability calibration was not established from binary labels alone.
+
+Graded labels (7 items, human 0/0.5/1): ECE **0.024**, MAE **0.024**, means 0.738 vs 0.714 — on this small sample the verifier's scores track human grades closely. Seven items is not enough to settle it. Caveat: negatives were built by the same rule (removing an edge or node), so this validates that the rule is implemented as stated and understood the same way — not that the rule is semantically right. That needs negatives from real model failures.
 
 Multi-model comparison is not possible yet: the command-code endpoint only serves `deepseek/deepseek-v4.1-flash`; `deepseek-v4.1`, `deepseek-v3.2`, `glm-4.7-flash` and `qwen3-max` all return 400.
 
