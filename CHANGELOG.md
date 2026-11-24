@@ -2,6 +2,41 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [2.4.0] - 2026-11-24
+
+执行型验证器：把评分信号从「AGH 自己定义的规则」换成「真跑测试」。
+
+### Added
+
+- `agh/execverify.py`：`ExecutionVerifier` 满足既有 `Verifier` 协议，在子进程里跑候选代码
+  - 期望值只留父进程，子进程只拿入参、只回传输出 → 候选无法伪造通过
+  - visible / hidden 两组用例，默认只用 hidden 打分；`overfit_gap()` 量化背可见答案的程度
+  - 子进程 + 超时 + rlimit + 清空环境 + 临时目录；固定 `PYTHONHASHSEED`，评分确定性
+- `agh/codetasks.py`：12 道题，每题带参考解与「已知 bug 变体」（对测试本身做突变测试）
+- `agh/codesolve.py`：`SolverPolicy` 有界基因组（采样数/选择方式/提示）+ 多候选求解，
+  选择只能看 visible 用例
+- `agh/code_evolution.py`：以 hidden 通过率为适应度的策略进化，与随机搜索同调用预算，
+  train / held-out 划分 + 配对 bootstrap 区间
+- `agh/simulated.py`：离线模拟模型，只验证流水线
+- `scripts/run_code_bench.py`：`--simulate` 离线跑，或接真模型（自动关 JSON 模式）
+- 15 条测试（execverify 10 条 + codetasks 断言突变体都被杀死）
+
+### Measured
+
+- 离线（模拟模型，400 次调用预算）：baseline 0.5625，进化 0.875，随机 0.875，
+  `evolution - random` 均值差 0，区间跨零 —— 流水线通了，方法未证明有效
+- 12 道题的参考解在 hidden 上全部 1.0；每个已知 bug 变体在 hidden 上 < 1.0
+
+### Notes
+
+- 安全边界：子进程只防失控（rlimit / 超时 / 清环境 / 临时目录），**不防恶意**，
+  不隔离网络与文件读权限。评估不可信模型输出时请放进容器或无网络沙箱
+- 尚未接入 pipeline / arena：原有 evolution 进化的是结构标签基因组，与代码任务不是同一个对象
+- 本题族的意义是补上「不由 AGH 定义对错」的信号，不是刷分
+- 真模型数字未取得：OpenRouter 余额不足（402）。第一次跑出「held-out 全 0」，
+  排查后确认是调用失败被当成空候选——已加 `call_errors` 计数与 `WARNING_CALL_ERRORS`，
+  把「模型答错」和「调用没通」分开，避免把 API 故障读成模型能力
+
 ## [2.3.0] - 2026-11-24
 
 外部锚定接进发布流程。

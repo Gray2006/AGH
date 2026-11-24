@@ -4,7 +4,7 @@
 
 **Agent Gestalt Hierarchy** — an M0 vertical slice of a multi-agent "gestalt reconstruction" framework. A parent issues a skeleton and a contract; children reconstruct the whole rather than reassembling parts; every submission is signed and provenance-checked. Gate, arena, arbitration, governance, budget ledger and a hash-chained log form one runnable, testable, replayable pipeline.
 
-> Status: M0 (v2.3.0). The default child is a **rule-based reconstructor**; LLM children and the LLM mutator are pluggable and already measured. Both the M0 pipeline and the LLM mutation path support bit-exact L1 replay.
+> Status: M0 (v2.4.0). The default child is a **rule-based reconstructor**; LLM children and the LLM mutator are pluggable and already measured. Both the M0 pipeline and the LLM mutation path support bit-exact L1 replay.
 
 ```
 Parent M0
@@ -399,7 +399,7 @@ python -m agh.supervisor --store runs/selfmod --gate "python -m pytest -q" -- py
 | Governance | qualified dissent → T2, stops at `VERIFIED`; `RELEASED` after human approval |
 | Ledger | 0 violations |
 | Replay | L1 `bit_exact=true` |
-| Tests | 287 passed + 1 skipped |
+| Tests | 303 passed + 1 skipped |
 
 ## Governance effectiveness
 
@@ -434,6 +434,36 @@ anchor up by version and checks the log against it.
 
 This is not a third-party timestamp. It prevents a quiet log edit, not someone with push access editing
 both the log and the tag.
+
+## Code tasks: an execution verifier
+
+Every other task family is scored by rules AGH defines. This one changes the signal: **tests run for real in a
+subprocess**, so correctness is not AGH's own opinion.
+
+`agh/execverify.py`:
+
+- Expected values stay in the parent process; the child only gets inputs and returns outputs. A candidate cannot
+  fake a pass — faking the output is equivalent to computing the right answer
+- Tests are split into visible / hidden: visible goes into the prompt, hidden only into the verifier. A candidate
+  that memorizes visible cases scores 0 on hidden, and `overfit_gap()` measures that gap
+- Subprocess with timeout, rlimits, cleared environment and a temp directory. **It stops runaway code, not hostile
+  code**: no network or filesystem isolation. Evaluate untrusted output in a container or network-less sandbox
+
+`agh/codetasks.py`: 12 small tasks, each with a reference solution and known-buggy mutants. The mutants are a
+mutation test for the tests themselves — if a mutant passes hidden cases, the cases are too weak and the score is
+not trustworthy.
+
+`agh/codesolve.py` + `agh/code_evolution.py`: the solving policy is a bounded genome (sample count / selection /
+hint). Evolution uses hidden pass rate as fitness, runs against random search with the same call budget, splits
+tasks into train / held-out, and reports paired bootstrap intervals.
+
+```bash
+python scripts/run_code_bench.py --simulate --budget 400      # offline, pipeline check only
+python scripts/run_code_bench.py --provider deepseek --budget 400   # real model
+```
+
+The offline result is negative: evolution and random search tie in a 45-policy space, held-out has 4 tasks, and the
+interval crosses zero. The pipeline works; the method is not shown to work.
 
 ## Design decisions
 

@@ -4,7 +4,7 @@
 
 **Agent Gestalt Hierarchy**：多智能体「整体重构」框架的 M0 垂直切片。母体发骨架与契约，子级按整体重构而不是拼零件，回传带签名与出处；写入门、竞技场、仲裁、治理机、预算账本、哈希链日志串成一条可跑、可测、可重放的链路。
 
-> 状态：M0（v2.3.0）。子级默认是**规则重构器**；LLM 子级与 LLM 变异器是可插拔的，已有实测数据。M0 管线与 LLM 变异路径都支持 L1 逐位重放。
+> 状态：M0（v2.4.0）。子级默认是**规则重构器**；LLM 子级与 LLM 变异器是可插拔的，已有实测数据。M0 管线与 LLM 变异路径都支持 L1 逐位重放。
 
 ```
 母体 M0
@@ -403,7 +403,7 @@ python -m agh.supervisor --store runs/selfmod --gate "python -m pytest -q" -- py
 | 治理 | 有合格异议 → 升 T2 停在 `VERIFIED`；人工批准后 `RELEASED` |
 | 账本 | 违规 0 |
 | 重放 | L1 `bit_exact=true` |
-| 测试 | 287 passed + 1 skipped |
+| 测试 | 303 passed + 1 skipped |
 
 ## 治理有效性
 
@@ -435,6 +435,27 @@ python -m agh.supervisor --store runs/selfmod --gate "python -m pytest -q" -- py
 替换就必须同时改远程——那是另一个权限面。`python scripts/release.py --verify` 按版本找回锚点并校验。
 
 这不是第三方时间戳。它防的是「悄悄改日志」，不防「有 push 权限的人同时改日志和 tag」。
+
+## 代码任务：执行型验证器
+
+前面所有任务族的分数都由 AGH 自己定义。这一组换掉信号源：**在子进程里真跑测试**，对错不由 AGH 决定。
+
+`agh/execverify.py`：
+
+- 期望值只留在父进程，子进程拿到入参、只回传输出——候选无法伪造「通过」，伪造输出等价于算出正确答案
+- 测试分 visible / hidden：visible 写进提示，hidden 只给验证器。背可见用例的候选在 hidden 上得 0，`overfit_gap()` 量化这个差距
+- 子进程 + 超时 + rlimit + 清空环境 + 临时目录。**只防失控，不防恶意**：不隔离网络与文件读权限，评估不可信输出时请放进容器或无网络沙箱
+
+`agh/codetasks.py`：12 道小题，每题带参考解和「已知有 bug 的变体」。变体是给测试本身做突变测试——若某个变体也能过 hidden，说明用例太弱、分数不可信。
+
+`agh/codesolve.py` + `agh/code_evolution.py`：求解策略是有界基因组（采样数 / 选择方式 / 提示），进化以 hidden 通过率为适应度，与随机搜索用同样的调用预算，任务分 train / held-out，配对 bootstrap 给区间。
+
+```bash
+python scripts/run_code_bench.py --simulate --budget 400      # 离线，只验证流水线
+python scripts/run_code_bench.py --provider deepseek --budget 400   # 真模型
+```
+
+离线模拟的结论是负面的：进化与随机搜索在 45 种策略的小空间里打平，held-out 只有 4 题、区间跨零。这说明流水线通了，不说明方法有效。
 
 ## 设计取舍
 
