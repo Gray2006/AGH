@@ -102,7 +102,15 @@ def anchor_release(
 
     log = EventLog(run_dir / "events.jsonl")
     signing_key = key if key is not None else dev_keyring("ed25519").get(DEV_KID)
-    anchor = anchor_log(log, key=signing_key, label=f"m0-v{version}")
+    # 锚点里只存 posix 相对路径：Windows 绝对路径的反斜杠进 JSON 会被命令行/编辑器
+    # 层层转义，存进 git tag 后可能变成非法 JSON。
+    try:
+        rel = run_dir.resolve().relative_to(root.resolve()).as_posix()
+    except ValueError:
+        rel = run_dir.name
+    anchor = anchor_log(
+        log, key=signing_key, label=f"m0-v{version}", log_path=f"{rel}/events.jsonl"
+    )
 
     local = AnchorStore(root / "runs" / "anchors" / f"v{version}.jsonl")
     local.append(anchor)

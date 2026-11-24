@@ -170,8 +170,7 @@ class AnchorStore:
         return out
 
     def latest(self, log_path: str | None = None) -> Anchor | None:
-        target = _resolved(log_path)
-        candidates = [a for a in self.read() if log_path is None or _resolved(a.log_path) == target]
+        candidates = [a for a in self.read() if log_path is None or a.log_path == log_path]
         return candidates[-1] if candidates else None
 
     def check(self, log: EventLog, *, keyring: KeyRing | None = None) -> bool:
@@ -207,22 +206,47 @@ class GitTagStore:
         return proc.stdout
 
     def append(self, anchor: Anchor) -> str:
+        """用 -F 从文件读 message。
+
+        Windows 上 `git tag -m <json>` 会把 JSON 里的 `\\\\` 按命令行规则再转义一次，
+        存进去的 message 变成非法 JSON（Windows 路径首当其冲）。走文件就没有这层解析。
+        """
+        import tempfile
+
         name = f"{self.prefix}/{digest_of(anchor)[:16]}"
         message = json.dumps(anchor.as_dict(), ensure_ascii=False, sort_keys=True)
-        self._run("tag", "-a", name, "-m", message, "--cleanup=verbatim")
+        with tempfile.NamedTemporaryFile(
+            "w", encoding="utf-8", suffix=".json", delete=False
+        ) as fh:
+            fh.write(message)
+            tmp = fh.name
+        try:
+            self._run("tag", "-a", name, "-F", tmp, "--cleanup=verbatim")
+        finally:
+            Path(tmp).unlink(missing_ok=True)
         return name
 
-    def read(self) -> list[Anchor]:
+    def _tag_names(self) -> list[str]:
         out = self._run(
             "for-each-ref",
-            "--format=%(contents:subject)%00%(contents:body)",
+            "--format=%(refname:short)",
             f"refs/tags/{self.prefix}/*",
         )
+        return [line.strip() for line in out.splitlines() if line.strip()]
+
+    def read(self) -> list[Anchor]:
+        """逐条读 tag 内容。
+
+        不用 for-each-ref 的 %(contents:...)：Git 会对 message 里的反斜杠再转义一次，
+        Windows 路径会变成非法 JSON 转义。cat-file -p 给的是原始 message。
+        """
         anchors: list[Anchor] = []
-        for line in out.splitlines():
-            if not line.strip():
+        for name in self._tag_names():
+            out = self._run("cat-file", "-p", name)
+            parts = out.split("\n\n", 1)
+            if len(parts) < 2:
                 continue
-            payload = line.replace("\x00", "\n").strip()
+            payload = parts[1].strip()
             try:
                 data = json.loads(payload)
             except json.JSONDecodeError:
