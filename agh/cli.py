@@ -404,6 +404,11 @@ def build_parser() -> argparse.ArgumentParser:
     audit.add_argument("--out", default=None)
     audit.add_argument("--no-payload", action="store_true", help="导出时不带原文")
     audit.set_defaults(func=cmd_audit)
+    feedback = sub.add_parser("feedback", help="把审计日志整理成可粘贴的反馈")
+    feedback.add_argument("--log", required=True)
+    feedback.add_argument("--out", default=None)
+    feedback.add_argument("--with-payload", action="store_true", help="带上输入输出原文（默认脱敏）")
+    feedback.set_defaults(func=cmd_feedback)
     version = sub.add_parser("version", help="打印版本")
     version.set_defaults(func=lambda _a: print(__version__) or 0)
 
@@ -462,6 +467,20 @@ def cmd_audit(args: argparse.Namespace) -> int:
         print(json.dumps({"ok": True, "cases": count, "out": str(out)}, ensure_ascii=False))
         return 0
     raise SystemExit(f"未知 action: {args.action}")
+
+
+def cmd_feedback(args: argparse.Namespace) -> int:
+    from .feedback import build_feedback
+
+    text = build_feedback(args.log, with_payload=args.with_payload)
+    if args.out:
+        out = Path(args.out)
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(text, encoding="utf-8")
+        print(json.dumps({"ok": True, "out": str(out)}, ensure_ascii=False))
+    else:
+        print(text)
+    return 0
 
 
 def main(argv: list[str] | None = None) -> int:

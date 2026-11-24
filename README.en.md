@@ -4,7 +4,7 @@
 
 **Agent Gestalt Hierarchy** — an M0 vertical slice of a multi-agent "gestalt reconstruction" framework. A parent issues a skeleton and a contract; children reconstruct the whole rather than reassembling parts; every submission is signed and provenance-checked. Gate, arena, arbitration, governance, budget ledger and a hash-chained log form one runnable, testable, replayable pipeline.
 
-> Status: M0 (v2.8.0). The default child is a **rule-based reconstructor**; LLM children and the LLM mutator are pluggable and already measured. Both the M0 pipeline and the LLM mutation path support bit-exact L1 replay.
+> Status: M0 (v2.8.1). The default child is a **rule-based reconstructor**; LLM children and the LLM mutator are pluggable and already measured. Both the M0 pipeline and the LLM mutation path support bit-exact L1 replay.
 
 ```
 Parent M0
@@ -106,7 +106,7 @@ git clone https://github.com/Gray2006/AGH.git
 cd AGH
 pip install -e ".[dev]"   # 或 pip install agh-gestalt
 
-python -m pytest -q          # 321 tests + 1 skipped
+python -m pytest -q          # 325 tests + 1 skipped
 python -m agh                # run M0, writes runs/m0/ (same as python scripts/run_m0.py)
 ```
 
@@ -428,7 +428,7 @@ python -m agh.supervisor --store runs/selfmod --gate "python -m pytest -q" -- py
 | Governance | qualified dissent → T2, stops at `VERIFIED`; `RELEASED` after human approval |
 | Ledger | 0 violations |
 | Replay | L1 `bit_exact=true` |
-| Tests | 321 passed + 1 skipped |
+| Tests | 325 passed + 1 skipped |
 
 ## Governance effectiveness
 
@@ -513,6 +513,18 @@ python scripts/run_code_arena.py --task dedupe --provider deepseek --samples 3
 
 The offline example reliably triggers the warning: visible 1.0, hidden 0.5, gap 0.50. That is exactly what the
 governance layer should make visible — **the winner picked on public cases may not be the genuinely best one**.
+
+## Feedback
+
+```bash
+agh feedback --log run.jsonl              # redacted by default, hashes only
+agh feedback --log run.jsonl --with-payload   # includes raw text; review before posting
+```
+
+It prints markdown you can paste straight into an issue: version, environment, call and flag counts, a table of
+flagged calls (only `prompt_sha256` prefixes by default), and a reproduction template.
+
+The command refuses a log that fails verification — reporting on tampered data is pointless.
 
 ## Design decisions
 
