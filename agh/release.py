@@ -144,8 +144,13 @@ def verify_release(
         raise ReleaseError(f"没有 v{version} 的锚点：{store.path}")
     log = EventLog(root / "runs" / "release" / f"v{version}" / "events.jsonl")
     # 只认指向这份日志的锚点：别的运行（测试、临时目录）写的锚点不能拿来比
-    expected = log.path
-    matching = [a for a in anchors if (root / a.log_path).resolve() == expected.resolve()]
+    log_path = log.path
+    if log_path is None:
+        raise ReleaseError("事件日志没有路径，无法定位锚点")
+    expected = log_path.resolve()
+    matching = [
+        a for a in anchors if a.log_path and (root / a.log_path).resolve() == expected
+    ]
     if not matching:
         raise ReleaseError(f"没有指向 {expected} 的锚点")
     anchor = matching[-1]
