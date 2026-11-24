@@ -4,7 +4,7 @@
 
 **Agent Gestalt Hierarchy** — an M0 vertical slice of a multi-agent "gestalt reconstruction" framework. A parent issues a skeleton and a contract; children reconstruct the whole rather than reassembling parts; every submission is signed and provenance-checked. Gate, arena, arbitration, governance, budget ledger and a hash-chained log form one runnable, testable, replayable pipeline.
 
-> Status: M0 (v1.11.3). Children are **rule-based reconstructors**, not LLMs. Every number below is reproducible locally.
+> Status: M0 (v1.11.4). Children are **rule-based reconstructors**, not LLMs. Every number below is reproducible locally.
 
 ```
 Parent M0
@@ -172,7 +172,7 @@ Conclusion: on a balanced set the structural verifier matches human judgement co
 
 Real-failure calibration (4 partial failures + 5 positives drawn from 50 hard runs, 9 items): binary agreement 1.0, kappa 1.0; ECE 0.241 — the verifier returns graded scores (0.5/0.667) while the human labels are binary, so the probability calibration was not established from binary labels alone.
 
-Graded labels (12 items, human 0/0.5/1): ECE **0.014**, MAE **0.014**, means 0.806 vs 0.792 — across three rounds (7/9/12 items) ECE went 0.024 → 0.019 → 0.014, a stable result. Caveat: negatives were built by the same rule (removing an edge or node), so this validates that the rule is implemented as stated and understood the same way — not that the rule is semantically right. That needs negatives from real model failures.
+Graded labels (19 items pooled, human 0/0.5/1): ECE **0.009**, MAE **0.009**; the newest 7 items scored ECE 0.0. Four rounds: 0.024 → 0.019 → 0.014 → 0.009. Caveat: negatives were built by the same rule (removing an edge or node), so this validates that the rule is implemented as stated and understood the same way — not that the rule is semantically right. That needs negatives from real model failures.
 
 Multi-model comparison is not possible yet: the command-code endpoint only serves `deepseek/deepseek-v4.1-flash`; `deepseek-v4.1`, `deepseek-v3.2`, `glm-4.7-flash` and `qwen3-max` all return 400.
 

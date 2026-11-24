@@ -34,18 +34,26 @@ def main() -> int:
     parser.add_argument("--out-json", type=Path, default=ROOT / "runs" / "g1" / "label-graded-template.json")
     parser.add_argument("--out-candidates", type=Path, default=ROOT / "runs" / "g1" / "label-graded-candidates.json")
     parser.add_argument("--per-bucket", type=int, default=3)
+    parser.add_argument("--exclude", type=Path, nargs="*", default=[], help="已标注过的候选文件，按内容去重")
     args = parser.parse_args()
 
     items = []
     for path in args.candidates:
         items.extend(json.loads(path.read_text(encoding="utf-8")))
     verifier = StructuralVerifier()
+    seen: set[str] = set()
+    for path in args.exclude:
+        if path.exists():
+            for old in json.loads(path.read_text(encoding="utf-8")):
+                seen.add(json.dumps(old["reconstruction"], sort_keys=True))
     buckets: dict[float, list[dict]] = {}
     for item in items:
         skeleton = Skeleton.model_validate(item["skeleton"])
         if not any(m.vertical for m in skeleton.moves):
             continue
         recon = GestaltReconstruction.model_validate(item["reconstruction"])
+        if json.dumps(item["reconstruction"], sort_keys=True) in seen:
+            continue
         score = round(verifier.score(recon, skeleton), 3)
         buckets.setdefault(score, []).append(item)
 

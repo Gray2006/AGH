@@ -2,6 +2,19 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [1.11.4] - 2026-11-24
+
+分级校准累计 19 题。
+
+### Added
+
+- `make_graded_packet.py --exclude`：按内容排除已标注候选
+
+### Measured
+
+- 新增 7 题：ECE 0.0
+- 合并 19 题：ECE 0.009、MAE 0.009；四轮 0.024 → 0.019 → 0.014 → 0.009
+
 ## [1.11.3] - 2026-11-24
 
 分级校准扩到 12 题。
