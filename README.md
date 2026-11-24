@@ -4,7 +4,7 @@
 
 **Agent Gestalt Hierarchy**：多智能体「整体重构」框架的 M0 垂直切片。母体发骨架与契约，子级按整体重构而不是拼零件，回传带签名与出处；写入门、竞技场、仲裁、治理机、预算账本、哈希链日志串成一条可跑、可测、可重放的链路。
 
-> 状态：M0（v2.7.0）。子级默认是**规则重构器**；LLM 子级与 LLM 变异器是可插拔的，已有实测数据。M0 管线与 LLM 变异路径都支持 L1 逐位重放。
+> 状态：M0（v2.8.0）。子级默认是**规则重构器**；LLM 子级与 LLM 变异器是可插拔的，已有实测数据。M0 管线与 LLM 变异路径都支持 L1 逐位重放。
 
 ```
 母体 M0
@@ -31,6 +31,33 @@
 ```
 
 ---
+
+## 三行接入：审计你自己的多智能体流水线
+
+```python
+from agh import AuditSession
+
+audit = AuditSession("run.jsonl")
+with audit:
+    call_id = audit.call(model="deepseek-chat", prompt=p, response=r, tokens=312)
+    audit.flag(call_id, reason="wrong")      # 结果不对就标一下
+
+audit.verify()                                # 事后：这条链有没有被改
+audit.replay()                                # 事后：重放，确认结论可复现
+audit.export("bundle.json", redact=True)      # 审计包，脱敏后可直接外发
+```
+
+命令行：
+
+```bash
+agh audit summary --log run.jsonl              # 多少次调用、多少 token、几条标记
+agh audit verify --log run.jsonl               # 校验哈希链
+agh audit export-failures --log run.jsonl      # 把标记过的调用导成失败样本
+```
+
+`store_payload=False` 时只存输入输出的哈希，不存原文——适合敏感数据，代价是事后只能验「没被改」，不能重现内容。
+
+导出的失败样本是**产品反哺实验室**的入口：真实用户标记的错题，比自造的任务族可信。
 
 ## 它解决什么
 
@@ -73,7 +100,7 @@ git clone https://github.com/Gray2006/AGH.git
 cd AGH
 pip install -e ".[dev]"   # 或 pip install agh-gestalt
 
-python -m pytest -q          # 315 条测试 + 1 skipped
+python -m pytest -q          # 321 条测试 + 1 skipped
 python -m agh                # 跑 M0，落盘 runs/m0/（等价 python scripts/run_m0.py）
 ```
 
@@ -403,7 +430,7 @@ python -m agh.supervisor --store runs/selfmod --gate "python -m pytest -q" -- py
 | 治理 | 有合格异议 → 升 T2 停在 `VERIFIED`；人工批准后 `RELEASED` |
 | 账本 | 违规 0 |
 | 重放 | L1 `bit_exact=true` |
-| 测试 | 315 passed + 1 skipped |
+| 测试 | 321 passed + 1 skipped |
 
 ## 治理有效性
 

@@ -398,6 +398,12 @@ def build_parser() -> argparse.ArgumentParser:
     anchor.add_argument("--sign", choices=["none", "ed25519"], default="ed25519")
     anchor.add_argument("--verify", action="store_true")
     anchor.set_defaults(func=cmd_anchor)
+    audit = sub.add_parser("audit", help="审计日志：摘要 / 校验 / 导出失败样本")
+    audit.add_argument("action", choices=["summary", "verify", "export-failures"])
+    audit.add_argument("--log", required=True)
+    audit.add_argument("--out", default=None)
+    audit.add_argument("--no-payload", action="store_true", help="导出时不带原文")
+    audit.set_defaults(func=cmd_audit)
     version = sub.add_parser("version", help="打印版本")
     version.set_defaults(func=lambda _a: print(__version__) or 0)
 
@@ -435,6 +441,27 @@ def cmd_anchor(args: argparse.Namespace) -> int:
     store.append(anchor)
     print(json.dumps(anchor.as_dict(), ensure_ascii=False, indent=2))
     return 0
+
+
+def cmd_audit(args: argparse.Namespace) -> int:
+    from .audit import AuditSession, export_failures
+
+    if args.action == "summary":
+        audit = AuditSession.__new__(AuditSession)
+        audit.path = Path(args.log)
+        audit.log = EventLog(Path(args.log))
+        print(json.dumps(audit.summary(), ensure_ascii=False, indent=2))
+        return 0
+    if args.action == "verify":
+        EventLog(Path(args.log)).verify()
+        print(json.dumps({"ok": True, "log": args.log}, ensure_ascii=False))
+        return 0
+    if args.action == "export-failures":
+        out = Path(args.out or Path(args.log).with_suffix(".failures.json"))
+        count = export_failures(args.log, out, include_payload=not args.no_payload)
+        print(json.dumps({"ok": True, "cases": count, "out": str(out)}, ensure_ascii=False))
+        return 0
+    raise SystemExit(f"未知 action: {args.action}")
 
 
 def main(argv: list[str] | None = None) -> int:

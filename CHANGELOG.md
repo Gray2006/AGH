@@ -2,6 +2,25 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [2.8.0] - 2026-11-25
+
+审计会话：产品面的三行接入层，以及「产品反哺实验室」的导出通道。
+
+### Added
+
+- `agh/audit.py`：`AuditSession` —— `call()` 记一次模型调用，`flag()` 标记错误结果，
+  `verify()` / `replay()` / `export()` 事后校验与重放
+- `store_payload=False`：只存哈希不存原文，适合敏感数据
+- `export()` 支持 `redact=True`，导出可直接外发的审计包
+- `export_failures()`：把被标记的调用导成失败样本，供实验室消费
+- CLI：`agh audit {summary,verify,export-failures} --log ...`
+- 7 条测试：篡改检出、脱敏导出、只导出被标记的调用、不存原文时仍能导出
+
+### Notes
+
+- 这层是给「用多个 LLM 搭流水线、出问题要追责」的场景准备的，不需要理解契约/骨架/竞技场
+- 产品叙事从这里开始，进化那半仍然存在但不再是入口
+
 ## [2.7.0] - 2026-11-25
 
 多轮修正：策略空间里第一个能改变单次生成质量的维度。

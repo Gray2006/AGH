@@ -4,7 +4,7 @@
 
 **Agent Gestalt Hierarchy** — an M0 vertical slice of a multi-agent "gestalt reconstruction" framework. A parent issues a skeleton and a contract; children reconstruct the whole rather than reassembling parts; every submission is signed and provenance-checked. Gate, arena, arbitration, governance, budget ledger and a hash-chained log form one runnable, testable, replayable pipeline.
 
-> Status: M0 (v2.7.0). The default child is a **rule-based reconstructor**; LLM children and the LLM mutator are pluggable and already measured. Both the M0 pipeline and the LLM mutation path support bit-exact L1 replay.
+> Status: M0 (v2.8.0). The default child is a **rule-based reconstructor**; LLM children and the LLM mutator are pluggable and already measured. Both the M0 pipeline and the LLM mutation path support bit-exact L1 replay.
 
 ```
 Parent M0
@@ -31,6 +31,35 @@ Budget settlement + hash-chained log + bit-exact L1 replay
 ```
 
 ---
+
+## Three lines to audit your own multi-agent pipeline
+
+```python
+from agh import AuditSession
+
+audit = AuditSession("run.jsonl")
+with audit:
+    call_id = audit.call(model="deepseek-chat", prompt=p, response=r, tokens=312)
+    audit.flag(call_id, reason="wrong")      # mark a result that went wrong
+
+audit.verify()                                # later: has this chain been modified?
+audit.replay()                                # later: replay it, confirm reproducibility
+audit.export("bundle.json", redact=True)      # audit bundle, safe to hand over
+```
+
+Command line:
+
+```bash
+agh audit summary --log run.jsonl              # calls, tokens, flags
+agh audit verify --log run.jsonl               # check the hash chain
+agh audit export-failures --log run.jsonl      # export flagged calls as failure samples
+```
+
+With `store_payload=False` only hashes of inputs and outputs are kept — suitable for sensitive data, at the
+cost of verifying "not modified" without being able to reproduce content.
+
+The exported failure samples are the **product feeding the lab** entry point: real flagged mistakes are more
+trustworthy than a self-made task family.
 
 ## What it solves
 
@@ -77,7 +106,7 @@ git clone https://github.com/Gray2006/AGH.git
 cd AGH
 pip install -e ".[dev]"   # 或 pip install agh-gestalt
 
-python -m pytest -q          # 315 tests + 1 skipped
+python -m pytest -q          # 321 tests + 1 skipped
 python -m agh                # run M0, writes runs/m0/ (same as python scripts/run_m0.py)
 ```
 
@@ -399,7 +428,7 @@ python -m agh.supervisor --store runs/selfmod --gate "python -m pytest -q" -- py
 | Governance | qualified dissent → T2, stops at `VERIFIED`; `RELEASED` after human approval |
 | Ledger | 0 violations |
 | Replay | L1 `bit_exact=true` |
-| Tests | 315 passed + 1 skipped |
+| Tests | 321 passed + 1 skipped |
 
 ## Governance effectiveness
 
