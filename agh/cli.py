@@ -23,6 +23,7 @@ from .evolution import EvolutionConfig, Strategy, default_benchmarks, evolve
 from .evolution_llm import compare_search
 from .frozen import FrozenLayer
 from .pipeline import DEV_KID, DEV_SECRET, PARENT_SIG, faithful_child, m0_skeleton, run_m0
+from .report import collect, render
 from .sdk import AghClient, default_frozen_root
 
 
@@ -227,6 +228,12 @@ def cmd_evolve(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_report(args: argparse.Namespace) -> int:
+    payload = collect(args.runs)
+    print(render(payload))
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="agh", description="AGH 多智能体整体重构框架")
     parser.add_argument("--version", action="version", version=f"AGH {__version__}")
@@ -282,6 +289,10 @@ def build_parser() -> argparse.ArgumentParser:
     evolve_cmd.add_argument("--model", default=None)
     evolve_cmd.add_argument("--api-key-env", default=None)
     evolve_cmd.set_defaults(func=cmd_evolve)
+
+    report = sub.add_parser("report", help="汇总 runs/ 下的实验结果")
+    report.add_argument("--runs", type=Path, default=Path("runs"))
+    report.set_defaults(func=cmd_report)
 
     version = sub.add_parser("version", help="打印版本")
     version.set_defaults(func=lambda _a: print(__version__) or 0)

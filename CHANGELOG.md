@@ -2,6 +2,13 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [1.11.0] - 2026-11-24
+
+### Added
+
+- `agh/report`：汇总 `runs/` 下各实验（M0、实验、消融、真模型、校准）成一张表
+- 测试 230 → 234
+
 ## [1.10.2] - 2026-11-24
 
 ### Added
