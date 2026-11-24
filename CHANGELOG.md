@@ -2,6 +2,23 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [2.10.0] - 2026-11-25
+
+可视化报告：一个自包含 HTML，双击就能看。
+
+### Added
+
+- `agh ui --log run.jsonl [--out report.html] [--no-open]`：读审计日志，生成数据内嵌的 HTML
+- 页面含调用统计、逐次调用的模型/哈希/tokens、被标记的问题、事件时间线
+- 日志内容用 `textContent` 渲染、`</` 转义，不拼接 innerHTML
+- 校验不过的日志直接拒绝生成
+- 5 条测试：结构、数据内嵌、闭合标签转义、篡改拒绝、CLI 落盘
+
+### Notes
+
+- 不做服务器、不做 WebView：一个文件即可，任何人拿到都能看
+- 想放进 DSH 侧边栏，用「在侧边栏打开」指向这个 HTML，不需要写插件
+
 ## [2.9.0] - 2026-11-25
 
 低门槛入口：`agh quickstart`，一条命令看完审计链路。

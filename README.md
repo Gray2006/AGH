@@ -4,7 +4,7 @@
 
 **Agent Gestalt Hierarchy**：多智能体「整体重构」框架的 M0 垂直切片。母体发骨架与契约，子级按整体重构而不是拼零件，回传带签名与出处；写入门、竞技场、仲裁、治理机、预算账本、哈希链日志串成一条可跑、可测、可重放的链路。
 
-> 状态：M0（v2.9.0）。子级默认是**规则重构器**；LLM 子级与 LLM 变异器是可插拔的，已有实测数据。M0 管线与 LLM 变异路径都支持 L1 逐位重放。
+> 状态：M0（v2.10.0）。子级默认是**规则重构器**；LLM 子级与 LLM 变异器是可插拔的，已有实测数据。M0 管线与 LLM 变异路径都支持 L1 逐位重放。
 
 ```
 母体 M0
@@ -111,7 +111,7 @@ git clone https://github.com/Gray2006/AGH.git
 cd AGH
 pip install -e ".[dev]"   # 或 pip install agh-gestalt
 
-python -m pytest -q          # 330 条测试 + 1 skipped
+python -m pytest -q          # 335 条测试 + 1 skipped
 python -m agh                # 跑 M0，落盘 runs/m0/（等价 python scripts/run_m0.py）
 ```
 
@@ -441,7 +441,7 @@ python -m agh.supervisor --store runs/selfmod --gate "python -m pytest -q" -- py
 | 治理 | 有合格异议 → 升 T2 停在 `VERIFIED`；人工批准后 `RELEASED` |
 | 账本 | 违规 0 |
 | 重放 | L1 `bit_exact=true` |
-| 测试 | 330 passed + 1 skipped |
+| 测试 | 335 passed + 1 skipped |
 
 ## 治理有效性
 
@@ -509,6 +509,18 @@ python scripts/run_code_arena.py --task dedupe --provider deepseek --samples 3
 ```
 
 离线示例（模拟模型）会稳定触发警告：visible 1.0、hidden 0.5、差距 0.50。这正是治理层该让人看见的东西——**按公开用例选出来的赢家，可能不是真实最好的那个**。
+
+## 可视化报告
+
+```bash
+agh ui --log run.jsonl
+```
+
+生成一个**自包含 HTML**（数据内嵌、不联网、不依赖服务器），自动打开浏览器。也可以直接发给别人，对方双击就能看。
+
+页面内容：调用统计、每次调用的模型/哈希/tokens、被标记的问题、事件时间线。日志校验不过时直接拒绝生成。
+
+想放进 DSH 侧边栏的话，生成后用「在侧边栏打开」指向这个 HTML 即可——不需要额外插件。
 
 ## 反馈
 
