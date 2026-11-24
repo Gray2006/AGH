@@ -24,14 +24,21 @@ BAR = "=" * 60
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="分级标注包")
-    parser.add_argument("--candidates", type=Path, default=ROOT / "runs" / "g1" / "llm-hard50-candidates.json")
+    parser.add_argument(
+        "--candidates",
+        type=Path,
+        nargs="+",
+        default=[ROOT / "runs" / "g1" / "llm-hard50-candidates.json"],
+    )
     parser.add_argument("--out-md", type=Path, default=ROOT / "runs" / "g1" / "label-graded.md")
     parser.add_argument("--out-json", type=Path, default=ROOT / "runs" / "g1" / "label-graded-template.json")
     parser.add_argument("--out-candidates", type=Path, default=ROOT / "runs" / "g1" / "label-graded-candidates.json")
     parser.add_argument("--per-bucket", type=int, default=3)
     args = parser.parse_args()
 
-    items = json.loads(args.candidates.read_text(encoding="utf-8"))
+    items = []
+    for path in args.candidates:
+        items.extend(json.loads(path.read_text(encoding="utf-8")))
     verifier = StructuralVerifier()
     buckets: dict[float, list[dict]] = {}
     for item in items:

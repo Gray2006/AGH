@@ -2,6 +2,15 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [1.11.3] - 2026-11-24
+
+分级校准扩到 12 题。
+
+### Measured
+
+- 12 题：ECE 0.014、MAE 0.014；验证器均值 0.806 vs 人工 0.792
+- 三轮 ECE：0.024 → 0.019 → 0.014，稳定
+
 ## [1.11.2] - 2026-11-24
 
 分级校准扩到 9 题。
