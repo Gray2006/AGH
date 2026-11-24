@@ -36,6 +36,7 @@ def main() -> int:
     parser.add_argument("--include-reference", action="store_true", help="提示里附一个参考重构（消融）")
     parser.add_argument("--temperature", type=float, default=None)
     parser.add_argument("--with-hints", action="store_true", help="提示里给特征命名约定（结构标签）")
+    parser.add_argument("--parallel", type=int, default=1)
     parser.add_argument("--verifier", choices=["structural", "coverage"], default=None)
     parser.add_argument("--samples", type=int, default=8)
     parser.add_argument("--out", type=Path, default=ROOT / "runs" / "g1" / "llm-experiment.json")
@@ -62,27 +63,59 @@ def main() -> int:
     )
 
     verifier = make_verifier(args.verifier) if args.verifier else None
-    scores: list[float] = []
-    errors: list[dict] = []
-    usage_total = {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
-    for index in range(args.samples):
+
+    def run_one(index: int) -> dict:
+        local_client = client
+        local_child = child
+        if args.parallel > 1:
+            local_client = make_client(
+                args.provider, model=args.model, api_key_env=args.api_key_env
+            )
+            local_client.max_tokens = args.max_tokens
+            if args.temperature is not None:
+                local_client.temperature = args.temperature
+            local_child = LlmChild(
+                name="llm-child",
+                complete=local_client,
+                skeleton=skeleton,
+                parent_features=PARENT_SIG.features,
+                reference=reference,
+                with_hints=args.with_hints,
+            )
         try:
-            recon = child.reconstruct(f"ct-llm-{index}")
+            recon = local_child.reconstruct(f"ct-llm-{index}")
         except ChildOutputError as exc:
-            errors.append({"sample": index, "error": str(exc), "details": exc.errors[:3]})
-            continue
+            return {"index": index, "error": str(exc), "details": exc.errors[:3], "usage": None}
         filt = hard_filter(recon, skeleton)
         if not filt.passed:
-            errors.append({"sample": index, "error": "hard_filter", "details": filt.reasons})
-            continue
-        if client.last_usage:
-            for key in usage_total:
-                usage_total[key] += int(client.last_usage.get(key, 0) or 0)
+            return {"index": index, "error": "hard_filter", "details": filt.reasons, "usage": None}
         verifier_score = verifier.score(recon, skeleton) if verifier else None
         breakdown = score_candidate(
             recon, skeleton, cfg, verifier_score=verifier_score, parent_signature=PARENT_SIG
         )
-        scores.append(breakdown.score)
+        return {"index": index, "score": breakdown.score, "usage": local_client.last_usage}
+
+    if args.parallel > 1:
+        from concurrent.futures import ThreadPoolExecutor
+
+        with ThreadPoolExecutor(max_workers=args.parallel) as pool:
+            results = list(pool.map(run_one, range(args.samples)))
+    else:
+        results = [run_one(i) for i in range(args.samples)]
+
+    scores: list[float] = []
+    errors: list[dict] = []
+    usage_total = {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
+    for result in results:
+        if "error" in result:
+            errors.append(
+                {"sample": result["index"], "error": result["error"], "details": result["details"]}
+            )
+            continue
+        scores.append(result["score"])
+        if result["usage"]:
+            for key in usage_total:
+                usage_total[key] += int(result["usage"].get(key, 0) or 0)
 
     rule_recon = faithful_child("ct-rule")
     rule_score = score_candidate(

@@ -2,6 +2,12 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [1.13.1] - 2026-11-24
+
+### Added
+
+- `run_llm_experiment.py --parallel N`：样本级并发，每个任务独立客户端，usage 汇总
+
 ## [1.13.0] - 2026-11-24
 
 性能与回归兜底。
