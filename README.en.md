@@ -4,7 +4,7 @@
 
 **Agent Gestalt Hierarchy** — an M0 vertical slice of a multi-agent "gestalt reconstruction" framework. A parent issues a skeleton and a contract; children reconstruct the whole rather than reassembling parts; every submission is signed and provenance-checked. Gate, arena, arbitration, governance, budget ledger and a hash-chained log form one runnable, testable, replayable pipeline.
 
-> Status: M0 (v2.1.2). The default child is a **rule-based reconstructor**; LLM children and the LLM mutator are pluggable and already measured. Both the M0 pipeline and the LLM mutation path support bit-exact L1 replay.
+> Status: M0 (v2.2.0). The default child is a **rule-based reconstructor**; LLM children and the LLM mutator are pluggable and already measured. Both the M0 pipeline and the LLM mutation path support bit-exact L1 replay.
 
 ```
 Parent M0
@@ -399,7 +399,23 @@ python -m agh.supervisor --store runs/selfmod --gate "python -m pytest -q" -- py
 | Governance | qualified dissent → T2, stops at `VERIFIED`; `RELEASED` after human approval |
 | Ledger | 0 violations |
 | Replay | L1 `bit_exact=true` |
-| Tests | 276 passed + 1 skipped |
+| Tests | 281 passed + 1 skipped |
+
+## Governance effectiveness
+
+Every other experiment asks whether the score can go up. This one asks: **remove the governance layer, and does the bad behaviour get in?**
+
+`python scripts/run_governance_bench.py` runs the same inputs through two arms; the control arm swaps governance for the naive implementation:
+
+| Scenario | With governance | Without |
+|---|---|---|
+| Forged provenance (tampered payload / signature / unknown signer / replay) | 80/80 blocked | 0/80 |
+| Over-budget calls | 10/10 refused | 0/10 |
+| One tampered log line | 20/20 detected | 0/20 |
+
+100% vs 0% in all three, zero false rejects on legitimate input. Reproducible in seconds and wired into CI.
+
+The point is not that AGH is secure. It is that the governance layer is not decoration: remove it and every "auditable, replayable" claim above stops holding.
 
 ## Design decisions
 
