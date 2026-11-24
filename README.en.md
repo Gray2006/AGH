@@ -4,7 +4,7 @@
 
 **Agent Gestalt Hierarchy** — an M0 vertical slice of a multi-agent "gestalt reconstruction" framework. A parent issues a skeleton and a contract; children reconstruct the whole rather than reassembling parts; every submission is signed and provenance-checked. Gate, arena, arbitration, governance, budget ledger and a hash-chained log form one runnable, testable, replayable pipeline.
 
-> Status: M0 (v1.9.2). Children are **rule-based reconstructors**, not LLMs. Every number below is reproducible locally.
+> Status: M0 (v1.10.0). Children are **rule-based reconstructors**, not LLMs. Every number below is reproducible locally.
 
 ```
 Parent M0
@@ -159,6 +159,8 @@ Prompt ablation (12 samples each, same verifier): without structural hints 0.793
 > Real-model scores before 1.4.0 (0.49–0.51) included self-reported vertical-move credit and are void. From 1.5.0 an independent verifier checks the evidence and both the rule child and the model are scored the same way.
 
 Across 10 generated skeletons (`scripts/run_llm_bench.py`): the real model averages 0.62229 vs the rule child at 0.69081, paired delta -0.06851 (CI -0.11277 to -0.02372) — the single-skeleton -0.014 grows to -0.07 across skeletons.
+
+Harder set (7–8 nodes, more edges, required ratio 0.6, 12 skeletons): 0.6744 vs 0.76478, delta -0.09038 (CI -0.11809 to -0.05952); one of twelve scored 0.5 on the structural verifier — a real partial failure, but only 8% of samples.
 
 Verifier calibration (`scripts/run_verifier_calibration.py`, 10 real candidates):
 - Judge with the rule: agreement 1.0, kappa 1.0, ECE 0.0 — but the judge merely restates the rule, so this is not independent evidence

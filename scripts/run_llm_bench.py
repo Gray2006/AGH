@@ -35,6 +35,10 @@ def main() -> int:
     parser.add_argument("--max-tokens", type=int, default=2048)
     parser.add_argument("--benchmarks", type=int, default=10)
     parser.add_argument("--bench-seed", type=int, default=0)
+    parser.add_argument("--min-nodes", type=int, default=5)
+    parser.add_argument("--max-nodes", type=int, default=5)
+    parser.add_argument("--extra-edges", type=int, default=2)
+    parser.add_argument("--required-ratio", type=float, default=0.5)
     parser.add_argument("--out", type=Path, default=ROOT / "runs" / "g1" / "llm-bench.json")
     parser.add_argument("--candidates-out", type=Path, default=ROOT / "runs" / "g1" / "llm-bench-candidates.json")
     args = parser.parse_args()
@@ -43,7 +47,14 @@ def main() -> int:
     verifier = StructuralVerifier()
     client = make_client(args.provider, model=args.model, api_key_env=args.api_key_env)
     client.max_tokens = args.max_tokens
-    benches = generate_benchmarks(args.benchmarks, seed=args.bench_seed)
+    benches = generate_benchmarks(
+        args.benchmarks,
+        seed=args.bench_seed,
+        min_nodes=args.min_nodes,
+        max_nodes=args.max_nodes,
+        extra_edges=args.extra_edges,
+        required_ratio=args.required_ratio,
+    )
 
     llm_scores: list[float] = []
     rule_scores: list[float] = []
@@ -65,8 +76,9 @@ def main() -> int:
         if not hard_filter(recon, sk).passed:
             per_bench.append({"skeleton": sk.skeleton_id, "error": "hard_filter"})
             continue
+        vscore = verifier.score(recon, sk)
         llm_score = score_candidate(
-            recon, sk, cfg, verifier_score=verifier.score(recon, sk), parent_signature=bench.parent
+            recon, sk, cfg, verifier_score=vscore, parent_signature=bench.parent
         ).score
         rule_recon = strategy_child(seed_for(bench), sk)(f"ct-{sk.skeleton_id}")
         rule_score = score_candidate(
@@ -79,7 +91,12 @@ def main() -> int:
         llm_scores.append(llm_score)
         rule_scores.append(rule_score)
         per_bench.append(
-            {"skeleton": sk.skeleton_id, "llm": round(llm_score, 5), "rule": round(rule_score, 5)}
+            {
+                "skeleton": sk.skeleton_id,
+                "llm": round(llm_score, 5),
+                "rule": round(rule_score, 5),
+                "verifier": round(vscore, 3),
+            }
         )
         candidates.append(
             {

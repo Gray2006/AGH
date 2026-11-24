@@ -2,6 +2,19 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [1.10.0] - 2026-11-24
+
+加难基准：差距扩大，真实失败样本开始出现。
+
+### Added
+
+- `run_llm_bench.py` 支持 `--min-nodes/--max-nodes/--extra-edges/--required-ratio`，报告记录每个骨架的验证器分数
+
+### Measured
+
+- 难基准 12 个（7–8 节点、必需项 0.6）：真模型 0.6744 vs 规则 0.76478，差 -0.09038（CI -0.11809–-0.05952）
+- 验证器分布：11 个 1.0、1 个 0.5（真实部分失败，8%）
+
 ## [1.9.2] - 2026-11-24
 
 人工标注 · 平衡集：验证器与人工完全一致。
