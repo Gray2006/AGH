@@ -4,7 +4,7 @@
 
 **Agent Gestalt Hierarchy** — an M0 vertical slice of a multi-agent "gestalt reconstruction" framework. A parent issues a skeleton and a contract; children reconstruct the whole rather than reassembling parts; every submission is signed and provenance-checked. Gate, arena, arbitration, governance, budget ledger and a hash-chained log form one runnable, testable, replayable pipeline.
 
-> Status: M0 (v1.9.1). Children are **rule-based reconstructors**, not LLMs. Every number below is reproducible locally.
+> Status: M0 (v1.9.2). Children are **rule-based reconstructors**, not LLMs. Every number below is reproducible locally.
 
 ```
 Parent M0
@@ -162,9 +162,11 @@ Across 10 generated skeletons (`scripts/run_llm_bench.py`): the real model avera
 
 Verifier calibration (`scripts/run_verifier_calibration.py`, 10 real candidates):
 - Judge with the rule: agreement 1.0, kappa 1.0, ECE 0.0 — but the judge merely restates the rule, so this is not independent evidence
-- Blind judge (`--blind`, no rule): agreement 0.8, **kappa 0.0**, ECE 0.2; the blind judge gives 1.0 to every candidate and does not discriminate
+- Blind judge (`--blind`, no rule): agreement 0.8, **kappa 0.0**, ECE 0.2; it gives 1.0 to every candidate and does not discriminate
+- Human labels, first batch (all positives): 8 scorable items, agreement 0.875, kappa 0.0 — no negatives, so kappa is meaningless
+- Human labels, balanced set (5 positive / 5 negative, 10 items): agreement **1.0**, kappa **1.0**, ECE **0.0**
 
-Conclusion: the structural verifier is **not independently calibrated**. That needs human-labelled samples; the LLM judge is unreliable here.
+Conclusion: on a balanced set the structural verifier matches human judgement completely. Caveat: negatives were built by the same rule (removing an edge or node), so this validates that the rule is implemented as stated and understood the same way — not that the rule is semantically right. That needs negatives from real model failures.
 
 Multi-model comparison is not possible yet: the command-code endpoint only serves `deepseek/deepseek-v4.1-flash`; `deepseek-v4.1`, `deepseek-v3.2`, `glm-4.7-flash` and `qwen3-max` all return 400.
 

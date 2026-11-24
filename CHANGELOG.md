@@ -2,6 +2,20 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [1.9.2] - 2026-11-24
+
+人工标注 · 平衡集：验证器与人工完全一致。
+
+### Added
+
+- `scripts/make_balanced_packet.py`：5 正 5 负标注包，题间粗分隔；负例由删边/删节点构造
+
+### Measured
+
+- 平衡集 10 题：一致率 1.0、Cohen's kappa 1.0、ECE 0.0
+- 首批全正例 8 题：一致率 0.875、kappa 0.0（无负例）
+- 注意：负例按同一条规则构造，属「规则实现正确 + 人机理解一致」，非语义正确性
+
 ## [1.9.1] - 2026-11-24
 
 人工标注首轮结果：验证器仍未校准。
