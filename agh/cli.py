@@ -418,6 +418,16 @@ def build_parser() -> argparse.ArgumentParser:
     ui.add_argument("--out", default=None)
     ui.add_argument("--no-open", action="store_true", help="只生成，不自动打开浏览器")
     ui.set_defaults(func=cmd_ui)
+    imp = sub.add_parser("import", help="把已有 jsonl 日志搬进可验证格式")
+    imp.add_argument("--from-jsonl", required=True)
+    imp.add_argument("--out", default=None)
+    imp.add_argument(
+        "--map",
+        action="append",
+        default=None,
+        help="字段映射，例如 --map prompt=input_text --map response=output_text",
+    )
+    imp.set_defaults(func=cmd_import)
     version = sub.add_parser("version", help="打印版本")
     version.set_defaults(func=lambda _a: print(__version__) or 0)
 
@@ -518,6 +528,15 @@ def cmd_ui(args: argparse.Namespace) -> int:
     print(json.dumps({"ok": True, "out": str(out), "log": log}, ensure_ascii=False))
     if not args.no_open:
         webbrowser.open(out.resolve().as_uri())
+    return 0
+
+
+def cmd_import(args: argparse.Namespace) -> int:
+    from .importers import import_jsonl, parse_map
+
+    out = args.out or str(Path(args.from_jsonl).with_suffix(".agh.jsonl"))
+    result = import_jsonl(args.from_jsonl, out, mapping=parse_map(args.map))
+    print(json.dumps(result.as_dict(), ensure_ascii=False, indent=2))
     return 0
 
 

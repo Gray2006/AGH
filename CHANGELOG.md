@@ -2,6 +2,23 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [2.11.0] - 2026-11-25
+
+接入已有日志：不改代码，把别处的调用记录搬进可验证格式。
+
+### Added
+
+- `agh import --from-jsonl my_log.jsonl [--out out.jsonl]`：逐行读源 JSONL，写成审计日志
+- `--map model=... prompt=... response=... tokens=...` 支持字段名映射
+- 缺字段 / 坏 JSON / 非对象的行跳过并计数，不中断
+- 5 条测试：可验证输出、字段映射、未知键报错、坏行跳过、CLI
+
+### Notes
+
+- 导入是事后记录：证明「从导入起没被改」，不证明「导入时那条记录本身真实」。
+  要在源头链上，得在调用发生时用 `AuditSession.call()`
+- README 补了 `agh ui --from-run` 只认默认目录的限制说明
+
 ## [2.10.1] - 2026-11-25
 
 `agh ui --from-run`，以及自检发现的四个问题。
