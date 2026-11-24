@@ -4,7 +4,7 @@
 
 **Agent Gestalt Hierarchy** — an M0 vertical slice of a multi-agent "gestalt reconstruction" framework. A parent issues a skeleton and a contract; children reconstruct the whole rather than reassembling parts; every submission is signed and provenance-checked. Gate, arena, arbitration, governance, budget ledger and a hash-chained log form one runnable, testable, replayable pipeline.
 
-> Status: M0 (v1.7.1). Children are **rule-based reconstructors**, not LLMs. Every number below is reproducible locally.
+> Status: M0 (v1.8.0). Children are **rule-based reconstructors**, not LLMs. Every number below is reproducible locally.
 
 ```
 Parent M0
@@ -147,6 +147,8 @@ Contract-pass-rate experiment (repeated reconstructions from a real model):
 python scripts/run_llm_experiment.py --provider command-code --samples 8
 ```
 
+Experiment reports now include real token usage (3 samples totalled 2956 tokens, 1861 completion including reasoning tokens).
+
 Measured with deepseek-v4.1-flash (12 samples, `StructuralVerifier` checking structural evidence): 12/12 passed the contract, mean score 0.79396 vs the rule child under the same verifier at 0.80795, delta -0.014 — consistently valid, still slightly below the handcrafted rule child.
 
 Prompt ablation (12 samples each, same verifier): without structural hints 0.79396; with the naming-convention hint 0.76546 (delta -0.043) — the hint pushes `vertical_moves:*` into features, increasing structural distance and hurting the score.
@@ -283,6 +285,16 @@ agh evolve --mode meta --rounds 8
 Eight rounds: difficulty rose from 1 to 4, the curve dipped and recovered on each harder level, and parameters settled at `update=0, coverage≈0.41, vertical≈0.37`.
 
 With annealed step sizes (0.1 early, 0.02 late), up to two weight changes per mutation and weight normalization, six rounds lift the mean from 0.54253 to 0.67324, converging to `confidence=0.05, structural=0.172, update=0, vertical=0.356, coverage=0.422`, `dissent_tau=0.18`.
+
+## Red team
+
+```bash
+python scripts/red_team.py
+```
+
+Seven local attacks, all expected to be blocked: forged signature, tampered payload, replayed nonce, stale sequence, log truncation, frozen-layer tamper, settlement replay.
+
+One boundary that must be stated: **a local hash chain cannot detect tail truncation** — the remaining chain is still self-consistent. It takes an external record of the head and size (`EventLog.verify_against(head, size)`, together with a timestamp anchor). `red_team.py` verifies exactly that.
 
 ## Safe self-modification
 

@@ -111,6 +111,21 @@ class EventLog:
             )
         return out
 
+    def head(self) -> str:
+        """当前链头哈希（空日志返回 GENESIS）。"""
+        return self.last_hash
+
+    def size(self) -> int:
+        return len(self.entries)
+
+    def verify_against(self, expected_head: str, expected_size: int) -> None:
+        """与外部记录的链头/长度比对：本地哈希链无法发现「截掉尾部」。"""
+        self.verify()
+        if self.size() != expected_size:
+            raise LogTampered(f"长度不符: 期望 {expected_size}，实际 {self.size()}")
+        if self.head() != expected_head:
+            raise LogTampered("链头与外部记录不符（可能被截断或替换）")
+
     def verify(self) -> None:
         prev = GENESIS
         for i, entry in enumerate(self.entries, start=1):

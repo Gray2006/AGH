@@ -64,6 +64,7 @@ def main() -> int:
     verifier = make_verifier(args.verifier) if args.verifier else None
     scores: list[float] = []
     errors: list[dict] = []
+    usage_total = {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
     for index in range(args.samples):
         try:
             recon = child.reconstruct(f"ct-llm-{index}")
@@ -74,6 +75,9 @@ def main() -> int:
         if not filt.passed:
             errors.append({"sample": index, "error": "hard_filter", "details": filt.reasons})
             continue
+        if client.last_usage:
+            for key in usage_total:
+                usage_total[key] += int(client.last_usage.get(key, 0) or 0)
         verifier_score = verifier.score(recon, skeleton) if verifier else None
         breakdown = score_candidate(
             recon, skeleton, cfg, verifier_score=verifier_score, parent_signature=PARENT_SIG
@@ -104,6 +108,7 @@ def main() -> int:
         "with_hints": bool(args.with_hints),
         "verifier": args.verifier,
         "scores": [round(x, 5) for x in scores],
+        "usage": usage_total,
         "delta_vs_rule": (
             {
                 "mean": round(paired_bootstrap_ci(deltas, resamples=2000, seed=0).mean, 5),

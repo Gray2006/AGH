@@ -2,6 +2,21 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [1.8.0] - 2026-11-24
+
+红队演练 + 真实 token 用量。
+
+### Added
+
+- `agh/redteam.py` + `scripts/red_team.py`：7 类本地攻击，全部拦住
+- `EventLog.verify_against(head, size)`、`head()`、`size()`：外部锚点才能发现日志尾部截断
+- 实验报告带 `usage`（prompt/completion/total tokens）
+- 测试 222 → 224
+
+### Found
+
+- 本地哈希链无法发现日志截断（剩余链自洽），必须靠外部链头+长度；红队里单列这一条并验证锚点方案
+
 ## [1.7.1] - 2026-11-24
 
 ### Added

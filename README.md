@@ -4,7 +4,7 @@
 
 **Agent Gestalt Hierarchy**：多智能体「整体重构」框架的 M0 垂直切片。母体发骨架与契约，子级按整体重构而不是拼零件，回传带签名与出处；写入门、竞技场、仲裁、治理机、预算账本、哈希链日志串成一条可跑、可测、可重放的链路。
 
-> 状态：M0（v1.7.1），子级是**规则重构器**，不接 LLM。所有数字都能在本地复现。
+> 状态：M0（v1.8.0），子级是**规则重构器**，不接 LLM。所有数字都能在本地复现。
 
 ```
 母体 M0
@@ -147,6 +147,8 @@ agh evolve --llm-mutator --provider deepseek --generations 5
 python scripts/run_llm_experiment.py --provider command-code --samples 8
 ```
 
+实验报告现在带真实 token 用量（3 次样本合计 2956 tokens，其中 completion 1861，含推理 token）。
+
 实测（deepseek-v4.1-flash，12 次，接 `StructuralVerifier` 核对结构证据）：12/12 通过契约，均分 0.79396，规则子级同验证器基线 0.80795，差 -0.014 —— 真模型稳定合格，仍略低于手工规则子级。
 
 提示消融（各 12 次，同一验证器）：不给结构提示 0.79396；给「特征命名约定」0.76546（差 -0.043）——提示让模型把 `vertical_moves:*` 塞进特征，结构距离变大，反而更差。
@@ -284,6 +286,16 @@ agh evolve --mode meta --rounds 8
 实测 8 轮：难度从 1 升到 4，曲线在加难时回落再爬升，参数稳定在 `update=0, coverage≈0.41, vertical≈0.37`；老虎机最后偏向 `weight_up`。
 
 参数层用退火步长（前半程 0.1、后半程 0.02）、一次可动两个权重、并对权重做归一化后，6 轮把均值从 0.54253 推到 0.67324，收敛到 `confidence=0.05, structural=0.172, update=0, vertical=0.356, coverage=0.422`，`dissent_tau=0.18`。
+
+## 红队演练
+
+```bash
+python scripts/red_team.py
+```
+
+本地跑 7 类攻击，全部应被拦住：伪造签名、篡改载荷、重放 nonce、序号回退、日志截断、冻结层篡改、结算重放。
+
+一个必须写明的边界：**本地哈希链发现不了「截掉日志尾部」**——剩下的链仍然自洽。要靠外部记录的长度与链头（`EventLog.verify_against(head, size)`，配合时间戳锚点）才能发现。`red_team.py` 里这条也是这么验的。
 
 ## 自我改写的安全边界
 

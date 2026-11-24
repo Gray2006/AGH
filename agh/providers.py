@@ -47,6 +47,7 @@ class ChatClient:
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
         "(KHTML, like Gecko) Chrome/120.0 Safari/537.36"
     )
+    last_usage: dict[str, Any] | None = field(default=None, repr=False)
 
     @property
     def api_key(self) -> str:
@@ -77,6 +78,7 @@ class ChatClient:
             attempt_payload["max_tokens"] = min(8192, self.max_tokens * (2**attempt))
             try:
                 data = self.transport(url, headers, attempt_payload)
+                self.last_usage = data.get("usage")
                 message = data["choices"][0]["message"]
                 content = message.get("content")
                 if data["choices"][0].get("finish_reason") == "length":
