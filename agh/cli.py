@@ -409,6 +409,9 @@ def build_parser() -> argparse.ArgumentParser:
     feedback.add_argument("--out", default=None)
     feedback.add_argument("--with-payload", action="store_true", help="带上输入输出原文（默认脱敏）")
     feedback.set_defaults(func=cmd_feedback)
+    quickstart = sub.add_parser("quickstart", help="30 秒看完审计链路（不需要 key）")
+    quickstart.add_argument("--dir", default=None, help="产物目录，默认 ./agh-quickstart")
+    quickstart.set_defaults(func=cmd_quickstart)
     version = sub.add_parser("version", help="打印版本")
     version.set_defaults(func=lambda _a: print(__version__) or 0)
 
@@ -480,6 +483,14 @@ def cmd_feedback(args: argparse.Namespace) -> int:
         print(json.dumps({"ok": True, "out": str(out)}, ensure_ascii=False))
     else:
         print(text)
+    return 0
+
+
+def cmd_quickstart(args: argparse.Namespace) -> int:
+    from .quickstart import render_quickstart, run_quickstart
+
+    report = run_quickstart(args.dir)
+    print(render_quickstart(report))
     return 0
 
 

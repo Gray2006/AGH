@@ -2,6 +2,21 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [2.9.0] - 2026-11-25
+
+低门槛入口：`agh quickstart`，一条命令看完审计链路。
+
+### Added
+
+- `agh quickstart`：内置三次模拟调用（一次故意标错），走完
+  记录 → 标记 → 校验 → 重放 → 导出失败样本，并打印下一步怎么接自己的代码
+- 不需要 API key、不需要写代码、不消耗 token
+- 5 条测试：无 key 可跑、日志可校验、只导出一条失败、可重复执行、输出含下一步
+
+### Notes
+
+- 这是给「想先看看是什么」的人的入口；真正接入还是 `AuditSession` 三行
+
 ## [2.8.1] - 2026-11-25
 
 反馈通道：把「提 issue」的成本降到复制粘贴。

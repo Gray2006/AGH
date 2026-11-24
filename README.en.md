@@ -4,7 +4,7 @@
 
 **Agent Gestalt Hierarchy** — an M0 vertical slice of a multi-agent "gestalt reconstruction" framework. A parent issues a skeleton and a contract; children reconstruct the whole rather than reassembling parts; every submission is signed and provenance-checked. Gate, arena, arbitration, governance, budget ledger and a hash-chained log form one runnable, testable, replayable pipeline.
 
-> Status: M0 (v2.8.1). The default child is a **rule-based reconstructor**; LLM children and the LLM mutator are pluggable and already measured. Both the M0 pipeline and the LLM mutation path support bit-exact L1 replay.
+> Status: M0 (v2.9.0). The default child is a **rule-based reconstructor**; LLM children and the LLM mutator are pluggable and already measured. Both the M0 pipeline and the LLM mutation path support bit-exact L1 replay.
 
 ```
 Parent M0
@@ -31,6 +31,18 @@ Budget settlement + hash-chained log + bit-exact L1 replay
 ```
 
 ---
+
+## 30-second tour
+
+```bash
+pip install agh-gestalt
+agh quickstart
+```
+
+No API key, no code, no tokens. It runs three mock calls, flags one of them as wrong, verifies the hash chain,
+replays it, exports failure samples, and then shows how to wire in your own code.
+
+Output lands in `./agh-quickstart/`: `run.jsonl` (the audit log) and `failures.json`.
 
 ## Three lines to audit your own multi-agent pipeline
 
@@ -106,7 +118,7 @@ git clone https://github.com/Gray2006/AGH.git
 cd AGH
 pip install -e ".[dev]"   # 或 pip install agh-gestalt
 
-python -m pytest -q          # 325 tests + 1 skipped
+python -m pytest -q          # 330 tests + 1 skipped
 python -m agh                # run M0, writes runs/m0/ (same as python scripts/run_m0.py)
 ```
 
@@ -428,7 +440,7 @@ python -m agh.supervisor --store runs/selfmod --gate "python -m pytest -q" -- py
 | Governance | qualified dissent → T2, stops at `VERIFIED`; `RELEASED` after human approval |
 | Ledger | 0 violations |
 | Replay | L1 `bit_exact=true` |
-| Tests | 325 passed + 1 skipped |
+| Tests | 330 passed + 1 skipped |
 
 ## Governance effectiveness
 
