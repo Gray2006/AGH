@@ -2,6 +2,12 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [1.7.1] - 2026-11-24
+
+### Added
+
+- 验证器「已知答案」测试：5 个正反例全部符合声明规则（证明实现正确，不证明规则正确）
+
 ## [1.7.0] - 2026-11-24
 
 盲裁判校准，结果是否定的。

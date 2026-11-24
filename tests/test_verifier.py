@@ -98,3 +98,23 @@ def test_llm_judge_clamps_and_handles_garbage() -> None:
     cand = recon(["M0"], [])
     assert LlmJudgeVerifier(complete=lambda _p: '{"support": 3}', blind=True).score(cand, sk) == 1.0
     assert LlmJudgeVerifier(complete=lambda _p: "garbage", blind=True).score(cand, sk) == 0.0
+
+
+def test_known_answer_set() -> None:
+    """已知答案集：正例覆盖全部垂直节点且有边，反例缺边或缺节点。
+
+    这验证的是「实现符合它声明的那条规则」，不是「规则本身正确」。
+    """
+    from agh.verifier import StructuralVerifier
+
+    v = StructuralVerifier()
+    sk = skeleton()
+    cases = [
+        (["M0", "P1", "C1"], [("M0", "P1"), ("P1", "C1")], 1.0),
+        (["M0", "P1", "C1"], [("M0", "P1")], 0.5),
+        (["M0", "P1"], [("M0", "P1"), ("P1", "C1")], 0.5),
+        (["M0"], [("M0", "P1"), ("P1", "C1")], 0.0),
+        (["M0", "P1", "C1"], [], 0.0),
+    ]
+    for parts, edges, expected in cases:
+        assert v.score(recon(parts, edges), sk) == pytest.approx(expected)
