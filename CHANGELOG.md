@@ -2,6 +2,33 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [2.7.0] - 2026-11-25
+
+多轮修正：策略空间里第一个能改变单次生成质量的维度。
+
+### Added
+
+- `SolverPolicy.rounds`（1–3）：生成 → 跑公开用例 → 把失败信息拼回提示 → 重写。
+  前三个旋钮（采样数 / 选择 / 提示）都只是生成前或生成后的选择，这是第一个生成中的反馈
+- `format_feedback()`：把 visible 失败整理成「输入/期望/实际」。只给 visible，hidden 永不进提示
+- `ExecResult.outputs`：子进程回传的原始输出，供反馈使用
+- 多轮下 `select="first"` 按 visible 选（否则等于丢掉修正结果）；单轮保持原义
+- 5 条测试：多轮带反馈修对、反馈不泄漏 hidden、单轮无反馈、rounds 越界、提示拼接
+
+### Measured
+
+| 模型 | baseline | evolution | random（抽到 r2） | 触顶 |
+|---|---|---|---|---|
+| command-code / flash | 1.0 | 1.0 | 1.0 | 是 |
+| zhipu / glm-4-flash | 0.9375 | 0.9375 | 0.9375 | 否 |
+
+### Notes
+
+- 单元测试证明多轮机制有效：第一轮写错的代码，第二轮带失败信息能改对
+- 但基准测不出来：glm-4-flash 的 held-out 只有 16 个样本、baseline 已 15/16，
+  差异 1 题 = 0.0625，且 110 次预算只够评估 1–2 个策略。**统计功效不足**，不是机制无效
+- 要让这个实验有结论，需要 50+ 道 held-out 题，或 baseline 低到 0.5 左右的题库
+
 ## [2.6.1] - 2026-11-24
 
 把 overfit 警告变成治理动作：hidden 决定发布等级，不参与选择。

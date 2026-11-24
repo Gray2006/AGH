@@ -19,6 +19,7 @@ from typing import Any
 from .codesolve import (
     HINT_CHOICES,
     N_SAMPLES_CHOICES,
+    ROUND_CHOICES,
     SELECT_CHOICES,
     SolverPolicy,
     solve_task,
@@ -63,14 +64,27 @@ def mutate(policy: SolverPolicy, rng: random.Random) -> SolverPolicy:
     if gene == "n_samples":
         i = N_SAMPLES_CHOICES.index(policy.n_samples)
         j = max(0, min(len(N_SAMPLES_CHOICES) - 1, i + rng.choice((-1, 1))))
-        return SolverPolicy(N_SAMPLES_CHOICES[j], policy.select, policy.hint)
+        return SolverPolicy(N_SAMPLES_CHOICES[j], policy.select, policy.hint, policy.rounds)
     if gene == "select":
-        return SolverPolicy(policy.n_samples, rng.choice(SELECT_CHOICES), policy.hint)
-    return SolverPolicy(policy.n_samples, policy.select, rng.choice(HINT_CHOICES))
+        return SolverPolicy(
+            policy.n_samples, rng.choice(SELECT_CHOICES), policy.hint, policy.rounds
+        )
+    if gene == "rounds":
+        return SolverPolicy(
+            policy.n_samples, policy.select, policy.hint, rng.choice(ROUND_CHOICES)
+        )
+    return SolverPolicy(
+        policy.n_samples, policy.select, rng.choice(HINT_CHOICES), policy.rounds
+    )
 
 
 def random_policy(rng: random.Random) -> SolverPolicy:
-    return SolverPolicy(rng.choice(N_SAMPLES_CHOICES), rng.choice(SELECT_CHOICES), rng.choice(HINT_CHOICES))
+    return SolverPolicy(
+        rng.choice(N_SAMPLES_CHOICES),
+        rng.choice(SELECT_CHOICES),
+        rng.choice(HINT_CHOICES),
+        rng.choice(ROUND_CHOICES),
+    )
 
 
 @dataclass

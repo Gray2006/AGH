@@ -94,6 +94,7 @@ class ExecResult:
     loaded: bool
     timed_out: bool
     failed_cases: tuple[int, ...] = field(default_factory=tuple)
+    outputs: tuple[Any, ...] = field(default_factory=tuple)  # 子进程回传的原始输出，供反馈用
 
     @property
     def score(self) -> float:
@@ -165,12 +166,21 @@ def run_cases(code: str, spec: TaskSpec, cases: Sequence[Case]) -> ExecResult:
     if len(results) != total:  # 子进程中途崩溃（如 OOM / CPU 超限）
         return ExecResult(0, total, loaded=True, timed_out=False)
     passed, failed = 0, []
+    outputs: list[Any] = []
     for i, (case, got) in enumerate(zip(cases, results, strict=True)):
+        outputs.append(got.get("value") if got.get("ok") else None)
         if got.get("ok") and _equal(got.get("value"), case.expected, spec.float_tol):
             passed += 1
         else:
             failed.append(i)
-    return ExecResult(passed, total, loaded=True, timed_out=False, failed_cases=tuple(failed))
+    return ExecResult(
+        passed,
+        total,
+        loaded=True,
+        timed_out=False,
+        failed_cases=tuple(failed),
+        outputs=tuple(outputs),
+    )
 
 
 def _parse_last_json(stdout: str) -> dict[str, Any] | None:
