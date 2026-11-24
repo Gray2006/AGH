@@ -5,7 +5,7 @@ from agh.execverify import run_cases
 
 
 def test_task_count():
-    assert len(TASKS) == 12
+    assert len(TASKS) == 15
 
 
 def test_reference_solutions_pass_visible_and_hidden():

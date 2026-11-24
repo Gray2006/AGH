@@ -133,6 +133,33 @@ TASKS: dict[str, CodeTask] = {
             "def second_largest(xs):\n    u = sorted(set(xs), reverse=True)\n    return u[1] if len(u) > 1 else None\n",
             ["def second_largest(xs):\n    s = sorted(xs, reverse=True)\n    return s[1] if len(s) > 1 else None\n"],
         ),
+        _task(
+            "edit_distance", "edit_distance", "两个字符串的最小编辑距离（插入/删除/替换各算 1）。",
+            [_c("kitten", "sitting", expected=3)],
+            [_c("", "", expected=0), _c("", "abc", expected=3), _c("abc", "", expected=3),
+             _c("same", "same", expected=0), _c("flaw", "lawn", expected=2)],
+            "def edit_distance(a, b):\n    prev = list(range(len(b) + 1))\n    for i, ca in enumerate(a, 1):\n        cur = [i]\n        for j, cb in enumerate(b, 1):\n            cur.append(min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (ca != cb)))\n        prev = cur\n    return prev[-1]\n",
+            ["def edit_distance(a, b):\n    return abs(len(a) - len(b))\n",
+             "def edit_distance(a, b):\n    return sum(1 for x, y in zip(a, b) if x != y) + abs(len(a) - len(b))\n"],
+        ),
+        _task(
+            "parse_int", "parse_int", "把字符串转成整数：忽略前导空格，可带一个 +/-，读到非数字停止；没有数字返回 0。",
+            [_c("42", expected=42), _c("   -13", expected=-13)],
+            [_c("", expected=0), _c("abc", expected=0), _c("+7", expected=7), _c(" 00042", expected=42),
+             _c("-0", expected=0), _c("3.14", expected=3)],
+            "def parse_int(s):\n    s = s.lstrip()\n    if not s:\n        return 0\n    sign, i = 1, 0\n    if s[0] in '+-':\n        sign = -1 if s[0] == '-' else 1\n        i = 1\n    n = 0\n    while i < len(s) and s[i].isdigit():\n        n = n * 10 + int(s[i])\n        i += 1\n    return sign * n\n",
+            ["def parse_int(s):\n    return int(s)\n",
+             "def parse_int(s):\n    n = 0\n    for ch in s:\n        if ch.isdigit():\n            n = n * 10 + int(ch)\n    return n\n"],
+        ),
+        _task(
+            "longest_palindrome_subseq", "longest_palindrome_subseq", "最长回文**子序列**的长度（不要求连续）。",
+            [_c("bbbab", expected=4)],
+            [_c("", expected=0), _c("a", expected=1), _c("abc", expected=1), _c("aaa", expected=3),
+             _c("character", expected=5)],
+            "def longest_palindrome_subseq(s):\n    n = len(s)\n    dp = [[0] * n for _ in range(n)]\n    for i in range(n - 1, -1, -1):\n        dp[i][i] = 1\n        for j in range(i + 1, n):\n            if s[i] == s[j]:\n                dp[i][j] = dp[i + 1][j - 1] + 2\n            else:\n                dp[i][j] = max(dp[i + 1][j], dp[i][j - 1])\n    return dp[0][n - 1] if n else 0\n",
+            ["def longest_palindrome_subseq(s):\n    best = 0\n    for i in range(len(s)):\n        for j in range(i, len(s)):\n            t = s[i:j + 1]\n            if t == t[::-1]:\n                best = max(best, len(t))\n    return best\n",
+             "def longest_palindrome_subseq(s):\n    return len(set(s))\n"],
+        ),
     )
 }
 

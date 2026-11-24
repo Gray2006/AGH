@@ -56,6 +56,11 @@ def main() -> int:
     }
     report = held_out_report(results, SolverPolicy(), test, complete)
     report["mode"] = "simulated" if args.simulate else f"real:{args.provider}"
+    if report["baseline"]["held_out_score"] >= 1.0:
+        report["WARNING_CEILING"] = (
+            "baseline 在 held-out 上全对：基准已触顶，进化/随机的差值没有意义，"
+            "要么加更难的题，要么换更弱的模型"
+        )
     errors = sum(report["call_errors"].values()) + report["baseline_call_errors"]
     if errors:
         report["WARNING_CALL_ERRORS"] = (

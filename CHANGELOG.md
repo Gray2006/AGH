@@ -2,6 +2,32 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [2.4.1] - 2026-11-24
+
+代码任务基准在真模型上触顶，加天花板检测。
+
+### Measured
+
+真模型 `command-code / deepseek-v4.1-flash`，budget 80：
+
+| 题库 | baseline held-out | evolution | random | call_errors |
+|---|---|---|---|---|
+| 12 题 | 1.0 | 1.0 | 1.0 | 0 |
+| 15 题（+编辑距离/parse_int/最长回文子序列） | 1.0 | 1.0 | 1.0 | 0 |
+
+### Changed
+
+- `run_code_bench.py` 在 `baseline.held_out_score >= 1.0` 时输出 `WARNING_CEILING`：
+  基准触顶，进化与随机的差值没有意义
+- 新增 3 道更难的题（编辑距离、字符串转整数、最长回文子序列），每题带参考解与已知 bug 变体，
+  突变测试通过
+
+### Notes
+
+- 结论：这 15 道经典小算法题对 flash 是送分题，**区分不出方法**。不是方法无效，是题库难度低于模型能力
+- 要让基准有区分度，需要难度显著高于模型的题（多步推理、非标准算法），或换更弱的模型
+- 执行型验证器链路本身已验证：参考解 hidden 全 1.0，bug 变体全部被杀
+
 ## [2.4.0] - 2026-11-24
 
 执行型验证器：把评分信号从「AGH 自己定义的规则」换成「真跑测试」。
