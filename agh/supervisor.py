@@ -75,7 +75,7 @@ class Supervisor:
     command: Sequence[str]
     gates: Sequence[Gate] = ()
     config: SupervisorConfig = field(default_factory=SupervisorConfig)
-    spawn: Callable[[Sequence[str], Path, dict[str, str]], Child] = ProcessChild
+    spawn: Callable[[Sequence[str], Path, dict[str, str]], Child] = ProcessChild  # type: ignore[assignment]
     log: EventLog | None = None
     _child: Child | None = None
     _workdir: Path | None = None
@@ -105,6 +105,7 @@ class Supervisor:
         if current is None:
             raise RuntimeError("没有已激活的版本")
         self._spawn_version(current.version)
+        assert self._child is not None
         self._record("supervisor.start", {"version": current.version, "pid": self._child.pid})
         return current.version
 
@@ -147,6 +148,7 @@ class Supervisor:
         previous = self.store.rollback()
         if previous is None:
             return None
+        assert previous is not None
         self.stop()
         self._spawn_version(previous.version)
         self._record("supervisor.rollback", {"to": previous.version})

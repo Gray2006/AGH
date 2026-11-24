@@ -1,0 +1,17 @@
+site_name: AGH
+site_description: 可审计的多智能体重构框架
+repo_url: https://github.com/Gray2006/AGH
+theme:
+  name: material
+  language: zh
+  features:
+    - navigation.sections
+    - content.code.copy
+nav:
+  - 首页: index.md
+  - 状态交接: STATUS.md
+  - 模块 API: api.md
+markdown_extensions:
+  - tables
+  - fenced_code
+  - admonition

@@ -228,7 +228,7 @@ def _harden(node: Any) -> Any:
 
 def model_schema(model: type[BaseModel]) -> dict[str, Any]:
     """生成硬化后的 JSON Schema。"""
-    return _harden(model.model_json_schema(mode="validation"))
+    return _harden(model.model_json_schema(mode="validation"))  # type: ignore[arg-type]
 
 
 def reconstruction_schema(skeleton: Skeleton) -> dict[str, Any]:

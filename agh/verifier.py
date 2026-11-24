@@ -107,7 +107,7 @@ class LlmJudgeVerifier:
         return min(1.0, max(0.0, value))
 
 
-def make_verifier(kind: str) -> Verifier:
+def make_verifier(kind: str) -> StructuralVerifier | CoverageVerifier | LlmJudgeVerifier:
     if kind == "structural":
         return StructuralVerifier()
     if kind == "coverage":

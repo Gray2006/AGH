@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import argparse
 import json
+from typing import Any
 import shutil
 from pathlib import Path
 
@@ -178,6 +179,7 @@ def cmd_evolve(args: argparse.Namespace) -> int:
             budget_calls=args.budget,
             seed=args.seed,
         )
+        result: Any
         if args.mode == "sharded":
             result = sharded_evolve(benches, cfg, evo_config, mutator=active_mutator)
         else:

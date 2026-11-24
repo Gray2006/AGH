@@ -88,12 +88,12 @@ class NatsBus:
         self.subscribe(stream, consumer)
         sub = self._subs[(stream, consumer)]
         msgs = sub.fetch(max_msgs, timeout=1)
-        out: list[Delivery] = []
+        out: list[Delivery] = []  # type: ignore[assignment]
         for msg in msgs:
             data = json.loads(msg.data.decode())
             seq = int(getattr(msg.metadata, "sequence", {}).get("stream", 0)) if hasattr(msg, "metadata") else 0
             event = Event(event_id=data["id"], type=data["type"], payload=data["payload"])
-            out.append(
+            out.append(  # type: ignore[arg-type]
                 NatsDelivery(
                     stream=stream,
                     consumer=consumer,

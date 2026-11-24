@@ -2,6 +2,16 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [1.14.0] - 2026-11-24
+
+工程化收尾：类型检查、文档站、构建产物。
+
+### Added
+
+- mypy 渐进接入（`check_untyped_defs`，5 个动态模块先忽略，其余 32 个文件检查通过）
+- `mkdocs.yml` + `docs/index.md` + `docs/api.md`，可本地构建站点
+- `python -m build` 产出 sdist/wheel；`docker-compose.yml` 可起 NATS 做联调
+
 ## [1.13.1] - 2026-11-24
 
 ### Added

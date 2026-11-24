@@ -49,17 +49,17 @@ def make_skeleton(
     if nodes[-1] not in required:
         required[-1] = nodes[-1]
     moves = []
-    for _, b in edges[: max(1, len(edges) // 2)]:
+    for _, node in edges[: max(1, len(edges) // 2)]:
         vertical = rng.random() < 0.6
         moves.append(
             SkeletonMove(
-                node=b,
+                node=node,
                 vertical=vertical,
                 declared_depth=round(rng.uniform(0.3, 0.9), 2),
                 preserved_depth=round(rng.uniform(0.3, 0.9), 2),
             )
             if vertical
-            else SkeletonMove(node=b, vertical=False)
+            else SkeletonMove(node=node, vertical=False)
         )
     return Skeleton(
         skeleton_id=f"sk-gen-{index}",
