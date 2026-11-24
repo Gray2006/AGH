@@ -143,6 +143,9 @@ class ShardedReport:
         }
 
 
+_SHARD_CACHE: dict[tuple, tuple[float, Strategy]] = {}
+
+
 def sharded_evolve(
     benchmarks: list[Benchmark],
     cfg: ArenaConfig,
@@ -152,6 +155,28 @@ def sharded_evolve(
     shards: list[ShardResult] = []
     evaluations = 0
     for bench in benchmarks:
+        key = None
+        if mutator is None:
+            key = (
+                bench.skeleton.skeleton_id,
+                tuple(seed_for(bench).features),
+                tuple(sorted(cfg.weights.items())),
+                cfg.dissent_tau,
+                config.generations,
+                config.population,
+                config.seed,
+            )
+            if key in _SHARD_CACHE:
+                evaluations += config.generations * config.population + 1
+                cached_fitness, cached_strategy = _SHARD_CACHE[key]
+                shards.append(
+                    ShardResult(
+                        skeleton_id=bench.skeleton.skeleton_id,
+                        strategy=cached_strategy,
+                        fitness=cached_fitness,
+                    )
+                )
+                continue
         report = evolve(
             seed_for(bench),
             [bench],
@@ -168,6 +193,8 @@ def sharded_evolve(
             mutator=mutator,
         )
         evaluations += config.generations * config.population + 1
+        if key is not None and report.best is not None:
+            _SHARD_CACHE[key] = (report.best.fitness, report.best.strategy)
         if report.best is not None:
             shards.append(
                 ShardResult(

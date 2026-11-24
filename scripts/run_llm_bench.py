@@ -33,6 +33,7 @@ def main() -> int:
     parser.add_argument("--model", default=None)
     parser.add_argument("--api-key-env", default=None)
     parser.add_argument("--max-tokens", type=int, default=2048)
+    parser.add_argument("--parallel", type=int, default=1, help="并发数，默认串行")
     parser.add_argument("--benchmarks", type=int, default=10)
     parser.add_argument("--bench-seed", type=int, default=0)
     parser.add_argument("--min-nodes", type=int, default=5)
@@ -56,26 +57,24 @@ def main() -> int:
         required_ratio=args.required_ratio,
     )
 
-    llm_scores: list[float] = []
-    rule_scores: list[float] = []
-    per_bench: list[dict] = []
-    candidates: list[dict] = []
-    for bench in benches:
+    def run_one(bench):
+        local_client = client if args.parallel <= 1 else make_client(
+            args.provider, model=args.model, api_key_env=args.api_key_env
+        )
+        local_client.max_tokens = args.max_tokens
         sk = bench.skeleton
         child = LlmChild(
             name="llm-bench",
-            complete=client,
+            complete=local_client,
             skeleton=sk,
             parent_features=list(bench.parent.features),
         )
         try:
             recon = child.reconstruct(f"ct-{sk.skeleton_id}")
         except ChildOutputError as exc:
-            per_bench.append({"skeleton": sk.skeleton_id, "error": str(exc)})
-            continue
+            return {"skeleton": sk.skeleton_id, "error": str(exc)}
         if not hard_filter(recon, sk).passed:
-            per_bench.append({"skeleton": sk.skeleton_id, "error": "hard_filter"})
-            continue
+            return {"skeleton": sk.skeleton_id, "error": "hard_filter"}
         vscore = verifier.score(recon, sk)
         llm_score = score_candidate(
             recon, sk, cfg, verifier_score=vscore, parent_signature=bench.parent
@@ -88,21 +87,42 @@ def main() -> int:
             verifier_score=verifier.score(rule_recon, sk),
             parent_signature=bench.parent,
         ).score
-        llm_scores.append(llm_score)
-        rule_scores.append(rule_score)
+        return {
+            "skeleton": sk.skeleton_id,
+            "llm": round(llm_score, 5),
+            "rule": round(rule_score, 5),
+            "verifier": round(vscore, 3),
+            "skeleton_json": sk.model_dump(mode="json"),
+            "reconstruction": recon.model_dump(mode="json"),
+        }
+    if args.parallel > 1:
+        from concurrent.futures import ThreadPoolExecutor
+
+        with ThreadPoolExecutor(max_workers=args.parallel) as pool:
+            results = list(pool.map(run_one, benches))
+    else:
+        results = [run_one(b) for b in benches]
+
+    per_bench: list[dict] = []
+    candidates: list[dict] = []
+    llm_scores: list[float] = []
+    rule_scores: list[float] = []
+    for result in results:
+        if "error" in result:
+            per_bench.append({"skeleton": result["skeleton"], "error": result["error"]})
+            continue
+        llm_scores.append(result["llm"])
+        rule_scores.append(result["rule"])
         per_bench.append(
             {
-                "skeleton": sk.skeleton_id,
-                "llm": round(llm_score, 5),
-                "rule": round(rule_score, 5),
-                "verifier": round(vscore, 3),
+                "skeleton": result["skeleton"],
+                "llm": result["llm"],
+                "rule": result["rule"],
+                "verifier": result["verifier"],
             }
         )
         candidates.append(
-            {
-                "skeleton": sk.model_dump(mode="json"),
-                "reconstruction": recon.model_dump(mode="json"),
-            }
+            {"skeleton": result["skeleton_json"], "reconstruction": result["reconstruction"]}
         )
 
     deltas = [a - b for a, b in zip(llm_scores, rule_scores, strict=False)]

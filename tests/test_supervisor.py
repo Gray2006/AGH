@@ -127,3 +127,22 @@ def test_promote_requires_gates(tmp_path: Path) -> None:
     sup = Supervisor(store, ["app"], spawn=FakeSpawner())
     with pytest.raises(RuntimeError):
         sup.promote("v2")
+
+
+def test_process_child_end_to_end(tmp_path: Path) -> None:
+    import sys
+
+    store = ArtifactStore(tmp_path / "store")
+    src = tmp_path / "src"
+    src.mkdir()
+    (src / "app.py").write_text("print(1)", encoding="utf-8")
+    store.stage(src, "v1")
+    store.activate("v1")
+    sup = Supervisor(
+        store,
+        [sys.executable, "-c", "import time; time.sleep(5)"],
+        config=SupervisorConfig(health_seconds=0.5),
+    )
+    assert sup.start() == "v1"
+    assert sup._child is not None and sup._child.alive()
+    sup.stop()

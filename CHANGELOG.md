@@ -2,6 +2,24 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [1.13.0] - 2026-11-24
+
+性能与回归兜底。
+
+### Added
+
+- `run_llm_bench.py --parallel N`：真模型跨基准并发跑（每任务独立客户端）
+- `evolution_sharded` 分片评估记忆化：同骨架同策略同参数直接复用，进化重复轮次不再重算
+- 监督者进程端到端测试：真实子进程启动/停止
+
+### Note
+
+- `EventLog` 原本就在内存缓存 entries，`verify()` 不重复读盘，无需改动
+
+### Tests
+
+- 237 → 238
+
 ## [1.12.0] - 2026-11-24
 
 校准进 CI：验证器改动不能悄悄回退。
