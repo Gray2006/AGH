@@ -4,7 +4,7 @@
 
 **Agent Gestalt Hierarchy** — an M0 vertical slice of a multi-agent "gestalt reconstruction" framework. A parent issues a skeleton and a contract; children reconstruct the whole rather than reassembling parts; every submission is signed and provenance-checked. Gate, arena, arbitration, governance, budget ledger and a hash-chained log form one runnable, testable, replayable pipeline.
 
-> Status: M0 (v1.20.0). The default child is a **rule-based reconstructor**; LLM children and the LLM mutator are pluggable and already measured. Both the M0 pipeline and the LLM mutation path support bit-exact L1 replay.
+> Status: M0 (v1.21.0). The default child is a **rule-based reconstructor**; LLM children and the LLM mutator are pluggable and already measured. Both the M0 pipeline and the LLM mutation path support bit-exact L1 replay.
 
 ```
 Parent M0
@@ -77,7 +77,7 @@ git clone https://github.com/Gray2006/AGH.git
 cd AGH
 pip install -e ".[dev]"
 
-python -m pytest -q          # 259 tests + 1 skipped
+python -m pytest -q          # 265 tests + 1 skipped
 python -m agh                # run M0, writes runs/m0/ (same as python scripts/run_m0.py)
 ```
 
@@ -259,6 +259,23 @@ assert client.verify_log()
 assert client.replay().bit_exact
 ```
 
+## External anchoring of the event log
+
+The hash chain catches an edited line, but a self-consistent replacement chain passes its own
+verification. Anchoring writes the head and size outside the log:
+
+```bash
+python -m agh run --anchor-store runs/anchors.jsonl   # write an Ed25519-signed anchor after M0
+python -m agh anchor --events runs/m0/events.jsonl --store runs/anchors.jsonl --verify
+```
+
+- The anchor is Ed25519-signed: without the private key nobody can rewrite the anchor, so the whole
+  chain cannot be swapped
+- Unsigned anchors (`--sign none`) catch edits to the log but not an edit to both the log and the anchor
+- `AnchorStore` is replaceable: point it at a timestamp service or another machine without changing the API
+- Verification re-reads the log from disk; in-memory entries never take part in the comparison
+
+
 ## Timestamps, billing, forgetting, statements
 
 - **External timestamps**: `anchor_log(log_head, tsa, path)`; `HmacTimestampAuthority` for local use, `HttpTimestampAuthority` for a remote service (transport injectable; swap in an RFC 3161 client without changing the interface)
@@ -382,7 +399,7 @@ python -m agh.supervisor --store runs/selfmod --gate "python -m pytest -q" -- py
 | Governance | qualified dissent → T2, stops at `VERIFIED`; `RELEASED` after human approval |
 | Ledger | 0 violations |
 | Replay | L1 `bit_exact=true` |
-| Tests | 259 passed + 1 skipped |
+| Tests | 265 passed + 1 skipped |
 
 ## Design decisions
 
@@ -417,6 +434,8 @@ See [`docs/verification-references.md`](docs/verification-references.md) and [`d
 - The frozen layer prevents silent edits, not edits by whoever holds the signing key
 - L1 replay covers the M0 pipeline and LLM mutation records (`--replay-mutations`); the LLM-child
   reconstruction path is L2 statistically equivalent
+- Anchoring detects whole-chain replacement (given the Ed25519 key), but the anchor file itself can be
+  deleted; a real third-party timestamp or off-host store is an interface, not a wired service
 
 ## Contributing
 

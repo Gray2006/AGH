@@ -1,4 +1,4 @@
-# AGH 状态交接（v1.20.0，2026-11-24）
+# AGH 状态交接（v1.21.0，2026-11-24）
 
 > 新会话先读这个文件，再读 `README.md` 的「版本与兼容」与 `memory/agh.md`。
 
@@ -8,7 +8,7 @@
 
 ## 当前版本
 
-- v1.20.0，`259 passed + 1 skipped`（NATS 需服务），ruff 干净，mypy 38 文件零错误
+- v1.21.0，`265 passed + 1 skipped`（NATS 需服务），ruff 干净，mypy 38 文件零错误
 - 仓库 <https://github.com/Gray2006/AGH>，CI 双版本绿
 - 依赖：pydantic v2、numpy、jsonschema、cryptography；Python 3.12+
 
@@ -25,6 +25,8 @@ python -m agh daemon --rounds 4     # 自主迭代（默认 0 token）
 python -m agh daemon --seed-drop 0.4 --llm-mutator --daily-budget 30000  # 降质任务族 + LLM 变异
 python -m agh daemon --seed-drop 0.4 --hide-gold --llm-mutator     # 信息不足：缺的边得推断
 python -m agh daemon --replay-mutations runs/daemon/events.jsonl   # L1 重放 LLM 进化轨迹
+python -m agh run --anchor-store runs/anchors.jsonl                # 写签名锚点
+python -m agh anchor --events runs/m0/events.jsonl --store runs/anchors.jsonl --verify
 python -m agh report --runs runs
 python scripts/red_team.py          # 7 类攻击
 ```
@@ -59,6 +61,7 @@ python scripts/score_labels.py --labels ... --candidates ...
 | 信息降质 LLM 变异 | 4 轮 0.47501 → 0.57681，22222 tokens | 中高（1 次） |
 | 跨 seed 配对（3 seed × 6 基准 = 18 对） | LLM − 规则 +0.0950，95% CI [0.0496, 0.1402] | 高（17720 tokens） |
 | LLM 进化 L1 重放 | 曲线 `[0.66079, 0.66168]` 逐位一致，0 token | 高 |
+| 锚定篡改检出 | 改一条 payload → `LogTampered: 数据被改动于 seq=6`；未篡改 → `signature_verified: true` | 高 |
 | daemon 的「改进」主要来自换权重 | 同批种子换权重 0.65792 → 0.75488 | 高（1.17.0） |
 
 校准已固化进 CI：`tests/fixtures/calibration.json` + `tests/test_calibration_regression.py`（ECE ≤ 0.05、kappa ≥ 0.9）。
@@ -81,7 +84,7 @@ python scripts/score_labels.py --labels ... --candidates ...
 
 1. 回写仍暂缓：参数权重在参照打分下不动，写回只会写回同值并重建锚点；要回写就得先让权重本身有梯度（比如把权重放进带真实验证信号的搜索）
 2. 堵覆盖口径漏洞：多余覆盖要么扣分，要么把必需项藏起来，否则「全塞」就是最优解
-3. 接外部锚定：链头写进可验证的外部位置（时间戳服务 / 另一份日志），让「整链替换」可被发现
+3. 把 AnchorStore 接到真正的第三方时间戳/异地存储；本地签名锚点只解决「没有密钥的人改不了」
 4. 接入真实失败样本作为任务族，替代人工降质；`--hide-gold` 只是第一层
 5. 回写路径要么接真实验证信号，要么在 README 里标成未验证（已标）
 3. PyPI 发布（需 token，先查 `AGH` 名字是否被占）

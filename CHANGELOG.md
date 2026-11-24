@@ -2,6 +2,30 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [1.21.0] - 2026-11-24
+
+事件日志的外部锚定：让「整链替换」可被发现。
+
+### Added
+
+- `agh/anchoring.py`：`Anchor` / `AnchorStore` / `anchor_log` / `check_log` / `verify_anchor`
+- `agh anchor --events ... --store ... [--verify]`：写链头与长度，或校验日志是否被替换
+- `agh run --anchor-store PATH`：跑完 M0 自动写锚点
+- 锚点用 Ed25519 签名；签名覆盖 head / size / log_path / label / created_at
+- 校验时从磁盘重新读日志（内存里的 entries 不参与），否则篡改不可能被发现
+
+### Measured
+
+- 未篡改：`{"ok": true, "signature_verified": true}`
+- 改一条 payload：`LogTampered: 数据被改动于 seq=6`
+- 截断日志：长度不符；换密钥验签：签名失败；锚点被改：签名失败
+
+### 边界
+
+- 本地锚点文件仍可被删：真正的「外部」需要把 AnchorStore 换成第三方时间戳或另一台机器，
+  接口已预留，未接真实服务
+- 开发密钥确定性派生，签名只证明「改动需要密钥」，不证明「密钥属于谁」
+
 ## [1.20.0] - 2026-11-24
 
 LLM 路径的 L1 重放，以及对外部评估的诚实校准。

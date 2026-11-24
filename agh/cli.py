@@ -18,13 +18,14 @@ from pathlib import Path
 from typing import Any
 
 from . import __version__
+from .anchoring import AnchorStore, anchor_log
 from .autonomous import AutonomousConfig, run_autonomous
 from .crypto import KeyRing
 from .eventlog import EventLog
 from .evolution import EvolutionConfig, Strategy, default_benchmarks, evolve
 from .evolution_llm import compare_search
 from .frozen import FrozenLayer
-from .pipeline import DEV_KID, DEV_SECRET, PARENT_SIG, faithful_child, m0_skeleton, run_m0
+from .pipeline import DEV_KID, DEV_SECRET, PARENT_SIG, dev_keyring, faithful_child, m0_skeleton, run_m0
 from .report import collect, render
 from .sdk import AghClient, default_frozen_root
 
@@ -63,6 +64,12 @@ def cmd_run(args: argparse.Namespace) -> int:
         human_approved=not args.no_approve,
         key_kind=args.sign,
     )
+    if args.anchor_store:
+        log = EventLog(run_dir / "events.jsonl")
+        key = dev_keyring("ed25519").get(DEV_KID)
+        anchor = anchor_log(log, key=key, label="m0")
+        AnchorStore(args.anchor_store).append(anchor)
+        print(f"anchor: {args.anchor_store} head={anchor.head[:12]}")
     print(json.dumps(report.as_dict(), ensure_ascii=False, indent=2))
     print(f"\n事件日志: {run_dir / 'events.jsonl'}")
     print(f"报告: {run_dir / 'report.json'}")
@@ -279,6 +286,11 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--no-dissent", action="store_true")
     run.add_argument("--no-approve", action="store_true")
     run.add_argument("--sign", choices=["hmac", "ed25519"], default="hmac")
+    run.add_argument(
+        "--anchor-store",
+        default=None,
+        help="把本次事件日志的链头写进锚点存储（日志之外的独立文件），用于发现整链替换",
+    )
     run.set_defaults(func=cmd_run)
 
     verify = sub.add_parser("verify", help="校验事件日志哈希链")
@@ -360,10 +372,44 @@ def build_parser() -> argparse.ArgumentParser:
     report.add_argument("--runs", type=Path, default=Path("runs"))
     report.set_defaults(func=cmd_report)
 
+
+    anchor = sub.add_parser("anchor", help="事件日志外部锚定：写链头 / 校验是否被替换")
+    anchor.add_argument("--events", required=True)
+    anchor.add_argument("--store", required=True)
+    anchor.add_argument("--label", default="")
+    anchor.add_argument("--sign", choices=["none", "ed25519"], default="ed25519")
+    anchor.add_argument("--verify", action="store_true")
+    anchor.set_defaults(func=cmd_anchor)
     version = sub.add_parser("version", help="打印版本")
     version.set_defaults(func=lambda _a: print(__version__) or 0)
 
     return parser
+
+
+def cmd_anchor(args: argparse.Namespace) -> int:
+    log = EventLog(Path(args.events))
+    store = AnchorStore(args.store)
+    if args.verify:
+        keyring = dev_keyring("ed25519") if args.sign == "ed25519" else None
+        anchored = store.check(log, keyring=keyring)
+        print(
+            json.dumps(
+                {
+                    "ok": True,
+                    "log": str(log.path),
+                    "head": log.head(),
+                    "size": log.size(),
+                    "signature_verified": anchored,
+                },
+                ensure_ascii=False,
+            )
+        )
+        return 0
+    key = dev_keyring("ed25519").get(DEV_KID) if args.sign == "ed25519" else None
+    anchor = anchor_log(log, key=key, label=args.label)
+    store.append(anchor)
+    print(json.dumps(anchor.as_dict(), ensure_ascii=False, indent=2))
+    return 0
 
 
 def main(argv: list[str] | None = None) -> int:

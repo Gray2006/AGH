@@ -1,10 +1,10 @@
-﻿# AGH
+# AGH
 
 [English](README.en.md) · [简体中文](README.md) · MIT
 
 **Agent Gestalt Hierarchy**：多智能体「整体重构」框架的 M0 垂直切片。母体发骨架与契约，子级按整体重构而不是拼零件，回传带签名与出处；写入门、竞技场、仲裁、治理机、预算账本、哈希链日志串成一条可跑、可测、可重放的链路。
 
-> 状态：M0（v1.20.0）。子级默认是**规则重构器**；LLM 子级与 LLM 变异器是可插拔的，已有实测数据。M0 管线与 LLM 变异路径都支持 L1 逐位重放。
+> 状态：M0（v1.21.0）。子级默认是**规则重构器**；LLM 子级与 LLM 变异器是可插拔的，已有实测数据。M0 管线与 LLM 变异路径都支持 L1 逐位重放。
 
 ```
 母体 M0
@@ -73,7 +73,7 @@ git clone https://github.com/Gray2006/AGH.git
 cd AGH
 pip install -e ".[dev]"
 
-python -m pytest -q          # 259 条测试 + 1 skipped
+python -m pytest -q          # 265 条测试 + 1 skipped
 python -m agh                # 跑 M0，落盘 runs/m0/（等价 python scripts/run_m0.py）
 ```
 
@@ -255,6 +255,21 @@ assert client.verify_log()
 assert client.replay().bit_exact
 ```
 
+## 事件日志的外部锚定
+
+哈希链能发现「改一行」，但删掉日志重写一条自洽的新链，链本身校验依然通过。锚定把链头和长度写到日志之外：
+
+```bash
+python -m agh run --anchor-store runs/anchors.jsonl   # 跑完 M0 顺手写锚点（Ed25519 签名）
+python -m agh anchor --events runs/m0/events.jsonl --store runs/anchors.jsonl --verify
+```
+
+- 锚点带 Ed25519 签名：没有私钥的人改不了锚点，也就无法替换整条链
+- 只写锚点不签名（`--sign none`）只能防「日志被改」，防不了「锚点和日志一起被改」
+- `AnchorStore` 是可替换的：换成第三方时间戳服务或另一台机器，接口不变
+- 校验会重新从磁盘读日志；内存里的 entries 不参与比对
+
+
 ## 时间戳、计费、遗忘与声明
 
 - **外部时间戳**：`anchor_log(log_head, tsa, path)` 把链头交给 TSA 盖章；`HmacTimestampAuthority` 用于本地，`HttpTimestampAuthority` 接外部服务（传输函数可注入，RFC 3161 客户端可替换 transport）
@@ -388,7 +403,7 @@ python -m agh.supervisor --store runs/selfmod --gate "python -m pytest -q" -- py
 | 治理 | 有合格异议 → 升 T2 停在 `VERIFIED`；人工批准后 `RELEASED` |
 | 账本 | 违规 0 |
 | 重放 | L1 `bit_exact=true` |
-| 测试 | 259 passed + 1 skipped |
+| 测试 | 265 passed + 1 skipped |
 
 ## 设计取舍
 
