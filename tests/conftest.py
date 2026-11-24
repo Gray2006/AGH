@@ -22,3 +22,13 @@ def frozen_root(tmp_path: Path) -> Path:
 @pytest.fixture()
 def frozen_src() -> Path:
     return FROZEN_SRC
+
+
+@pytest.fixture()
+def frozen_copy(tmp_path: Path) -> Path:
+    """仓库冻结层的临时副本：会回写冻结层的测试必须用它，不能碰仓库。"""
+    import shutil
+
+    target = tmp_path / "config" / "frozen"
+    shutil.copytree(FROZEN_SRC, target)
+    return target

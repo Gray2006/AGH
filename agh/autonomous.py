@@ -22,7 +22,7 @@ from .contracts import GestaltReconstruction, Skeleton
 from .crypto import KeyRing
 from .eventlog import EventLog
 from .evolution import EvolutionConfig
-from .evolution_sharded import combined_evolve
+from .evolution_sharded import ParamGenome, combined_evolve
 from .frozen import FrozenLayer
 from .pipeline import DEV_KID, DEV_SECRET
 from .verifier import StructuralVerifier
@@ -151,14 +151,26 @@ def run_autonomous(
     rolled = False
     params: dict[str, Any] = {}
     rounds_run = 0
+    # 参数在内存里跨轮延续：否则 --no-write-back 每轮都从冻结层重新起跑，
+    # 曲线必然是一条水平线，观察模式就永远看不到「持续改进」。
+    frozen_cfg = ArenaConfig.from_frozen(frozen_root)
+    carried = ParamGenome.from_config(frozen_cfg)
 
     for round_index in range(settings.rounds):
         rounds_run += 1
-        cfg = ArenaConfig.from_frozen(frozen_root)
+        cfg = carried.config(frozen_cfg)
         report = combined_evolve(
-            benchmarks, cfg, evo_config, rounds=1, params_per_round=2, mutator=active_mutator
+            benchmarks,
+            cfg,
+            evo_config,
+            rounds=max(1, settings.generations),
+            params_per_round=3,
+            mutator=active_mutator,
+            verifier=StructuralVerifier(),
+            reference_cfg=frozen_cfg,
         )
-        fitness = report.sharded.mean_fitness
+        fitness = report.objective if report.objective is not None else report.sharded.mean_fitness
+        carried = report.best_params
         curve.append(fitness)
         params = report.best_params.as_dict()
         if log is not None:

@@ -110,3 +110,73 @@ def test_normalize_weights() -> None:
     out = normalize_weights({"a": 0.2, "b": 0.2, "c": 0.7})
     assert abs(sum(out.values()) - 1.0) < 1e-6
     assert out["c"] > out["a"]
+
+
+def test_unverified_seed_is_at_fitness_ceiling(cfg: ArenaConfig) -> None:
+    """种子策略等于参照签名：无验证器时结构/覆盖满分，适应度顶在天花板。"""
+    from agh.evolution import evaluate_strategy
+
+    bench = generate_benchmarks(1, seed=0)[0]
+    seed = seed_for(bench)
+    result = evaluate_strategy(seed, [bench], cfg)
+    assert result.fitness == pytest.approx(cfg.weights["coverage"])
+
+
+def test_verifier_unlocks_fitness_headroom(cfg: ArenaConfig) -> None:
+    """接上验证器后，深度变异应能超过种子——否则进化搜索没有梯度。"""
+    from agh.evolution import evaluate_strategy
+    from agh.verifier import StructuralVerifier
+
+    verifier = StructuralVerifier()
+    benches = generate_benchmarks(3, seed=0)
+    improved = False
+    for bench in benches:
+        seed = seed_for(bench)
+        seed_score = evaluate_strategy(seed, [bench], cfg, verifier=verifier).fitness
+        assert seed_score > evaluate_strategy(seed, [bench], cfg).fitness
+        for step in range(16):
+            depth = round(0.2 + 0.05 * step, 2)
+            candidate = type(seed)(**{**seed.__dict__, "depth": depth})
+            if evaluate_strategy(candidate, [bench], cfg, verifier=verifier).fitness > seed_score + 1e-9:
+                improved = True
+    assert improved
+
+
+def test_verifier_reaches_combined_evolve(cfg: ArenaConfig) -> None:
+    from agh.verifier import StructuralVerifier
+
+    benches = generate_benchmarks(2, seed=4)
+    report = combined_evolve(
+        benches,
+        cfg,
+        EvolutionConfig(generations=1, population=1),
+        rounds=1,
+        params_per_round=1,
+        verifier=StructuralVerifier(),
+    )
+    assert report.sharded.mean_fitness > 0
+
+
+def test_reference_objective_ignores_searched_weights(cfg: ArenaConfig) -> None:
+    """参照权重打分：候选参数不能靠抬高覆盖权重刷自己的分。"""
+    from agh.evolution import evaluate_strategy
+    from agh.verifier import StructuralVerifier
+
+    verifier = StructuralVerifier()
+    benches = generate_benchmarks(3, seed=5)
+    report = combined_evolve(
+        benches,
+        cfg,
+        EvolutionConfig(generations=1, population=1),
+        rounds=2,
+        params_per_round=2,
+        verifier=verifier,
+        reference_cfg=cfg,
+    )
+    by_id = {b.skeleton.skeleton_id: b for b in benches}
+    rescored = [
+        evaluate_strategy(shard.strategy, [by_id[shard.skeleton_id]], cfg, verifier=verifier).fitness
+        for shard in report.sharded.shards
+    ]
+    assert report.objective == pytest.approx(sum(rescored) / len(rescored))
+    assert report.objective is not None and report.objective > 0

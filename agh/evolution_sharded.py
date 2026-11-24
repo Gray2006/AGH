@@ -151,12 +151,13 @@ def sharded_evolve(
     cfg: ArenaConfig,
     config: EvolutionConfig,
     mutator: Any | None = None,
+    verifier: Any | None = None,
 ) -> ShardedReport:
     shards: list[ShardResult] = []
     evaluations = 0
     for bench in benchmarks:
         key = None
-        if mutator is None:
+        if mutator is None and verifier is None:
             key = (
                 bench.skeleton.skeleton_id,
                 tuple(seed_for(bench).features),
@@ -191,6 +192,7 @@ def sharded_evolve(
                 alpha=config.alpha,
             ),
             mutator=mutator,
+            verifier=verifier,
         )
         evaluations += config.generations * config.population + 1
         if key is not None and report.best is not None:
@@ -216,6 +218,7 @@ class CombinedReport:
     curve: list[float]
     deltas: Interval | None
     params_history: list[dict[str, Any]] = field(default_factory=list)
+    objective: float | None = None
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -223,6 +226,7 @@ class CombinedReport:
             "best_params": self.best_params.as_dict(),
             "sharded": self.sharded.as_dict(),
             "single_mean": round(self.single_mean, 5),
+            "objective": None if self.objective is None else round(self.objective, 5),
             "curve": [round(x, 5) for x in self.curve],
             "per_benchmark_delta": None
             if self.deltas is None
@@ -252,11 +256,35 @@ def combined_evolve(
     rounds: int = 3,
     params_per_round: int = 3,
     mutator: Any | None = None,
+    verifier: Any | None = None,
+    reference_cfg: ArenaConfig | None = None,
 ) -> CombinedReport:
+    """分片精英 + 参数进化。
+
+    reference_cfg 非空时，参数候选的取舍改用「固定参照权重」重打分：
+    否则被搜索的权重就是打分函数本身，最优解必然是把惩罚项权重压到下界，
+    那是换尺子，不是改进。
+    """
+    from .evolution import evaluate_strategy
+
     rng = random.Random(config.seed)
+    bench_by_id = {b.skeleton.skeleton_id: b for b in benchmarks}
+
+    def objective(sharded_report: ShardedReport) -> float:
+        if reference_cfg is None or verifier is None:
+            return sharded_report.mean_fitness
+        scores = [
+            evaluate_strategy(
+                shard.strategy, [bench_by_id[shard.skeleton_id]], reference_cfg, verifier=verifier
+            ).fitness
+            for shard in sharded_report.shards
+            if shard.skeleton_id in bench_by_id
+        ]
+        return sum(scores) / len(scores) if scores else 0.0
+
     params = ParamGenome.from_config(cfg)
-    sharded = sharded_evolve(benchmarks, params.config(cfg), config, mutator=mutator)
-    best_mean = sharded.mean_fitness
+    sharded = sharded_evolve(benchmarks, params.config(cfg), config, mutator=mutator, verifier=verifier)
+    best_mean = objective(sharded)
     curve = [best_mean]
     history: list[dict[str, Any]] = []
 
@@ -265,11 +293,12 @@ def combined_evolve(
         scale = anneal_scale(_round, rounds)
         for _ in range(params_per_round):
             candidate = mutate_params(params, rng, scale=scale)
-            candidate_sharded = sharded_evolve(benchmarks, candidate.config(cfg), config)
-            if candidate_sharded.mean_fitness > best_mean:
+            candidate_sharded = sharded_evolve(benchmarks, candidate.config(cfg), config, verifier=verifier)
+            score = objective(candidate_sharded)
+            if score > best_mean:
                 params = candidate
                 sharded = candidate_sharded
-                best_mean = candidate_sharded.mean_fitness
+                best_mean = score
                 improved = True
                 history.append({"round": _round, "accepted": True, **candidate.as_dict()})
         if not improved:
@@ -287,7 +316,7 @@ def combined_evolve(
         confidence=0.6,
         depth=0.7,
     )
-    single_report = evolve(single_seed, benchmarks, params.config(cfg), config)
+    single_report = evolve(single_seed, benchmarks, params.config(cfg), config, verifier=verifier)
     single_mean = single_report.best.fitness if single_report.best else 0.0
 
     deltas: Interval | None = None
@@ -305,6 +334,7 @@ def combined_evolve(
         curve=curve,
         deltas=deltas,
         params_history=history,
+        objective=best_mean,
     )
 
 

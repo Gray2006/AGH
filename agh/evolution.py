@@ -114,7 +114,14 @@ def evaluate_strategy(
     strategy: Strategy,
     benchmarks: Sequence[Benchmark],
     cfg: ArenaConfig,
+    *,
+    verifier: Any | None = None,
 ) -> EvalResult:
+    """评估策略适应度。
+
+    不传 verifier 时沿用旧口径：置信与垂直一致性不计分（自报不可信）。
+    传入 verifier 后，垂直移动由独立验证器核对，适应度才有可爬的梯度。
+    """
     scores: list[float] = []
     notes: list[str] = []
     passed = True
@@ -126,8 +133,13 @@ def evaluate_strategy(
             notes.append(f"{bench.skeleton.skeleton_id}: 硬过滤拒收 {filt.reasons}")
             scores.append(0.0)
             continue
+        verifier_score = verifier.score(recon, bench.skeleton) if verifier is not None else None
         breakdown = score_candidate(
-            recon, bench.skeleton, cfg, verifier_score=None, parent_signature=bench.parent
+            recon,
+            bench.skeleton,
+            cfg,
+            verifier_score=verifier_score,
+            parent_signature=bench.parent,
         )
         scores.append(breakdown.score)
     fitness = sum(scores) / len(scores) if scores else 0.0
@@ -285,6 +297,7 @@ def evolve(
     config: EvolutionConfig | None = None,
     log: EventLog | None = None,
     mutator: Any | None = None,
+    verifier: Any | None = None,
 ) -> EvolutionReport:
     """档案式进化主循环：变异 → 评估 → 接受/拒绝 → 入档。"""
     settings = config or EvolutionConfig()
@@ -307,7 +320,7 @@ def evolve(
         if log is not None:
             log.append(kind, payload)
 
-    seed_eval = evaluate_strategy(seed_strategy, benchmarks, cfg)
+    seed_eval = evaluate_strategy(seed_strategy, benchmarks, cfg, verifier=verifier)
     record("evolution.start", {"seed": seed_strategy.name, "fitness": seed_eval.fitness})
     seed_variant = Variant(
         variant_id="v0-seed",
@@ -338,7 +351,7 @@ def evolve(
                     reserved=BudgetVector(compute_units=1, wall_ms=1000, usd=0.01),
                     max_tokens=1,
                 )
-                result = evaluate_strategy(child_strategy, benchmarks, cfg)
+                result = evaluate_strategy(child_strategy, benchmarks, cfg, verifier=verifier)
                 ledger.settle(lease.lease_id, BudgetVector(compute_units=1, wall_ms=1000, usd=0.01))
                 novelty = novelty_of(child_strategy, archive.all())
 
