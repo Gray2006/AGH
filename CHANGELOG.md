@@ -2,6 +2,20 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [1.16.0] - 2026-11-24
+
+daemon 支持 LLM 变异器与 token 硬预算。
+
+### Added
+
+- `agh daemon --llm-mutator --provider --model --api-key-env --daily-budget`
+- 预算用尽自动停止并写进报告 `tokens_used`；预算内退化回规则变异
+- `combined_evolve` 透传 `mutator`
+
+### Measured
+
+- 冒烟（2 基准、1 代、population 1）：tokens_used 1607，未触顶
+
 ## [1.15.0] - 2026-11-24
 
 自主迭代闭环。

@@ -246,6 +246,11 @@ def cmd_daemon(args: argparse.Namespace) -> int:
             patience=args.patience,
             write_back=not args.no_write_back,
             seed=args.seed,
+            llm_mutator=args.llm_mutator,
+            provider=args.provider,
+            model=args.model,
+            api_key_env=args.api_key_env,
+            daily_token_budget=args.daily_budget,
         ),
         log=EventLog(log_path),
     )
@@ -324,6 +329,11 @@ def build_parser() -> argparse.ArgumentParser:
     daemon.add_argument("--patience", type=int, default=2)
     daemon.add_argument("--seed", type=int, default=0)
     daemon.add_argument("--no-write-back", action="store_true")
+    daemon.add_argument("--llm-mutator", action="store_true")
+    daemon.add_argument("--provider", default="deepseek")
+    daemon.add_argument("--model", default=None)
+    daemon.add_argument("--api-key-env", default=None)
+    daemon.add_argument("--daily-budget", type=int, default=0, help="token 预算，0 不限")
     daemon.add_argument("--out", type=Path, default=Path("runs") / "daemon" / "events.jsonl")
     daemon.set_defaults(func=cmd_daemon)
 

@@ -4,7 +4,7 @@
 
 **Agent Gestalt Hierarchy** — an M0 vertical slice of a multi-agent "gestalt reconstruction" framework. A parent issues a skeleton and a contract; children reconstruct the whole rather than reassembling parts; every submission is signed and provenance-checked. Gate, arena, arbitration, governance, budget ledger and a hash-chained log form one runnable, testable, replayable pipeline.
 
-> Status: M0 (v1.15.0). Children are **rule-based reconstructors**, not LLMs. Every number below is reproducible locally.
+> Status: M0 (v1.16.0). Children are **rule-based reconstructors**, not LLMs. Every number below is reproducible locally.
 
 ```
 Parent M0
@@ -313,7 +313,7 @@ agh daemon --rounds 4 --benchmarks 6 --patience 2
 
 Each round: generate benchmarks → sharded + parameter evolution → calibration gate → write back to the frozen layer and rebuild the anchor; if calibration fails, the backup is restored and the write-back rolls back. Stops after `patience` rounds without improvement.
 
-- Rule-based mutations and local scoring only by default: **0 tokens**; the LLM mutator must be enabled explicitly
+- Rule-based mutations and local scoring only by default: **0 tokens**; `--llm-mutator --provider command-code --daily-budget 30000` enables model mutations with a hard token cap and stops when spent
 - `--no-write-back` iterates without touching disk
 - Write-back only touches `arena.weights` and `dissent_tau`
 

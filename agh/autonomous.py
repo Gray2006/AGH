@@ -43,6 +43,11 @@ class AutonomousConfig:
     min_improvement: float = 1e-4
     write_back: bool = True
     seed: int = 0
+    llm_mutator: bool = False
+    provider: str = "deepseek"
+    model: str | None = None
+    api_key_env: str | None = None
+    daily_token_budget: int = 0
 
 
 @dataclass
@@ -54,6 +59,7 @@ class AutonomousReport:
     rolled_back: bool
     params: dict[str, Any]
     log_entries: int
+    tokens_used: int = 0
     notes: list[str] = field(default_factory=list)
 
     def as_dict(self) -> dict[str, Any]:
@@ -65,6 +71,7 @@ class AutonomousReport:
             "rolled_back": self.rolled_back,
             "params": self.params,
             "log_entries": self.log_entries,
+            "tokens_used": self.tokens_used,
             "notes": self.notes,
         }
 
@@ -110,6 +117,29 @@ def run_autonomous(
     frozen_root = Path(frozen_root)
     notes: list[str] = []
     benchmarks = generate_benchmarks(settings.benchmarks, seed=settings.bench_seed)
+
+    tokens_used = 0
+    active_mutator = None
+    if settings.llm_mutator:
+        from .evolution_llm import LlmStrategyMutator
+        from .providers import make_client
+
+        client = make_client(settings.provider, model=settings.model, api_key_env=settings.api_key_env)
+        feature_pool = sorted({f"{a}-{b}" for b in benchmarks for a, b in b.skeleton.edges})
+        node_pool = sorted({n for b in benchmarks for n in b.skeleton.nodes})
+        base_mutator = LlmStrategyMutator(feature_pool, node_pool, complete=client)
+
+        class BudgetedMutator:
+            def mutate(self, parent, rng, name):
+                nonlocal tokens_used
+                if settings.daily_token_budget and tokens_used >= settings.daily_token_budget:
+                    return base_mutator.fallback.mutate(parent, rng, name)
+                strategy = base_mutator.mutate(parent, rng, name)
+                usage = client.last_usage or {}
+                tokens_used += int(usage.get("total_tokens", 0) or 0)
+                return strategy
+
+        active_mutator = BudgetedMutator()
     evo_config = EvolutionConfig(
         generations=settings.generations, population=settings.population, seed=settings.seed
     )
@@ -126,7 +156,7 @@ def run_autonomous(
         rounds_run += 1
         cfg = ArenaConfig.from_frozen(frozen_root)
         report = combined_evolve(
-            benchmarks, cfg, evo_config, rounds=1, params_per_round=2
+            benchmarks, cfg, evo_config, rounds=1, params_per_round=2, mutator=active_mutator
         )
         fitness = report.sharded.mean_fitness
         curve.append(fitness)
@@ -144,6 +174,10 @@ def run_autonomous(
             if stale >= settings.patience:
                 notes.append(f"连续 {stale} 轮无改进，停止")
                 break
+
+        if settings.daily_token_budget and tokens_used >= settings.daily_token_budget:
+            notes.append(f"token 预算用尽（{tokens_used}），停止")
+            break
 
         if settings.write_back and fitness > 0:
             backup = frozen_root / "thresholds.json.bak"
@@ -168,6 +202,7 @@ def run_autonomous(
         rolled_back=rolled,
         params=params,
         log_entries=len(log.read()) if log is not None else 0,
+        tokens_used=tokens_used,
         notes=notes,
     )
 

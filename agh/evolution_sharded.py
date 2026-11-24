@@ -251,10 +251,11 @@ def combined_evolve(
     *,
     rounds: int = 3,
     params_per_round: int = 3,
+    mutator: Any | None = None,
 ) -> CombinedReport:
     rng = random.Random(config.seed)
     params = ParamGenome.from_config(cfg)
-    sharded = sharded_evolve(benchmarks, params.config(cfg), config)
+    sharded = sharded_evolve(benchmarks, params.config(cfg), config, mutator=mutator)
     best_mean = sharded.mean_fitness
     curve = [best_mean]
     history: list[dict[str, Any]] = []
