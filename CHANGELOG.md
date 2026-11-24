@@ -2,6 +2,21 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [1.7.0] - 2026-11-24
+
+盲裁判校准，结果是否定的。
+
+### Added
+
+- `LlmJudgeVerifier(blind=True)`：裁判不给规则，自行判断
+- `run_verifier_calibration.py --blind`
+- 测试 219 → 221
+
+### Measured
+
+- 盲裁判（10 候选）：一致率 0.8、Cohen's kappa 0.0、ECE 0.2；盲裁判对所有候选都给 1.0
+- 结论：结构验证器尚未被独立校准；模型裁判不可靠，需要人工标注
+
 ## [1.6.0] - 2026-11-24
 
 三件补齐：Ed25519 主链路、跨基准真模型实验、验证器校准。

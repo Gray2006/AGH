@@ -72,3 +72,29 @@ def test_make_verifier() -> None:
     assert make_verifier("structural").name == "structural"
     with pytest.raises(ValueError):
         make_verifier("nope")
+
+
+def test_llm_judge_blind_prompt_has_no_rule() -> None:
+    from agh.verifier import LlmJudgeVerifier
+
+    prompts: list[str] = []
+
+    def complete(prompt: str) -> str:
+        prompts.append(prompt)
+        return '{"support": 0.5}'
+
+    judge = LlmJudgeVerifier(complete=complete, blind=True)
+    sk = skeleton()
+    cand = recon(["M0", "P1", "C1"], [("M0", "P1"), ("P1", "C1")])
+    assert judge.score(cand, sk) == pytest.approx(0.5)
+    assert "规则：" not in prompts[0]
+    assert "独立评审" in prompts[0]
+
+
+def test_llm_judge_clamps_and_handles_garbage() -> None:
+    from agh.verifier import LlmJudgeVerifier
+
+    sk = skeleton()
+    cand = recon(["M0"], [])
+    assert LlmJudgeVerifier(complete=lambda _p: '{"support": 3}', blind=True).score(cand, sk) == 1.0
+    assert LlmJudgeVerifier(complete=lambda _p: "garbage", blind=True).score(cand, sk) == 0.0

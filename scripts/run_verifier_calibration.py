@@ -29,12 +29,13 @@ def main() -> int:
     parser.add_argument("--api-key-env", default=None)
     parser.add_argument("--candidates", type=Path, default=ROOT / "runs" / "g1" / "llm-bench-candidates.json")
     parser.add_argument("--out", type=Path, default=ROOT / "runs" / "g1" / "verifier-calibration.json")
+    parser.add_argument("--blind", action="store_true", help="裁判不给规则，自行判断")
     args = parser.parse_args()
 
     items = json.loads(args.candidates.read_text(encoding="utf-8"))
     client = make_client(args.provider, model=args.model, api_key_env=args.api_key_env)
     structural = StructuralVerifier()
-    judge = LlmJudgeVerifier(complete=client)
+    judge = LlmJudgeVerifier(complete=client, blind=args.blind)
 
     structural_scores: list[float] = []
     judge_scores: list[float] = []
@@ -50,6 +51,7 @@ def main() -> int:
 
     report = {
         "n": len(items),
+        "blind": bool(args.blind),
         "calibration": evaluate(structural_scores, judge_scores).as_dict(),
         "items": per_item,
     }

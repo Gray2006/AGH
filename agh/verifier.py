@@ -75,17 +75,30 @@ class LlmJudgeVerifier:
 
     complete: Callable[[str], str]
     name: str = "llm-judge"
+    blind: bool = False
 
     def score(self, candidate: GestaltReconstruction, skeleton: Skeleton) -> float:
         vertical = [m.node for m in skeleton.moves if m.vertical]
-        prompt = (
-            "判断候选重构是否用结构证据支持了这些垂直移动。只输出 JSON。\n"
-            f"垂直移动节点：{vertical}\n"
-            f"候选 parts：{list(candidate.parts)}\n"
-            f"候选 edges：{json.dumps(candidate.content.get('edges', []), ensure_ascii=False)}\n"
-            "规则：节点在 parts 里、且有边指向它，才算支持。\n"
-            '输出：{"support": 0 到 1 的数}'
-        )
+        if self.blind:
+            prompt = (
+                "你是独立评审。下面是一个多智能体重构结果和它要满足的骨架。\n"
+                f"骨架节点：{list(skeleton.nodes)}\n"
+                f"骨架边：{json.dumps([list(e) for e in skeleton.edges], ensure_ascii=False)}\n"
+                f"垂直移动节点：{vertical}\n"
+                f"候选 parts：{list(candidate.parts)}\n"
+                f"候选 edges：{json.dumps(candidate.content.get('edges', []), ensure_ascii=False)}\n"
+                "请自行判断：这个重构是否真实保留了骨架的层级关系？只输出 JSON。\n"
+                '输出：{"support": 0 到 1 的数}'
+            )
+        else:
+            prompt = (
+                "判断候选重构是否用结构证据支持了这些垂直移动。只输出 JSON。\n"
+                f"垂直移动节点：{vertical}\n"
+                f"候选 parts：{list(candidate.parts)}\n"
+                f"候选 edges：{json.dumps(candidate.content.get('edges', []), ensure_ascii=False)}\n"
+                "规则：节点在 parts 里、且有边指向它，才算支持。\n"
+                '输出：{"support": 0 到 1 的数}'
+            )
         try:
             data = extract_json(self.complete(prompt))
             value = float(data.get("support", 0.0))

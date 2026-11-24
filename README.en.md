@@ -4,7 +4,7 @@
 
 **Agent Gestalt Hierarchy** — an M0 vertical slice of a multi-agent "gestalt reconstruction" framework. A parent issues a skeleton and a contract; children reconstruct the whole rather than reassembling parts; every submission is signed and provenance-checked. Gate, arena, arbitration, governance, budget ledger and a hash-chained log form one runnable, testable, replayable pipeline.
 
-> Status: M0 (v1.6.0). Children are **rule-based reconstructors**, not LLMs. Every number below is reproducible locally.
+> Status: M0 (v1.7.0). Children are **rule-based reconstructors**, not LLMs. Every number below is reproducible locally.
 
 ```
 Parent M0
@@ -155,7 +155,11 @@ Prompt ablation (12 samples each, same verifier): without structural hints 0.793
 
 Across 10 generated skeletons (`scripts/run_llm_bench.py`): the real model averages 0.62229 vs the rule child at 0.69081, paired delta -0.06851 (CI -0.11277 to -0.02372) — the single-skeleton -0.014 grows to -0.07 across skeletons.
 
-Verifier calibration (`scripts/run_verifier_calibration.py`, 10 real candidates): structural verifier and LLM judge agree 1.0, kappa 1.0, ECE 0.0. Caveat: the judge prompt restates the same rule, so this shows the two do not conflict rather than providing independent validation.
+Verifier calibration (`scripts/run_verifier_calibration.py`, 10 real candidates):
+- Judge with the rule: agreement 1.0, kappa 1.0, ECE 0.0 — but the judge merely restates the rule, so this is not independent evidence
+- Blind judge (`--blind`, no rule): agreement 0.8, **kappa 0.0**, ECE 0.2; the blind judge gives 1.0 to every candidate and does not discriminate
+
+Conclusion: the structural verifier is **not independently calibrated**. That needs human-labelled samples; the LLM judge is unreliable here.
 
 Multi-model comparison is not possible yet: the command-code endpoint only serves `deepseek/deepseek-v4.1-flash`; `deepseek-v4.1`, `deepseek-v3.2`, `glm-4.7-flash` and `qwen3-max` all return 400.
 
