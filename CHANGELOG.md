@@ -2,6 +2,20 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [1.9.1] - 2026-11-24
+
+人工标注首轮结果：验证器仍未校准。
+
+### Added
+
+- `scripts/make_label_packet.py` / `scripts/score_labels.py`：是非题标注包与打分脚本；无垂直移动的题自动排除
+
+### Measured
+
+- 10 题人工标注：2 题因骨架无垂直移动排除；剩 8 题一致率 0.875、kappa 0.0、ECE 0.125
+- 原因：候选集几乎全为正例（验证器全给 1），缺少负例，kappa 无法区分
+- 结论：需要平衡的正负例集合才能校准
+
 ## [1.9.0] - 2026-11-24
 
 计费、NATS 适配、SQLite 日志。
