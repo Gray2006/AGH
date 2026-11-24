@@ -146,7 +146,10 @@ def _winner_score(
         return candidates[0].breakdown.score
     result = arbitrate(candidates, seed=seed, cfg=cfg)
     winner = next((c for c in candidates if c.reconstruction.child_id == result.winner), None)
-    return winner.breakdown.score if winner is not None else None
+    if winner is None:
+        # 仲裁可能因为所有候选都是 0 分而不选任何人；消融里按 0 分处理
+        return 0.0
+    return winner.breakdown.score
 
 
 def run_ablation(

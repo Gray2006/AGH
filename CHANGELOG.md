@@ -2,6 +2,24 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [1.4.0] - 2026-11-24
+
+门控自报垂直一致性，并修正由此暴露的假高分。
+
+### Fixed
+
+- `score_candidate`：没有验证器信号时垂直一致性不计分（此前候选自报 `vertical_moves` 即可拿满 0.3182 权重，属于自报刷分）
+- `build_prompt`：写清 `content.vertical_moves` 的元素格式（`{"node": ..., "preserved_depth": ...}`），此前未定义导致模型写成字符串数组
+- `vertical_consistency` 接受字符串条目（深度未报按声明深度计，不因格式差异惩罚）
+- `ablation._winner_score`：仲裁因全 0 分不选人时按 0 分处理
+
+### Measured（修正后）
+
+- 无提示 12 次：均分 0.40187，规则基线 0.422，差 -0.02013（CI -0.02935–-0.01024）
+- 加结构提示 12 次：0.379（差 -0.043），提示反而有害
+- 1.4.0 之前的真模型分数（0.49–0.51）包含自报加分，作废
+- 测试 206 → 208
+
 ## [1.3.0] - 2026-11-24
 
 温度消融，并修脚本参数未生效。

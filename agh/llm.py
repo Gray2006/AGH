@@ -92,10 +92,19 @@ def extract_json(text: str) -> Any:
     raise ChildOutputError("JSON 括号不闭合", raw=text)
 
 
+HINTS = (
+    "特征命名约定（请照此填写）：",
+    "- 每条骨架边写成一个特征，形如 \"M0-P1\"",
+    "- 垂直移动写成 \"vertical_moves:<节点>\"，水平移动写成 \"horizontal_move:<节点>\"",
+    "- 结构谓词：层级式用 \"pred:hierarchical\"，平铺用 \"pred:flat\"，独立用 \"pred:independent\"",
+)
+
+
 def build_prompt(
     contract: Contract,
     parent_features: list[str] | None = None,
     reference: dict | None = None,
+    with_hints: bool = False,
 ) -> str:
     """把骨架、必需项、垂直移动写成可执行的指令，不给答案。"""
     sk = contract.skeleton
@@ -119,6 +128,9 @@ def build_prompt(
         lines.append(f"- 至少 {sk.min_vertical_moves} 次垂直移动，写在 content.vertical_moves 里")
     if parent_features:
         lines.append(f"- 父级签名特征（用于判断你是否只是复读）：{', '.join(parent_features)}")
+    if with_hints:
+        lines.append("")
+        lines.extend(HINTS)
     if reference is not None:
         lines.append("")
         lines.append("参考实现（一个合格样本，可照抄结构，但请自己判断是否要调整）：")
@@ -131,7 +143,9 @@ def build_prompt(
         'coverage: {"covered": [...]},',
         'signature: {"signature_id": "...", "features": [...], "abstraction": false},',
         "self_confidence (0-1),",
-        'content: {"edges": [[a,b],...], "vertical_moves": [...], "changed_nodes": [...]}',
+        'content: {"edges": [[a,b],...], '
+        '"vertical_moves": [{"node": "...", "preserved_depth": 0.0-1.0}], '
+        '"changed_nodes": [...]}',
         "",
         f"contract_id 固定为 {contract.contract_id}，skeleton_id 固定为 {sk.skeleton_id}。",
     ]
@@ -147,6 +161,7 @@ class LlmChild:
     skeleton: Skeleton
     parent_features: list[str] | None = None
     reference: dict | None = None
+    with_hints: bool = False
 
     def reconstruct(self, contract_id: str) -> GestaltReconstruction:
         contract = Contract(
@@ -156,7 +171,7 @@ class LlmChild:
             budget_max_tokens=1,
             ttl_ms=1,
         )
-        prompt = build_prompt(contract, self.parent_features, self.reference)
+        prompt = build_prompt(contract, self.parent_features, self.reference, self.with_hints)
         raw = self.complete(prompt)
         data = extract_json(raw)
         if not isinstance(data, dict):

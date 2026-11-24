@@ -128,3 +128,17 @@ def test_llm_child_passes_reference() -> None:
     )
     child.reconstruct("ct-llm")
     assert "参考实现" in seen[0]
+
+
+def test_prompt_includes_structural_hints() -> None:
+    from agh.contracts import Contract
+
+    sk = skeleton()
+    contract = Contract(
+        contract_id="ct-llm", parent_id="p", skeleton=sk, budget_max_tokens=1, ttl_ms=1
+    )
+    prompt = build_prompt(contract, None, None, True)
+    assert "特征命名约定" in prompt
+    assert "pred:hierarchical" in prompt
+    plain = build_prompt(contract)
+    assert "特征命名约定" not in plain

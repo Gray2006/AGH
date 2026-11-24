@@ -270,3 +270,14 @@ def test_vertical_consistency_uses_candidate_depths() -> None:
     missing = recon().model_copy(update={"content": {"edges": [], "vertical_moves": []}})
     missing_vc, _ = vertical_consistency(sk, missing)
     assert missing_vc < good_vc
+
+
+def test_vertical_consistency_accepts_node_names() -> None:
+    from agh.arena import vertical_consistency
+
+    sk = skeleton()
+    names = [m.node for m in sk.moves if m.vertical]
+    cand = recon().model_copy(update={"content": {"edges": [], "vertical_moves": names}})
+    vc, n = vertical_consistency(sk, cand)
+    assert n == 2
+    assert vc == pytest.approx(1.0)

@@ -34,6 +34,7 @@ def main() -> int:
     parser.add_argument("--max-tokens", type=int, default=2048)
     parser.add_argument("--include-reference", action="store_true", help="提示里附一个参考重构（消融）")
     parser.add_argument("--temperature", type=float, default=None)
+    parser.add_argument("--with-hints", action="store_true", help="提示里给特征命名约定（结构标签）")
     parser.add_argument("--samples", type=int, default=8)
     parser.add_argument("--out", type=Path, default=ROOT / "runs" / "g1" / "llm-experiment.json")
     args = parser.parse_args()
@@ -55,6 +56,7 @@ def main() -> int:
         skeleton=skeleton,
         parent_features=PARENT_SIG.features,
         reference=reference,
+        with_hints=args.with_hints,
     )
 
     scores: list[float] = []
@@ -90,6 +92,7 @@ def main() -> int:
         "rule_baseline": round(rule_score, 5),
         "include_reference": bool(args.include_reference),
         "temperature": client.temperature,
+        "with_hints": bool(args.with_hints),
         "scores": [round(x, 5) for x in scores],
         "delta_vs_rule": (
             {

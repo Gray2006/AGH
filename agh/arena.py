@@ -192,9 +192,16 @@ def vertical_consistency(
         for move in candidate.content.get("vertical_moves", []) or []:
             if isinstance(move, dict) and "node" in move:
                 reported[str(move["node"])] = float(move.get("preserved_depth", 0.0))
+            elif isinstance(move, str):
+                # 只报了节点名：深度未知，按声明深度算，不因格式差异扣分
+                reported[move] = float("nan")
     deltas = []
     for m in vertical:
-        preserved = m.preserved_depth if candidate is None else reported.get(m.node, 0.0)
+        if candidate is None:
+            preserved = m.preserved_depth
+        else:
+            value = reported.get(m.node, 0.0)
+            preserved = m.declared_depth if value != value else value  # NaN 表示只报了节点
         deltas.append(abs(m.declared_depth - preserved))
     return 1.0 - sum(deltas) / len(deltas), len(vertical)
 
@@ -235,6 +242,10 @@ def score_candidate(
     update = len(changed) / max(len(nodes), 1)
 
     vc, n_vertical = vertical_consistency(skeleton, candidate)
+    vc_gated = verifier_score is None
+    if vc_gated:
+        # 垂直移动是候选自报的；没有验证器信号就不计分，否则自报即可刷分
+        vc = 0.0
     covered = len({c for c in candidate.coverage.covered if c in set(skeleton.required_items)})
     coverage = covered / len(skeleton.required_items)
 
@@ -246,7 +257,7 @@ def score_candidate(
         + w["vertical"] * vc
         + w["coverage"] * coverage
     )
-    notes: list[str] = []
+    notes: list[str] = ["无验证器信号：垂直一致性不计分"] if vc_gated and n_vertical else []
     if unverified:
         notes.append("无独立验证信号，置信分记 0")
     if n_vertical == 0:
