@@ -2,6 +2,31 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [2.5.0] - 2026-11-24
+
+三个模型通道上的代码基准对照，结论是策略空间本身没有区分度。
+
+### Added
+
+- `providers.PRESETS` 增加 `zhipu`（`glm-4-flash`）
+- `run_code_bench.py` 在 baseline 触顶时输出 `WARNING_CEILING`（2.4.1 起，本版实测触发）
+
+### Measured（15 题，budget 80，held-out 4）
+
+| 通道 / 模型 | baseline | evolution | random | 触顶 |
+|---|---|---|---|---|
+| command-code / deepseek-v4.1-flash | 1.0 | 1.0 | 1.0 | 是 |
+| deepseek 官方 / deepseek-chat | 1.0 | 1.0 | 1.0 | 是 |
+| zhipu / glm-4-flash | 0.9375 | 0.9375 | 0.9375 | 否 |
+
+### Notes
+
+- glm-4-flash 没触顶，但进化与随机仍然同分。原因不在模型：`SolverPolicy` 只能调
+  「采样数 / 选择方式 / 提示」，baseline（n=1、取第一个）已经接近上限，这些旋钮无法提升单次生成质量
+- 结论：这个策略空间对这套题没有区分度。要测出「进化 vs 随机」，需要
+  1）baseline 明显低于上限的题库，2）能改变单次生成质量的策略维度（多轮修正、更细的提示模板）
+- 三个通道都 0 调用失败，链路本身是通的
+
 ## [2.4.1] - 2026-11-24
 
 代码任务基准在真模型上触顶，加天花板检测。

@@ -124,6 +124,11 @@ PRESETS: dict[str, dict[str, Any]] = {
         "model": "deepseek/deepseek-v4.1-flash",
         "api_key_env": "COMMAND_CODE_API_KEY",
     },
+    "zhipu": {
+        "base_url": "https://open.bigmodel.cn/api/paas/v4",
+        "model": "glm-4-flash",
+        "api_key_env": "ZHIPU_API_KEY",
+    },
     "ollama": {
         "base_url": "http://127.0.0.1:11434/v1",
         "model": "qwen2.5:7b",
