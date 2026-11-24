@@ -57,3 +57,30 @@ def test_daemon_uses_failure_seeds(monkeypatch, frozen_copy: Path) -> None:
     for case in cases:
         assert seen[case.skeleton.skeleton_id].features == case.seed.features  # type: ignore[union-attr]
     assert any("真实失败样本" in note for note in report.notes)
+
+
+def test_failures_ignore_seed_drop(monkeypatch, frozen_copy: Path) -> None:
+    from types import SimpleNamespace
+
+    from agh import autonomous as mod
+
+    seen: dict = {}
+
+    def fake_combined(benchmarks, cfg, evo_config, **kwargs):
+        seen.update(kwargs)
+        return SimpleNamespace(
+            objective=0.5,
+            best_params=mod.ParamGenome.from_config(cfg),
+            carry={},
+            sharded=SimpleNamespace(mean_fitness=0.5),
+        )
+
+    monkeypatch.setattr(mod, "combined_evolve", fake_combined)
+    report = mod.run_autonomous(
+        frozen_copy,
+        mod.AutonomousConfig(
+            rounds=1, generations=1, population=1, failures=str(FIXTURE), seed_degrade=0.4
+        ),
+    )
+    assert seen["seed_degrade"] == 0.0
+    assert any("seed-drop" in note for note in report.notes)

@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import json
 import shutil
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any
 
@@ -139,6 +139,9 @@ def run_autonomous(
         benchmarks = [case.to_benchmark() for case in cases]
         initial_carry = {case.skeleton.skeleton_id: case.seed for case in cases}
         notes.append(f"真实失败样本：{len(cases)} 条")
+        if settings.seed_degrade:
+            notes.append("失败样本自带种子，--seed-drop 被忽略")
+        settings = replace(settings, seed_degrade=0.0)
     else:
         benchmarks = generate_benchmarks(settings.benchmarks, seed=settings.bench_seed)
         initial_carry = {}

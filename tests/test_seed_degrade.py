@@ -126,3 +126,13 @@ def test_shard_cache_reused_with_verifier(cfg: ArenaConfig) -> None:
     second = sharded_evolve(benches, cfg, evo, verifier=StructuralVerifier())
     assert first.mean_fitness == second.mean_fitness
     assert mod._SHARD_CACHE
+
+
+def test_shard_cache_is_bounded() -> None:
+    from agh import evolution_sharded as mod
+
+    mod._SHARD_CACHE.clear()
+    for i in range(mod._SHARD_CACHE_MAX + 20):
+        mod._cache_put((i,), (float(i), None))  # type: ignore[arg-type]
+    assert len(mod._SHARD_CACHE) <= mod._SHARD_CACHE_MAX
+    assert (0,) not in mod._SHARD_CACHE

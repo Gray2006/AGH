@@ -1,4 +1,4 @@
-# AGH 状态交接（v2.0.0，2026-11-24）
+# AGH 状态交接（v2.0.1，2026-11-24）
 
 > 新会话先读这个文件，再读 `README.md` 的「版本与兼容」与 `memory/agh.md`。
 
@@ -8,7 +8,7 @@
 
 ## 当前版本
 
-- v2.0.0，`271 passed + 1 skipped`（NATS 需服务），ruff 干净，mypy 38 文件零错误
+- v2.0.0，`273 passed + 1 skipped`（NATS 需服务），ruff 干净，mypy 38 文件零错误
 - 仓库 <https://github.com/Gray2006/AGH>，CI 双版本绿
 - 依赖：pydantic v2、numpy、jsonschema、cryptography；Python 3.12+
 

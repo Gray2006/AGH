@@ -176,6 +176,14 @@ class ShardedReport:
 
 
 _SHARD_CACHE: dict[tuple, tuple[float, Strategy]] = {}
+_SHARD_CACHE_MAX = 256
+
+
+def _cache_put(key: tuple, value: tuple[float, Strategy]) -> None:
+    """有界缓存：daemon 长跑时键随参数/种子变化，不设上限会一直涨。"""
+    _SHARD_CACHE[key] = value
+    while len(_SHARD_CACHE) > _SHARD_CACHE_MAX:
+        _SHARD_CACHE.pop(next(iter(_SHARD_CACHE)))
 
 
 def sharded_evolve(
@@ -261,7 +269,7 @@ def sharded_evolve(
         )
         evaluations += config.generations * config.population + 1
         if key is not None and report.best is not None:
-            _SHARD_CACHE[key] = (report.best.fitness, report.best.strategy)
+            _cache_put(key, (report.best.fitness, report.best.strategy))
         if report.best is not None:
             shards.append(
                 ShardResult(

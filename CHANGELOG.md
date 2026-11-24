@@ -2,6 +2,21 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [2.0.1] - 2026-11-24
+
+两处工程卫生，都是长跑才会暴露的问题。
+
+### Fixed
+
+- `_SHARD_CACHE` 加上限（256，FIFO 淘汰）：daemon 长跑时缓存键随参数与种子变化，
+  此前无界增长
+- `--failures` 与 `--seed-drop` 同时给时语义明确：失败样本自带种子，`--seed-drop`
+  被忽略并在 notes 里说明，不再静默失效
+
+### Tests
+
+- 缓存上限单测；失败样本忽略 seed-drop 单测
+
 ## [2.0.0] - 2026-11-24
 
 2.0 不是新增功能的分界线，而是承认：1.x 承诺「公开 API 冻结」，字段层面做到了，
