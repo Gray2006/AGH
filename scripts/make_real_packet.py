@@ -95,7 +95,9 @@ def main() -> int:
         encoding="utf-8",
     )
     print(f"题目: {args.out_md}")
-    print(f"失败样本 {min(len(failures), args.failures)} 个，正例 {min(len(positives), args.positives)} 个，共 {len(picked)} 题")
+    n_fail = min(len(failures), args.failures)
+    n_pos = min(len(positives), args.positives)
+    print(f"失败样本 {n_fail} 个，正例 {n_pos} 个，共 {len(picked)} 题")
     return 0
 
 
