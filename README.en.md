@@ -1,6 +1,6 @@
 # AGH
 
-[English](README.en.md) · [简体中文](README.md) · MIT
+[English](README.en.md) · [简体中文](README.md) · [PyPI](https://pypi.org/project/agh-gestalt/) · MIT
 
 **Agent Gestalt Hierarchy** — an M0 vertical slice of a multi-agent "gestalt reconstruction" framework. A parent issues a skeleton and a contract; children reconstruct the whole rather than reassembling parts; every submission is signed and provenance-checked. Gate, arena, arbitration, governance, budget ledger and a hash-chained log form one runnable, testable, replayable pipeline.
 

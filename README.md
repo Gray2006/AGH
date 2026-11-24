@@ -1,6 +1,6 @@
 # AGH
 
-[English](README.en.md) · [简体中文](README.md) · MIT
+[English](README.en.md) · [简体中文](README.md) · [PyPI](https://pypi.org/project/agh-gestalt/) · MIT
 
 **Agent Gestalt Hierarchy**：多智能体「整体重构」框架的 M0 垂直切片。母体发骨架与契约，子级按整体重构而不是拼零件，回传带签名与出处；写入门、竞技场、仲裁、治理机、预算账本、哈希链日志串成一条可跑、可测、可重放的链路。
 

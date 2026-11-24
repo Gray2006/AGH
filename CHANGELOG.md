@@ -26,6 +26,12 @@
   因此只做到「可构建、可校验」
 - 本地无 docker，NATS 集成测试保持 skipped
 
+### Fixed
+
+- `scripts/publish.py`：Windows 下 `dist/*` 不被 subprocess 展开，改为显式文件列表；
+  控制台 GBK 会让 twine 的进度条崩掉，上传时强制 `PYTHONIOENCODING=utf-8`
+- 2.1.0 已发布到 PyPI：<https://pypi.org/project/agh-gestalt/2.1.0/>
+
 ## [2.0.1] - 2026-11-24
 
 两处工程卫生，都是长跑才会暴露的问题。
