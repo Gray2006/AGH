@@ -1,4 +1,4 @@
-# AGH 状态交接（v2.2.0，2026-11-24）
+# AGH 状态交接（v2.3.0，2026-11-24）
 
 > 新会话先读这个文件，再读 `README.md` 的「版本与兼容」与 `memory/agh.md`。
 
@@ -8,7 +8,7 @@
 
 ## 当前版本
 
-- v2.0.0，`281 passed + 1 skipped`（NATS 需服务），ruff 干净，mypy 38 文件零错误
+- v2.0.0，`287 passed + 1 skipped`（NATS 需服务），ruff 干净，mypy 38 文件零错误
 - 仓库 <https://github.com/Gray2006/AGH>，CI 双版本绿
 - 依赖：pydantic v2、numpy、jsonschema、cryptography；Python 3.12+
 
@@ -70,6 +70,7 @@ python scripts/score_labels.py --labels ... --candidates ...
 | 治理有效性：伪造出处 | 有网关 80/80 拦截，无治理 0/80 | 高 |
 | 治理有效性：超预算 | 有账本 10/10 拒绝，无账本 0/10 | 高 |
 | 治理有效性：篡改日志 | 有链 20/20 检出，无链 0/20 | 高 |
+| 发布锚定 | `scripts/release.py` 跑 M0 → 签名锚点 → git tag，CI 全绿 | 高 |
 | 锚定篡改检出 | 改一条 payload → `LogTampered: 数据被改动于 seq=6`；未篡改 → `signature_verified: true` | 高 |
 | 真实失败样本（8 条） | 种子均值 0.37887 → 规则/LLM 均 0.42151 后停滞；LLM 20107 tokens | 中高（各 1 次） |
 | git tag 锚点 | 写 tag 后读回 head/size/label 一致 | 高（单测） |

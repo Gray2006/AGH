@@ -2,6 +2,22 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [2.3.0] - 2026-11-24
+
+外部锚定接进发布流程。
+
+### Added
+
+- `agh/release.py`：版本一致性校验、工作区干净检查、跑 M0 并锚定、按版本校验锚点
+- `scripts/release.py`：一条命令完成「校验 → 可选上传 PyPI → 跑 M0 → 签名锚定 → 推 tag」
+- 锚点同时写本地 JSONL 与 git tag `agh-anchor/<digest>`，tag 可推到远程作为外部位置
+- 6 条测试：版本不一致、篡改日志被拒、缺锚点报错、干净工作区检查
+
+### Notes
+
+- 锚定前强制要求 M0 的 L1 重放逐位一致，不一致直接拒绝发布
+- 这仍不是第三方时间戳：防「悄悄改日志」，不防「有 push 权限的人同时改日志和 tag」
+
 ## [2.2.0] - 2026-11-24
 
 治理有效性对照实验：三组「有治理 vs 无治理」，第一次量化 AGH 的立身之本。

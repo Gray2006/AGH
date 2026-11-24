@@ -4,7 +4,7 @@
 
 **Agent Gestalt Hierarchy** — an M0 vertical slice of a multi-agent "gestalt reconstruction" framework. A parent issues a skeleton and a contract; children reconstruct the whole rather than reassembling parts; every submission is signed and provenance-checked. Gate, arena, arbitration, governance, budget ledger and a hash-chained log form one runnable, testable, replayable pipeline.
 
-> Status: M0 (v2.2.0). The default child is a **rule-based reconstructor**; LLM children and the LLM mutator are pluggable and already measured. Both the M0 pipeline and the LLM mutation path support bit-exact L1 replay.
+> Status: M0 (v2.3.0). The default child is a **rule-based reconstructor**; LLM children and the LLM mutator are pluggable and already measured. Both the M0 pipeline and the LLM mutation path support bit-exact L1 replay.
 
 ```
 Parent M0
@@ -399,7 +399,7 @@ python -m agh.supervisor --store runs/selfmod --gate "python -m pytest -q" -- py
 | Governance | qualified dissent → T2, stops at `VERIFIED`; `RELEASED` after human approval |
 | Ledger | 0 violations |
 | Replay | L1 `bit_exact=true` |
-| Tests | 281 passed + 1 skipped |
+| Tests | 287 passed + 1 skipped |
 
 ## Governance effectiveness
 
@@ -416,6 +416,24 @@ Every other experiment asks whether the score can go up. This one asks: **remove
 100% vs 0% in all three, zero false rejects on legitimate input. Reproducible in seconds and wired into CI.
 
 The point is not that AGH is secure. It is that the governance layer is not decoration: remove it and every "auditable, replayable" claim above stops holding.
+
+## Releasing and anchoring
+
+`python scripts/release.py` makes a release one command:
+
+1. Check that `pyproject.toml` and the package version agree, and the tree is clean
+2. Optionally upload to PyPI with `--upload --token-file .pypi_token`
+3. Run M0 once and require bit-exact L1 replay
+4. Sign the event-log head and anchor it: local `runs/anchors/vX.Y.Z.jsonl` plus a git tag `agh-anchor/<digest>`
+5. `--push` pushes the anchor tag to origin
+
+The anchor tag is an **external location**: a local `events.jsonl` can be deleted and rewritten as a
+self-consistent new chain, but the head already lives in the remote repository, so replacing it means
+touching the remote too — a different permission boundary. `python scripts/release.py --verify` looks the
+anchor up by version and checks the log against it.
+
+This is not a third-party timestamp. It prevents a quiet log edit, not someone with push access editing
+both the log and the tag.
 
 ## Design decisions
 

@@ -4,7 +4,7 @@
 
 **Agent Gestalt Hierarchy**：多智能体「整体重构」框架的 M0 垂直切片。母体发骨架与契约，子级按整体重构而不是拼零件，回传带签名与出处；写入门、竞技场、仲裁、治理机、预算账本、哈希链日志串成一条可跑、可测、可重放的链路。
 
-> 状态：M0（v2.2.0）。子级默认是**规则重构器**；LLM 子级与 LLM 变异器是可插拔的，已有实测数据。M0 管线与 LLM 变异路径都支持 L1 逐位重放。
+> 状态：M0（v2.3.0）。子级默认是**规则重构器**；LLM 子级与 LLM 变异器是可插拔的，已有实测数据。M0 管线与 LLM 变异路径都支持 L1 逐位重放。
 
 ```
 母体 M0
@@ -403,7 +403,7 @@ python -m agh.supervisor --store runs/selfmod --gate "python -m pytest -q" -- py
 | 治理 | 有合格异议 → 升 T2 停在 `VERIFIED`；人工批准后 `RELEASED` |
 | 账本 | 违规 0 |
 | 重放 | L1 `bit_exact=true` |
-| 测试 | 281 passed + 1 skipped |
+| 测试 | 287 passed + 1 skipped |
 
 ## 治理有效性
 
@@ -420,6 +420,21 @@ python -m agh.supervisor --store runs/selfmod --gate "python -m pytest -q" -- py
 三组都是 100% vs 0%，合法输入误拒 0。数字可复现，跑一次几秒，进 CI。
 
 它的意义不在于证明 AGH 安全，而在于说明：**治理层不是装饰**。去掉之后，前面那些「可审计、可重放」的结论全部失效。
+
+## 发布与锚定
+
+`python scripts/release.py` 把发布做成一条命令：
+
+1. 校验 `pyproject.toml` 与包内版本一致、工作区干净
+2. 可选 `--upload --token-file .pypi_token` 上传 PyPI
+3. 跑一次 M0，确认 L1 逐位重放通过
+4. 把事件日志的链头签名后锚定：本地 `runs/anchors/vX.Y.Z.jsonl` + git tag `agh-anchor/<digest>`
+5. `--push` 把锚点 tag 推到 origin
+
+锚点 tag 是**外部位置**：本地 `events.jsonl` 可以被删掉重写成一条自洽的新链，但链头已经在远程仓库里，
+替换就必须同时改远程——那是另一个权限面。`python scripts/release.py --verify` 按版本找回锚点并校验。
+
+这不是第三方时间戳。它防的是「悄悄改日志」，不防「有 push 权限的人同时改日志和 tag」。
 
 ## 设计取舍
 
