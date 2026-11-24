@@ -66,7 +66,8 @@ class AuditSession:
         meta: dict[str, Any] | None = None,
     ) -> str:
         """记一次模型调用，返回 call_id（用于后续 flag）。"""
-        call_id = f"call-{sha256_hex({'p': prompt, 'r': response})[:16]}"
+        seq = sum(1 for e in self.log.entries if e.type == "llm.call")
+        call_id = f"call-{sha256_hex({'p': prompt, 'r': response})[:12]}-{seq}"
         payload: dict[str, Any] = {
             "call_id": call_id,
             "model": model,

@@ -95,3 +95,14 @@ def test_export_failures_without_payload(tmp_path: Path) -> None:
     case = json.loads(out.read_text(encoding="utf-8"))["cases"][0]
     assert "prompt" not in case
     assert len(case["prompt_sha256"]) == 64
+
+
+def test_identical_calls_get_distinct_ids(tmp_path: Path) -> None:
+    """内容完全相同的两次调用必须拿到不同 call_id，否则 flag 会串到另一条。"""
+    audit = _session(tmp_path / "run.jsonl")
+    first = audit.call(model="m", prompt="同一个输入", response="同一个输出")
+    second = audit.call(model="m", prompt="同一个输入", response="同一个输出")
+    assert first != second
+    audit.flag(second, reason="wrong")
+    text = (tmp_path / "run.jsonl").read_text(encoding="utf-8")
+    assert text.count('"llm.flag"') == 1

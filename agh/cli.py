@@ -413,7 +413,8 @@ def build_parser() -> argparse.ArgumentParser:
     quickstart.add_argument("--dir", default=None, help="产物目录，默认 ./agh-quickstart")
     quickstart.set_defaults(func=cmd_quickstart)
     ui = sub.add_parser("ui", help="把审计日志渲染成自包含 HTML 报告")
-    ui.add_argument("--log", required=True)
+    ui.add_argument("--log", default=None)
+    ui.add_argument("--from-run", action="store_true", help="读 ./agh-quickstart/run.jsonl")
     ui.add_argument("--out", default=None)
     ui.add_argument("--no-open", action="store_true", help="只生成，不自动打开浏览器")
     ui.set_defaults(func=cmd_ui)
@@ -504,10 +505,17 @@ def cmd_ui(args: argparse.Namespace) -> int:
 
     from .ui import render_html
 
-    out = Path(args.out) if args.out else Path(args.log).with_suffix(".report.html")
+    log = args.log
+    if args.from_run or log is None:
+        default = Path("agh-quickstart") / "run.jsonl"
+        if args.from_run or default.exists():
+            log = str(default)
+        else:
+            raise SystemExit(f"找不到 {default}，先跑一次 agh quickstart，或用 --log 指定日志")
+    out = Path(args.out) if args.out else Path(log).with_suffix(".report.html")
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(render_html(args.log), encoding="utf-8")
-    print(json.dumps({"ok": True, "out": str(out)}, ensure_ascii=False))
+    out.write_text(render_html(log), encoding="utf-8")
+    print(json.dumps({"ok": True, "out": str(out), "log": log}, ensure_ascii=False))
     if not args.no_open:
         webbrowser.open(out.resolve().as_uri())
     return 0

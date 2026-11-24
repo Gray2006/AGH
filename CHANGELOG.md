@@ -2,6 +2,28 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [2.10.1] - 2026-11-25
+
+`agh ui --from-run`，以及自检发现的四个问题。
+
+### Added
+
+- `agh ui --from-run`：直接读 `./agh-quickstart/run.jsonl`，不用填路径；
+  不给 `--log` 且存在该文件时也会自动用它
+
+### Fixed
+
+- **call_id 冲突**：内容完全相同的两次调用会算出同一个 id，flag 会串到另一条。
+  加序号保证唯一（`call-<hash12>-<seq>`）
+- `agh ui` 的 `title` 参数此前没有渲染到页面
+- `agh quickstart` 产物目录未进 `.gitignore`，会污染工作区
+- `.gitignore` 本身不是 UTF-8（被 PowerShell 用系统编码写过），改为按字节追加
+
+### Tests
+
+- 相同内容两次调用必须拿到不同 id
+- `--from-run` 默认路径、无日志且无 quickstart 时报错退出
+
 ## [2.10.0] - 2026-11-25
 
 可视化报告：一个自包含 HTML，双击就能看。

@@ -66,3 +66,29 @@ def test_ui_cli_writes_file(tmp_path: Path) -> None:
     assert code == 0
     assert out.exists()
     assert "AGH 审计报告" in out.read_text(encoding="utf-8")
+
+
+def test_ui_from_run_default(tmp_path: Path, monkeypatch) -> None:
+    import os
+
+    from agh.cli import main
+    from agh.quickstart import run_quickstart
+
+    monkeypatch.chdir(tmp_path)
+    run_quickstart(tmp_path / "agh-quickstart")
+    monkeypatch.chdir(tmp_path)
+    os.chdir(tmp_path)
+    out = tmp_path / "r.html"
+    code = main(["ui", "--from-run", "--out", str(out), "--no-open"])
+    assert code == 0
+    assert out.exists()
+
+
+def test_ui_without_log_and_no_quickstart(tmp_path: Path, monkeypatch) -> None:
+    import pytest
+
+    from agh.cli import main
+
+    monkeypatch.chdir(tmp_path)
+    with pytest.raises(SystemExit):
+        main(["ui", "--out", str(tmp_path / "x.html"), "--no-open"])

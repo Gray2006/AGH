@@ -57,7 +57,7 @@ footer { padding:14px 28px 28px; color:var(--muted); font-size:12px; border-top:
 </head>
 <body>
 <header>
-  <h1>AGH 审计报告</h1>
+  <h1 id="title">AGH 审计报告</h1>
   <div class="sub" id="meta"></div>
 </header>
 <div class="cards" id="cards"></div>
@@ -85,6 +85,7 @@ const text = (tag, value, cls) => {
 };
 const short = (s, n) => { s = String(s || ""); return s.length > n ? s.slice(0, n) + "…" : s; };
 
+$("title").textContent = DATA.title || "AGH 审计报告";
 $("meta").textContent = `日志：${DATA.log}　链头：${DATA.head.slice(0, 16)}　事件：${DATA.entries}`;
 $("footer").textContent = DATA.footer;
 
