@@ -25,7 +25,7 @@ def test_nats_roundtrip() -> None:  # pragma: no cover - 需要外部服务
         with contextlib.suppress(Exception):
             await js.add_stream(name="AGH", subjects=["agh.>"])
         bus = NatsBus(js)
-        seq = bus.publish("jobs", Event(event_id="it-1", type="t", payload={"a": 1}))
+        seq = await bus.publish_async("jobs", Event(event_id="it-1", type="t", payload={"a": 1}))
         assert seq >= 1
         await nc.close()
 

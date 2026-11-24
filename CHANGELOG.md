@@ -2,6 +2,26 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [2.1.1] - 2026-11-24
+
+NATS 适配器与真实客户端对齐，集成测试进 CI。
+
+### Fixed
+
+- `NatsBus.publish/fetch` 假设同步客户端，但 nats-py 的 `JetStream.publish/fetch`
+  是 async：同步调用拿到 coroutine，`seq` 恒为 0。新增 `publish_async` / `fetch_async`，
+  同步接口遇到 awaitable 时抛明确错误而不是静默返回 0
+- 集成测试改用 `publish_async`
+
+### Added
+
+- `[project.optional-dependencies] nats = ["nats-py>=2.6"]`
+- CI 起 `nats:2.10` service 并设 `NATS_URL`，集成测试不再 skipped
+
+### Verified
+
+- 本地 `nats-server -js` + `NATS_URL=nats://127.0.0.1:4222`：roundtrip 通过
+
 ## [2.1.0] - 2026-11-24
 
 骨架难度、搜索旋钮、打包发布。

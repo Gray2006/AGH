@@ -11,14 +11,23 @@ jobs:
     strategy:
       matrix:
         python: ["3.12", "3.13"]
+    env:
+      NATS_URL: nats://127.0.0.1:4222
     steps:
       - uses: actions/checkout@v4
+      - name: Start NATS with JetStream
+        run: |
+          docker run -d --name nats -p 4222:4222 -p 8222:8222 nats:2.10 -js -m 8222
+          for i in $(seq 1 20); do
+            curl -fsS http://127.0.0.1:8222/healthz && break
+            sleep 1
+          done
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
           cache: pip
       - name: Install
-        run: pip install -e ".[dev]"
+        run: pip install -e ".[dev,nats]"
       - name: Lint
         run: python -m ruff check .
       - name: Unit tests

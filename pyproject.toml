@@ -1,6 +1,6 @@
 [project]
 name = "agh-gestalt"
-version = "2.1.0"
+version = "2.1.1"
 description = "Agent Gestalt Hierarchy (AGH): provenance-signed, budget-ledgered, replayable multi-agent reconstruction. M0 vertical slice."
 readme = "README.md"
 license = { text = "MIT" }
@@ -33,6 +33,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8", "ruff>=0.6"]
+nats = ["nats-py>=2.6"]
 
 [project.urls]
 Homepage = "https://github.com/Gray2006/AGH"

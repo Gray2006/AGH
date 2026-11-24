@@ -15,6 +15,7 @@
 
 from __future__ import annotations
 
+import inspect
 import json
 from dataclasses import dataclass
 from typing import Any, Protocol
@@ -58,22 +59,55 @@ class NatsBus:
     def _subject(self, stream: str) -> str:
         return f"{self.subject_prefix}.{stream}"
 
+    def _payload(self, event: Event) -> bytes:
+        return json.dumps(
+            {"id": event.event_id, "type": event.type, "payload": event.payload}
+        ).encode()
+
+    def _headers(self, event: Event, expected_last_seq: int | None) -> dict[str, str]:
+        headers = {"Nats-Msg-Id": event.event_id}
+        if expected_last_seq is not None:
+            headers["Nats-Expected-Last-Subject-Sequence"] = str(expected_last_seq)
+        return headers
+
     def publish(
         self,
         stream: str,
         event: Event,
         expected_last_seq: int | None = None,
     ) -> int:
-        headers = {"Nats-Msg-Id": event.event_id}
-        if expected_last_seq is not None:
-            headers["Nats-Expected-Last-Subject-Sequence"] = str(expected_last_seq)
+        """同步接口。nats-py 的 JetStream.publish 是 async，请用 publish_async。"""
         try:
             ack = self.js.publish(
                 self._subject(stream),
-                json.dumps({"id": event.event_id, "type": event.type, "payload": event.payload}).encode(),
-                headers=headers,
+                self._payload(event),
+                headers=self._headers(event, expected_last_seq),
             )
         except Exception as exc:  # 服务端明确拒绝时由客户端抛错
+            if "expected" in str(exc).lower():
+                raise SubjectConflict(str(exc)) from exc
+            raise
+        if inspect.isawaitable(ack):
+            ack.close()  # type: ignore[attr-defined]
+            raise TypeError(
+                "NatsBus.publish 是同步接口，但客户端返回了 awaitable；"
+                "nats-py 请用 await bus.publish_async(...)"
+            )
+        return int(getattr(ack, "seq", 0))
+
+    async def publish_async(
+        self,
+        stream: str,
+        event: Event,
+        expected_last_seq: int | None = None,
+    ) -> int:
+        try:
+            ack = await self.js.publish(
+                self._subject(stream),
+                self._payload(event),
+                headers=self._headers(event, expected_last_seq),
+            )
+        except Exception as exc:
             if "expected" in str(exc).lower():
                 raise SubjectConflict(str(exc)) from exc
             raise
@@ -85,9 +119,27 @@ class NatsBus:
             self._subs[key] = self.js.pull_subscribe(self._subject(stream), durable=consumer)
 
     def fetch(self, stream: str, consumer: str, max_msgs: int = 10) -> list[Delivery]:
+        """同步接口；nats-py 的 fetch 是 async，请用 fetch_async。"""
         self.subscribe(stream, consumer)
         sub = self._subs[(stream, consumer)]
         msgs = sub.fetch(max_msgs, timeout=1)
+        if inspect.isawaitable(msgs):
+            msgs.close()  # type: ignore[attr-defined]
+            raise TypeError(
+                "NatsBus.fetch 是同步接口，但客户端返回了 awaitable；"
+                "nats-py 请用 await bus.fetch_async(...)"
+            )
+        return self._to_deliveries(stream, consumer, msgs)
+
+    async def fetch_async(
+        self, stream: str, consumer: str, max_msgs: int = 10
+    ) -> list[Delivery]:
+        self.subscribe(stream, consumer)
+        sub = self._subs[(stream, consumer)]
+        msgs = await sub.fetch(max_msgs, timeout=1)
+        return self._to_deliveries(stream, consumer, msgs)
+
+    def _to_deliveries(self, stream: str, consumer: str, msgs: Any) -> list[Delivery]:
         out: list[Delivery] = []  # type: ignore[assignment]
         for msg in msgs:
             data = json.loads(msg.data.decode())
