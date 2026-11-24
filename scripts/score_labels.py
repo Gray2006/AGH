@@ -2,7 +2,7 @@
 
     python scripts/score_labels.py --labels runs/g1/label-template.json
 
-答案模板里 label 必须全部填成 0 或 1；缺项会报出来。
+没有垂直移动的题「是否支持」无定义，自动排除并列出。
 """
 
 from __future__ import annotations
@@ -38,15 +38,28 @@ def main() -> int:
     verifier = StructuralVerifier()
     human: list[float] = []
     machine: list[float] = []
+    excluded: list[int] = []
     for row in labels:
         item = items[row["index"]]
         skeleton = Skeleton.model_validate(item["skeleton"])
         recon = GestaltReconstruction.model_validate(item["reconstruction"])
+        if not any(m.vertical for m in skeleton.moves):
+            excluded.append(row["index"])
+            continue
         human.append(float(row["label"]))
         machine.append(verifier.score(recon, skeleton))
 
+    if not human:
+        print("没有可校准的题目（全部缺少垂直移动）")
+        return 1
     report = evaluate(machine, human)
-    payload = {"n": len(human), **report.as_dict(), "human": human, "machine": [round(x, 3) for x in machine]}
+    payload = {
+        "n": len(human),
+        "excluded_no_vertical": excluded,
+        **report.as_dict(),
+        "human": human,
+        "machine": [round(x, 3) for x in machine],
+    }
     args.out.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
     print(json.dumps(payload, ensure_ascii=False, indent=2))
     print(f"\n报告: {args.out}")
