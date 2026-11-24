@@ -50,6 +50,7 @@ class AutonomousConfig:
     daily_token_budget: int = 0
     seed_degrade: float = 0.0
     hide_gold: bool = False
+    replay_mutations: str | None = None
 
 
 @dataclass
@@ -132,15 +133,37 @@ def run_autonomous(
 
     tokens_used = 0
     mutator_factory = None
-    if settings.llm_mutator:
+    if settings.replay_mutations:
+        from .evolution_llm import ReplayStrategyMutator
+
+        records = [
+            entry.payload
+            for entry in EventLog(Path(settings.replay_mutations)).read()
+            if entry.type == "llm.mutation"
+        ]
+        replay = ReplayStrategyMutator(records)
+
+        def mutator_factory(feature_pool, node_pool):
+            return replay
+
+        notes.append(f"L1 重放：{len(records)} 条变异记录")
+    elif settings.llm_mutator:
         from .evolution_llm import LlmStrategyMutator
         from .providers import make_client
 
         client = make_client(settings.provider, model=settings.model, api_key_env=settings.api_key_env)
+        def record_mutation(payload: dict[str, Any]) -> None:
+            if log is not None:
+                log.append("llm.mutation", payload)
 
         class BudgetedMutator:
             def __init__(self, feature_pool, node_pool):
-                self.inner = LlmStrategyMutator(feature_pool, node_pool, complete=client)
+                self.inner = LlmStrategyMutator(
+                    feature_pool,
+                    node_pool,
+                    complete=client,
+                    recorder=record_mutation,
+                )
 
             def mutate(self, parent, rng, name):
                 nonlocal tokens_used

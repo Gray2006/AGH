@@ -253,6 +253,7 @@ def cmd_daemon(args: argparse.Namespace) -> int:
             daily_token_budget=args.daily_budget,
             seed_degrade=args.seed_drop,
             hide_gold=args.hide_gold,
+            replay_mutations=args.replay_mutations,
         ),
         log=EventLog(log_path),
     )
@@ -346,6 +347,11 @@ def build_parser() -> argparse.ArgumentParser:
         "--hide-gold",
         action="store_true",
         help="信息降质：变异器只看得到降质后保留的边，缺的边得靠推断（默认给全集）",
+    )
+    daemon.add_argument(
+        "--replay-mutations",
+        default=None,
+        help="L1 重放：从事件日志读 llm.mutation 记录，不调用模型，逐位复现进化轨迹",
     )
     daemon.add_argument("--out", type=Path, default=Path("runs") / "daemon" / "events.jsonl")
     daemon.set_defaults(func=cmd_daemon)

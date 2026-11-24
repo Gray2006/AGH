@@ -1,4 +1,4 @@
-# AGH 状态交接（v1.19.0，2026-11-24）
+# AGH 状态交接（v1.20.0，2026-11-24）
 
 > 新会话先读这个文件，再读 `README.md` 的「版本与兼容」与 `memory/agh.md`。
 
@@ -8,7 +8,7 @@
 
 ## 当前版本
 
-- v1.19.0，`256 passed + 1 skipped`（NATS 需服务），ruff 干净，mypy 38 文件零错误
+- v1.20.0，`259 passed + 1 skipped`（NATS 需服务），ruff 干净，mypy 38 文件零错误
 - 仓库 <https://github.com/Gray2006/AGH>，CI 双版本绿
 - 依赖：pydantic v2、numpy、jsonschema、cryptography；Python 3.12+
 
@@ -24,6 +24,7 @@ python -m agh evolve --mode meta --rounds 8
 python -m agh daemon --rounds 4     # 自主迭代（默认 0 token）
 python -m agh daemon --seed-drop 0.4 --llm-mutator --daily-budget 30000  # 降质任务族 + LLM 变异
 python -m agh daemon --seed-drop 0.4 --hide-gold --llm-mutator     # 信息不足：缺的边得推断
+python -m agh daemon --replay-mutations runs/daemon/events.jsonl   # L1 重放 LLM 进化轨迹
 python -m agh report --runs runs
 python scripts/red_team.py          # 7 类攻击
 ```
@@ -57,6 +58,7 @@ python scripts/score_labels.py --labels ... --candidates ...
 | 信息降质（--hide-gold）规则变异 | 4 轮恒 0.41109，无梯度 | 高 |
 | 信息降质 LLM 变异 | 4 轮 0.47501 → 0.57681，22222 tokens | 中高（1 次） |
 | 跨 seed 配对（3 seed × 6 基准 = 18 对） | LLM − 规则 +0.0950，95% CI [0.0496, 0.1402] | 高（17720 tokens） |
+| LLM 进化 L1 重放 | 曲线 `[0.66079, 0.66168]` 逐位一致，0 token | 高 |
 | daemon 的「改进」主要来自换权重 | 同批种子换权重 0.65792 → 0.75488 | 高（1.17.0） |
 
 校准已固化进 CI：`tests/fixtures/calibration.json` + `tests/test_calibration_regression.py`（ECE ≤ 0.05、kappa ≥ 0.9）。
@@ -72,13 +74,16 @@ python scripts/score_labels.py --labels ... --candidates ...
 7. 完美种子上种子策略即适应度上界（0.66625 / 0.68212），没有持续改进空间；只有降质种子（--seed-drop）才有梯度
 8. 降质任务族的改进来自策略恢复，参数权重在参照打分下不动；回写分支已加「参数未变则跳过」，但它仍不是可持久化路径
 9. 覆盖项只数必需项交集，多覆盖不扣分：LLM 可以靠「把节点全塞进 covered」刷覆盖率，这条口径漏洞还没堵
+10. 哈希链无外部锚定：能防「改一行」，不能防「整链替换」；`verify_against` 只是接口，尚未接外部时间戳
+11. 验证器与签名密钥都是本地的，不构成独立第三方验证或身份系统
 
 ## 下一步（按优先级）
 
 1. 回写仍暂缓：参数权重在参照打分下不动，写回只会写回同值并重建锚点；要回写就得先让权重本身有梯度（比如把权重放进带真实验证信号的搜索）
 2. 堵覆盖口径漏洞：多余覆盖要么扣分，要么把必需项藏起来，否则「全塞」就是最优解
-3. 接入真实失败样本作为任务族，替代人工降质；`--hide-gold` 只是第一层
-4. 回写路径要么接真实验证信号，要么在 README 里标成未验证
+3. 接外部锚定：链头写进可验证的外部位置（时间戳服务 / 另一份日志），让「整链替换」可被发现
+4. 接入真实失败样本作为任务族，替代人工降质；`--hide-gold` 只是第一层
+5. 回写路径要么接真实验证信号，要么在 README 里标成未验证（已标）
 3. PyPI 发布（需 token，先查 `AGH` 名字是否被占）
 4. NATS 联调（`docker compose up -d nats` + `NATS_URL=... pytest tests/test_nats_integration.py`）
 5. 多模型对比（需别的 key）

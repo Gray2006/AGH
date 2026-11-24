@@ -1,10 +1,10 @@
-﻿# AGH
+# AGH
 
 [English](README.en.md) · [简体中文](README.md) · MIT
 
 **Agent Gestalt Hierarchy** — an M0 vertical slice of a multi-agent "gestalt reconstruction" framework. A parent issues a skeleton and a contract; children reconstruct the whole rather than reassembling parts; every submission is signed and provenance-checked. Gate, arena, arbitration, governance, budget ledger and a hash-chained log form one runnable, testable, replayable pipeline.
 
-> Status: M0 (v1.19.0). Children are **rule-based reconstructors**, not LLMs. Every number below is reproducible locally.
+> Status: M0 (v1.20.0). The default child is a **rule-based reconstructor**; LLM children and the LLM mutator are pluggable and already measured. Both the M0 pipeline and the LLM mutation path support bit-exact L1 replay.
 
 ```
 Parent M0
@@ -43,6 +43,31 @@ AGH's answers:
 - **Budget before call**: lease reservation, idempotent settlement, over-reservation recorded as a violation
 - **Reproducible conclusions**: arbitration is a pure function, the log is hash-chained, L1 replay is bit-exact
 
+## Where it sits in the AGI-governance spectrum
+
+Multi-agent governance splits into three layers; AGH claims only the middle one:
+
+| Layer | Question | Representative approach |
+|---|---|---|
+| Individual safety | Is every decision of one strong model traceable? | Cryptographic audit shell: hash-chained log plus external anchoring |
+| Team charter | Between hierarchical agents, who told whom what, and can the conclusion be reproduced? | **AGH** |
+| Social simulation | When many individually-safe agents interact, do harmful behaviours emerge? | Simulation frameworks such as [SWARM](https://www.swarm-ai.org/) |
+
+AGH's bet: part of AGI-level risk is not in a single model but in **information transfer and
+accountability** — a child can self-report confidence and provenance, and the parent cannot verify it.
+So AGH makes contracts, signatures, budget ledger and hash-chained log a mandatory channel, and treats
+replay as a first-class citizen rather than afterthought logging.
+
+**What it does not promise** (which is exactly why it is not production-grade governance):
+
+- Not an external timestamp or third-party audit: the hash chain is local. It detects a quietly edited
+  line, not a wholesale replacement of the chain
+- Not an identity system: the dev key is deterministically derived, so anyone with the source can forge
+  signatures
+- Not independent verification: `StructuralVerifier` is a local deterministic pure function
+- L1 replay covers the M0 pipeline and LLM mutation records; the LLM-child reconstruction path is only
+  L2 statistically equivalent for now
+
 ## Quick start
 
 Python 3.12+.
@@ -52,7 +77,7 @@ git clone https://github.com/Gray2006/AGH.git
 cd AGH
 pip install -e ".[dev]"
 
-python -m pytest -q          # 256 tests + 1 skipped
+python -m pytest -q          # 259 tests + 1 skipped
 python -m agh                # run M0, writes runs/m0/ (same as python scripts/run_m0.py)
 ```
 
@@ -357,7 +382,7 @@ python -m agh.supervisor --store runs/selfmod --gate "python -m pytest -q" -- py
 | Governance | qualified dissent → T2, stops at `VERIFIED`; `RELEASED` after human approval |
 | Ledger | 0 violations |
 | Replay | L1 `bit_exact=true` |
-| Tests | 256 passed + 1 skipped |
+| Tests | 259 passed + 1 skipped |
 
 ## Design decisions
 
@@ -380,10 +405,18 @@ See [`docs/verification-references.md`](docs/verification-references.md) and [`d
 
 ## Boundaries
 
-- Research prototype, not production. The `gw-dev` key is local-only; production needs Ed25519 and managed keys
-- Children are rule functions; they do not represent real LLM behaviour. G1 arena experiments are not done
+- Research prototype, not production
+- The default child is a rule-based reconstructor; `LlmChild` and `LlmStrategyMutator` are drop-in and
+  already measured (real model mean 0.62229 vs rule 0.69081, see G1 above), but the sample is small and
+  is not a capability claim
+- The `gw-dev` key is derived from a fixed value: anyone with the source can forge signatures. Production
+  needs Ed25519 plus managed keys
+- The hash chain detects a quietly edited line, not a wholesale replacement. Preventing replacement needs
+  an external anchor: `verify_against` is the interface, no external timestamp is wired yet
+- `StructuralVerifier` is a local pure function, not an independent third party
 - The frozen layer prevents silent edits, not edits by whoever holds the signing key
-- The hash chain gives ordering and integrity, not timestamp proof
+- L1 replay covers the M0 pipeline and LLM mutation records (`--replay-mutations`); the LLM-child
+  reconstruction path is L2 statistically equivalent
 
 ## Contributing
 

@@ -29,17 +29,23 @@ from .llm import extract_json
 
 
 class LlmStrategyMutator:
-    """让模型提议变异；输出必须过池子过滤与边界钳制，否则退回规则变异。"""
+    """让模型提议变异；输出必须过池子过滤与边界钳制，否则退回规则变异。
+
+    recorder 会收到每次提议的完整记录（提示、原始输出、解析结果、是否退回规则）。
+    有记录才能做到 L1 重放：模型本身非确定，但「记录下来的输出」是确定的。
+    """
 
     def __init__(
         self,
         feature_pool: Sequence[str],
         node_pool: Sequence[str],
         complete: Callable[[str], str],
+        recorder: Callable[[dict[str, Any]], None] | None = None,
     ) -> None:
         self.feature_pool = list(feature_pool)
         self.node_pool = list(node_pool)
         self.complete = complete
+        self.recorder = recorder
         self.fallback = StrategyMutator(feature_pool, node_pool)
 
     def _prompt(self, parent: Strategy) -> str:
@@ -55,8 +61,11 @@ class LlmStrategyMutator:
         )
 
     def mutate(self, parent: Strategy, rng: random.Random, name: str) -> Strategy:
+        prompt = self._prompt(parent)
+        raw = ""
         try:
-            data = extract_json(self.complete(self._prompt(parent)))
+            raw = self.complete(prompt)
+            data = extract_json(raw)
             if not isinstance(data, dict):
                 raise ValueError("不是对象")
             features = [f for f in data.get("features", []) if f in self.feature_pool]
@@ -64,7 +73,7 @@ class LlmStrategyMutator:
             covered = [c for c in data.get("covered", []) if c in self.node_pool]
             if not features:
                 raise ValueError("特征为空")
-            return Strategy(
+            strategy = Strategy(
                 name=name,
                 features=tuple(sorted(set(features))),
                 parts=tuple(sorted(set(parts))) or parent.parts,
@@ -72,8 +81,65 @@ class LlmStrategyMutator:
                 confidence=min(0.95, max(0.1, float(data.get("confidence", parent.confidence)))),
                 depth=min(0.95, max(0.2, float(data.get("depth", parent.depth)))),
             )
-        except Exception:
-            return self.fallback.mutate(parent, rng, name)
+            self._record(name, prompt, raw, strategy, fell_back=False)
+            return strategy
+        except Exception as exc:
+            fallback = self.fallback.mutate(parent, rng, name)
+            self._record(name, prompt, raw, fallback, fell_back=True, error=str(exc))
+            return fallback
+
+    def _record(
+        self,
+        name: str,
+        prompt: str,
+        raw: str,
+        strategy: Strategy,
+        *,
+        fell_back: bool,
+        error: str | None = None,
+    ) -> None:
+        if self.recorder is None:
+            return
+        payload: dict[str, Any] = {
+            "name": name,
+            "prompt": prompt,
+            "raw": raw,
+            "strategy": strategy.as_dict(),
+            "fell_back": fell_back,
+        }
+        if error is not None:
+            payload["error"] = error
+        self.recorder(payload)
+
+
+class ReplayStrategyMutator:
+    """L1 重放用：按顺序吐出记录里的策略，不再调用模型。
+
+    记录与原始运行同序时，进化轨迹逐位一致；记录耗尽后抛错而不是悄悄退回规则，
+    否则「重放」会变成「另一条轨迹」。
+    """
+
+    def __init__(self, records: Sequence[dict[str, Any]]) -> None:
+        self._records = list(records)
+        self._index = 0
+
+    def mutate(self, parent: Strategy, rng: random.Random, name: str) -> Strategy:
+        if self._index >= len(self._records):
+            raise IndexError(f"重放记录不足：需要第 {self._index + 1} 条，只有 {len(self._records)} 条")
+        data = self._records[self._index]
+        self._index += 1
+        strategy = data["strategy"]
+        return Strategy(
+            name=strategy.get("name", name),
+            features=tuple(strategy.get("features", [])),
+            parts=tuple(strategy.get("parts", [])),
+            covered=tuple(strategy.get("covered", [])),
+            confidence=float(strategy.get("confidence", parent.confidence)),
+            depth=float(strategy.get("depth", parent.depth)),
+        )
+
+    def remaining(self) -> int:
+        return len(self._records) - self._index
 
 
 def random_strategy(
@@ -293,6 +359,7 @@ def compare_search(
 __all__ = [
     "BaselineRow",
     "LlmStrategyMutator",
+    "ReplayStrategyMutator",
     "SearchComparison",
     "compare_search",
     "hill_climb",

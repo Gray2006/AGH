@@ -2,6 +2,32 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [1.20.0] - 2026-11-24
+
+LLM 路径的 L1 重放，以及对外部评估的诚实校准。
+
+### Added
+
+- `LlmStrategyMutator(recorder=...)`：每次模型提议都落一条 `llm.mutation` 记录
+  （提示、原始输出、解析后的策略、是否退回规则）
+- `ReplayStrategyMutator`：按记录顺序吐出策略，不调用模型；记录耗尽直接抛错，
+  不会悄悄退回规则
+- `agh daemon --replay-mutations EVENTS.jsonl`：用记录逐位复现 LLM 进化轨迹
+- `CombinedReport` 之外无需改动：重放走同一条 `mutator_factory` 通道
+
+### Measured
+
+- 端到端重放：原始 2 轮 LLM 进化曲线 `[0.66079, 0.66168]`；重放同一份记录，
+  曲线与最优策略逐位一致，0 token
+
+### Docs
+
+- README 增加「在 AGI 治理光谱里的位置」：个体安全壳 / 团队章程（AGH 所在层）/
+  社会模拟器（SWARM）三层分工，只认领自己那一层
+- README「边界」重写：本地哈希链不防整链替换、开发密钥可伪造、验证器不是独立第三方、
+  L1 只覆盖 M0 管线与 LLM 变异，LLM 子级重构仍是 L2
+- 移除过时表述（「子级是规则函数，不接 LLM」「G1 未做」）
+
 ## [1.19.0] - 2026-11-24
 
 真难度任务族、显著性证据、缓存与回写卫生。

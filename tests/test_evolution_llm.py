@@ -7,15 +7,17 @@ from pathlib import Path
 import pytest
 
 from agh.arena import ArenaConfig
-from agh.evolution import EvolutionConfig, Strategy, default_benchmarks
+from agh.evolution import EvolutionConfig, Strategy, default_benchmarks, evolve
 from agh.evolution_llm import (
     LlmStrategyMutator,
+    ReplayStrategyMutator,
     compare_search,
     hill_climb,
     random_search,
     random_strategy,
 )
 from agh.pipeline import PARENT_SIG, m0_skeleton
+from agh.verifier import StructuralVerifier
 
 
 @pytest.fixture()
@@ -146,3 +148,54 @@ def test_compare_search_uses_injected_mutator(cfg: ArenaConfig) -> None:
         mutator=mutator,
     )
     assert mutator.calls == 2
+
+
+def test_mutator_records_proposal() -> None:
+    pool = [*list(PARENT_SIG.features), "extra"]
+    reply = json.dumps(
+        {"features": ["M0-P1"], "parts": ["M0"], "covered": ["P1"], "confidence": 0.5, "depth": 0.4}
+    )
+    records: list[dict] = []
+    mutator = LlmStrategyMutator(pool, ["M0", "P1"], lambda _p: reply, recorder=records.append)
+    mutator.mutate(seed(), random.Random(1), "v1")
+    assert len(records) == 1
+    assert records[0]["raw"] == reply
+    assert records[0]["fell_back"] is False
+    assert list(records[0]["strategy"]["features"]) == ["M0-P1"]
+
+
+def test_replay_reproduces_llm_evolution(cfg: ArenaConfig) -> None:
+    """同 seed + 同一份变异记录，进化轨迹必须逐位一致。"""
+    benches = default_benchmarks(m0_skeleton(), PARENT_SIG.features)
+    evo = EvolutionConfig(generations=2, population=1, seed=0)
+    replies = [
+        json.dumps({"features": list(PARENT_SIG.features), "parts": ["M0", "P1", "C1"],
+                    "covered": ["P1", "C1"], "confidence": 0.9, "depth": 0.9}),
+        json.dumps({"features": ["M0-P1"], "parts": ["M0"], "covered": ["P1"],
+                    "confidence": 0.4, "depth": 0.3}),
+    ]
+    calls = {"n": 0}
+    records: list[dict] = []
+
+    def complete(_prompt: str) -> str:
+        calls["n"] += 1
+        return replies[(calls["n"] - 1) % len(replies)]
+
+    pool = list(PARENT_SIG.features)
+    nodes = ["M0", "P1", "C1", "C2", "C3"]
+    mutator = LlmStrategyMutator(pool, nodes, complete, recorder=records.append)
+    first = evolve(seed(), benches, cfg, evo, mutator=mutator, verifier=StructuralVerifier())
+    assert first.best is not None
+
+    replay = ReplayStrategyMutator(records)
+    second = evolve(seed(), benches, cfg, evo, mutator=replay, verifier=StructuralVerifier())
+    assert second.best is not None
+    assert first.curve == second.curve
+    assert first.best.strategy.as_dict() == second.best.strategy.as_dict()
+    assert replay.remaining() == 0
+
+
+def test_replay_raises_when_records_run_out() -> None:
+    replay = ReplayStrategyMutator([])
+    with pytest.raises(IndexError):
+        replay.mutate(seed(), random.Random(0), "v1")
