@@ -2,6 +2,25 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [2.25.5] - 2026-11-25
+
+README 说清楚 PyPI 版本落后，并验证 release workflow 的构建路径可用。
+
+### Changed
+
+- 安装段标注「PyPI 上是 2.1.0」，并给出从源码安装的命令
+
+### Verified
+
+- 手动触发 `release.yml`（`confirm=build`）：build job 成功，publish job 按设计跳过
+- 真发布需要先在 PyPI 配 Trusted Publishing，步骤见 `docs/release.md`
+
+### Notes
+
+- 不把「PyPI 落后」藏起来：用户装到旧版会以为新功能不存在
+- `gh workflow run release.yml -f confirm=""` 会被 GitHub 拒绝（空值不算提供），
+  要用任意非 `publish` 的值
+
 ## [2.25.4] - 2026-11-25
 
 文档与实现的一致性测试：README 里写的命令必须真实存在。
