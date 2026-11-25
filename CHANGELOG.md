@@ -2,6 +2,21 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [2.27.1] - 2026-11-25
+
+离线基准的回归测试：分数变了就红。
+
+### Added
+
+- `tests/test_benchmark_regression.py`：模拟模型确定性，所以直接断言精确分数
+  - baseline 0.2875 / evolution 0.1875 / random 0.4375（20 题、held-out 4、p_correct=0.4）
+  - 另外断言「同种子两次跑结果相同」
+
+### Notes
+
+- 这条测试会拦住两类改动：不小心改了评分逻辑、以及加题后忘了更新期望值
+- 改题库或评分口径时，期望值要同步更新并在 CHANGELOG 注明——这是有意的摩擦
+
 ## [2.27.0] - 2026-11-25
 
 安全加固：网络调用禁止 file:// 等本地协议。
