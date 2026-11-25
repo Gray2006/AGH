@@ -2,6 +2,23 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [2.28.0] - 2026-11-25
+
+README 瘦身：研究类章节移到 docs/research.md。
+
+### Changed
+
+- README 从 626 行降到 446 行。移走 9 个章节：G1 实验、消融与度量、自我迭代、
+  自主迭代、红队演练、自我改写的安全边界、M0 实测、代码任务、代码竞技场
+- 原位置留一段指针，指向 `docs/research.md`
+- `docs/research.md` 进 mkdocs nav
+
+### Notes
+
+- 产品面（30 秒上手 / 三行接入 / 接入已有日志 / 可视化 / 反馈）和研究面混在一起时，
+  第一次打开的人看不出重点。拆开后 README 只回答「怎么用」
+- 研究记录没有被删，只是换了位置——`docs/research.md` 里保留全部实测数字与负面结果
+
 ## [2.27.1] - 2026-11-25
 
 离线基准的回归测试：分数变了就红。

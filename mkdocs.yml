@@ -10,6 +10,7 @@ theme:
 nav:
   - 首页: index.md
   - 项目自审: what-it-proves.md
+  - 研究记录: research.md
   - 状态交接: STATUS.md
   - 动机映射: motivation.md
   - 接入指南: import-guide.md
