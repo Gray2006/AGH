@@ -6,11 +6,14 @@
 python -m venv .venv
 . .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -e ".[dev]"
-python -m ruff check .
-python -m pytest
+
+python scripts/dev.py check   # lint + 全量测试（跨平台）
+python scripts/dev.py test    # 只跑测试
+python scripts/dev.py lint    # ruff + mypy + vulture
+python scripts/dev.py docs    # 构建文档站
 ```
 
-Python 3.12+。提交前 lint 与全量测试必须通过，CI 会跑 3.12 / 3.13。
+Python 3.11+。提交前 lint 与全量测试必须通过，CI 会跑 3.11 / 3.12 / 3.13，另加 Windows 与打包冒烟。
 
 ## 改动范围
 

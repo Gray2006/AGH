@@ -2,6 +2,24 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [2.28.2] - 2026-11-25
+
+`scripts/dev.py`：跨平台的开发者命令入口。
+
+### Added
+
+- `python scripts/dev.py {test,lint,check,build,docs,clean}`
+  - `check` = ruff + mypy + vulture + 全量测试（带覆盖率门槛）
+  - `build` = `python -m build` + `twine check`
+  - `docs` = `mkdocs build --strict`
+- CONTRIBUTING.md 改用它，并把 Python 版本说明从 3.12+ 更正为 3.11+
+
+### Notes
+
+- 没用 Makefile：这个项目主要在 Windows 上开发，`make` 不一定有。
+  Python 脚本在所有平台行为一致
+- 顺带修了 CONTRIBUTING 里过期的版本说明（CI 早就跑 3.11/3.12/3.13 + Windows + 打包冒烟了）
+
 ## [2.28.1] - 2026-11-25
 
 英文 README 同步拆分。
