@@ -70,4 +70,4 @@ python -m pytest tests/test_crypto.py tests/test_gate.py tests/test_governance_b
 
 ## 报告问题
 
-见 [SECURITY.md](../SECURITY.md)。
+见仓库根目录的 `SECURITY.md`。
