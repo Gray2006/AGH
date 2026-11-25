@@ -68,7 +68,8 @@ jobs:
       - name: Smoke test the installed package
         run: |
           /tmp/venv/bin/agh version
-          /tmp/venv/bin/agh doctor --json > /tmp/doctor.json
+          # doctor 在缺可选组件时会返回非零，这里只验证它能产出合法 JSON
+          /tmp/venv/bin/agh doctor --json > /tmp/doctor.json || true
           python -c "import json,sys; d=json.load(open('/tmp/doctor.json')); sys.exit(0 if 'checks' in d else 1)"
           /tmp/venv/bin/agh quickstart --dir /tmp/qs
           /tmp/venv/bin/agh audit verify --log /tmp/qs/run.jsonl
