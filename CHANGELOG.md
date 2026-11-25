@@ -2,6 +2,21 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [2.29.3] - 2026-11-26
+
+STATUS 的「下一步」全部过时，重写。
+
+### Changed
+
+- 原来 6 条待办全部已经做完或已排除：回写路径、GitTagStore 发布、更强变异器、
+  PyPI 命名、NATS 集成、大模型横向对比
+- 新待办 5 条：PyPI 同步、文档站部署、任务抽象、真实用户、NATS 本地联调
+
+### Notes
+
+- 待办清单过期比没有更糟：它会让人去做已经做完的事
+- 新清单里前两条是「用户要做的配置」，后两条是「项目要解决的未知」
+
 ## [2.29.2] - 2026-11-26
 
 `docs/security.md`：威胁模型、依赖清单、复查方法。

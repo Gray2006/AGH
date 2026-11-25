@@ -1,4 +1,4 @@
-# AGH 状态交接（v2.29.2，2026-11-26）
+# AGH 状态交接（v2.29.3，2026-11-26）
 
 > 新会话先读这个文件，再读 `README.md` 的「版本与兼容」与 `memory/agh.md`。
 
@@ -146,12 +146,15 @@ python scripts/score_labels.py --labels ... --candidates ...
 
 ## 下一步（按优先级）
 
-1. 回写路径：参数不动时已跳过；要真回写得让参数有梯度，先接真实验证信号再谈
-2. 把 GitTagStore 用于发布流程（tag 推送即外部锚定），再考虑第三方时间戳服务
-3. 真实失败样本上规则与 LLM 都在 0.42151 停滞：换更强的变异器，或换更难的骨架族
-4. 发布：PyPI 名称 `AGH` 是否被占用、token 就绪
-5. NATS 集成测试：`docker compose up -d nats` + `NATS_URL=... pytest tests/test_nats_integration.py`
-6. 大模型横向对比（需要各家 key）
+1. **PyPI 同步最新版**：PyPI 上停在 2.1.0。`release.yml` 与 `docs/release.md` 已就绪，
+   需要在 PyPI 配 Trusted Publishing（pending publisher），然后触发 workflow
+2. **文档站部署**：CI 已构建 `docs-site` artifact；需要在 GitHub Settings → Pages
+   把 Source 设为 GitHub Actions，之后可加 deploy 步骤
+3. **任务抽象**：题库路线已终止（五类难度尝试全部一次通过）。要验证策略搜索，
+   必须换成多文件改动 / 真实项目 bug / 需要运行调试的任务——`Case` 模型表达不了
+4. **真实用户**：目前零真实接入。`agh import` 是最低门槛的验证方式——
+   没人拿它导自己的日志，说明「审计」这个需求本身要重新审视
+5. NATS 集成：CI 已起 `nats:2.10` service 并跑真实联调；本地需要 docker
 
 ## 踩坑清单
 
