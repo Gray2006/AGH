@@ -2,6 +2,26 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [2.29.0] - 2026-11-26
+
+用户旅程冒烟：从零到「看完报告」走一遍所有日常命令。
+
+### Added
+
+- `scripts/smoke_journey.py`：quickstart → audit verify/summary → stats → timeline →
+  ui → export → feedback → doctor，每步检查产物，输出耗时
+- CI 的 package job 里加一步跑它
+
+### Measured
+
+本地全程 9 步，每步 0.28–0.52 秒，全部通过。
+
+### Notes
+
+- 和 package job 的区别：那个只验证「命令能跑」，这个按用户真实顺序串联并检查产物
+  （HTML 有内容、CSV 存在、JSON 合法）
+- 第一版把子进程的 PATH 清空了，导致 `python -m agh` 找不到依赖——改成继承 os.environ
+
 ## [2.28.2] - 2026-11-25
 
 `scripts/dev.py`：跨平台的开发者命令入口。
