@@ -31,6 +31,6 @@ jobs:
       - name: Lint
         run: python -m ruff check .
       - name: Unit tests
-        run: python -m pytest
+        run: python -m pytest --cov=agh --cov-report=term --cov-fail-under=88
       - name: Run M0 demo
         run: python -m agh

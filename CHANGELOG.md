@@ -2,6 +2,27 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [2.23.1] - 2026-11-25
+
+覆盖率进 CI，13 条 CLI 冒烟测试。
+
+### Added
+
+- `tests/test_cli_commands.py`：13 个子命令至少跑通一次（version / audit 四个 /
+  audit-stats / audit-timeline / audit-diff / ui / feedback / import / doctor / quickstart）
+- dev 依赖加 `pytest-cov`，CI 设 `--cov-fail-under=88`
+
+### Measured
+
+- 覆盖率 89% → 90%（5815 行，569 行未覆盖）
+- 之前 `cli.py` 只有 62%，大部分子命令没有入口测试
+
+### Notes
+
+- 门槛设 88% 而不是 90%：留一点余量，避免正常的重构（删代码）误伤 CI
+- 覆盖率不是目标，只是防回退的护栏。剩下的未覆盖主要在 `supervisor.py`（67%）和
+  `bus_nats.py`（77%），这两个都需要外部服务或复杂编排
+
 ## [2.23.0] - 2026-11-25
 
 `agh audit-timeline`：按顺序看事件，`--limit` 看最近 N 条。
