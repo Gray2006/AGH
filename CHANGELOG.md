@@ -2,6 +2,26 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [2.23.2] - 2026-11-25
+
+Windows CI 上线，第一次跑就抓到一个真 bug。
+
+### Fixed
+
+- **Windows 控制台输出中文直接崩溃**：CI 的 Windows runner 用 GBK 代码页，
+  `python -m agh` 打印中文时抛 `UnicodeEncodeError: 'charmap' codec`。
+  `main()` 现在在 Windows 上把 stdout/stderr 切到 UTF-8；终端不支持时最多是乱码，不会崩
+
+### Added
+
+- CI 加 `test-windows` job（windows-latest + Python 3.13）
+
+### Notes
+
+- 这个 bug 在 Ubuntu CI 上永远不会暴露，而 AGH 的开发和主要使用环境都是 Windows
+- Windows job 不跑 NATS 集成测试（runner 的 service container 不支持 Windows），
+  那一条在 Windows 上保持 skipped
+
 ## [2.23.1] - 2026-11-25
 
 覆盖率进 CI，13 条 CLI 冒烟测试。

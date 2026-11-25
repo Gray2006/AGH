@@ -12,6 +12,7 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
 import shutil
 import sys
@@ -650,6 +651,18 @@ def cmd_timeline(args: argparse.Namespace) -> int:
     return 0
 
 
+def _ensure_utf8_stdout() -> None:
+    """Windows 控制台默认 GBK，中文输出会直接抛 UnicodeEncodeError。
+
+    这里把 stdout/stderr 切到 UTF-8；终端不支持时最多是乱码，不会崩。
+    """
+    if sys.platform != "win32":
+        return
+    for stream in (sys.stdout, sys.stderr):
+        with contextlib.suppress(AttributeError, ValueError):
+            stream.reconfigure(encoding="utf-8")  # type: ignore[attr-defined]
+
+
 def main(argv: list[str] | None = None) -> int:
     from .eventlog import LogTampered
 
@@ -657,6 +670,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     if not getattr(args, "command", None):
         args = parser.parse_args(["run", *(argv or [])])
+    _ensure_utf8_stdout()
     try:
         return int(args.func(args))
     except LogTampered as exc:
