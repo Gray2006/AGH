@@ -2,6 +2,27 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [2.14.1] - 2026-11-25
+
+真模型验证：离线那个「显著」结果不能外推。
+
+### Measured（command-code / deepseek-v4.1-flash，budget 150，270 种策略）
+
+| 方法 | held-out | train fitness |
+|---|---|---|
+| baseline `n1|first|plain|r1|p0` | 1.0 | — |
+| evolution | 1.0 | 0.99 |
+| random | 1.0 | 0.90 |
+
+`WARNING_CEILING` 触发：baseline 在 held-out 上全对，差值没有意义。
+
+### Notes
+
+- 离线模拟模型上 evolution 0.9375 vs baseline 0.5 的「显著」，来自模拟模型
+  `p_correct=0.4` 人为留下的可学习空间，**不代表真模型**
+- 真模型对 15 道题仍然全对，策略空间扩到 270 种也测不出差异
+- 结论：要验证策略搜索，必须先有「真模型会做错」的题库。现在没有
+
 ## [2.14.0] - 2026-11-25
 
 分级目标（goal ladder）：先过公开用例，再看 hidden。
