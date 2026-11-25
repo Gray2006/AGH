@@ -1,4 +1,4 @@
-# AGH 状态交接（v2.15.1，2026-11-25）
+# AGH 状态交接（v2.15.2，2026-11-25）
 
 > 新会话先读这个文件，再读 `README.md` 的「版本与兼容」与 `memory/agh.md`。
 
@@ -92,6 +92,7 @@ python scripts/score_labels.py --labels ... --candidates ...
 | 270 空间真模型 | flash：baseline/evolution/random 全 1.0，触顶；离线显著结果不可外推 | 高（负面结果） |
 | 加难题（通配符/表达式/罗马数字） | flash 三道全 1.0：纯函数型任务已到极限 | 高（负面结果） |
 | 调试题（给 bug 代码修复） | flash 一次 hidden 1.0：三类任务全试过，题库路线终止 | 高（负面结果） |
+| 多 bug 模块（debug_textstats） | flash 两次尝试均 1.0：五类难度尝试全部失败 | 高（负面结果） |
 | 锚定篡改检出 | 改一条 payload → `LogTampered: 数据被改动于 seq=6`；未篡改 → `signature_verified: true` | 高 |
 | 真实失败样本（8 条） | 种子均值 0.37887 → 规则/LLM 均 0.42151 后停滞；LLM 20107 tokens | 中高（各 1 次） |
 | git tag 锚点 | 写 tag 后读回 head/size/label 一致 | 高（单测） |

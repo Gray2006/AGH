@@ -206,6 +206,18 @@ TASKS: dict[str, CodeTask] = {
             ["def lru(capacity, ops):\n    data = {}\n    out = []\n    for op in ops:\n        if op[0] == 'put':\n            if len(data) >= capacity:\n                data.pop(next(iter(data)))\n            data[op[1]] = op[2]\n        else:\n            out.append(data.get(op[1], -1))\n    return out\n",
              "def lru(capacity, ops):\n    return [-1 for op in ops if op[0] == 'get']\n"],
         ),
+        _task(
+            "debug_textstats", "summarize",
+            "下面这个模块有三个 bug，请修好并返回完整的 `summarize` 实现（可以包含辅助函数）。\n```python\ndef normalize(text):\n    return text.lower().strip()\n\n\ndef word_count(text):\n    counts = {}\n    for word in normalize(text).split():\n        counts[word] = counts.get(word, 0) + 1\n    return counts\n\n\ndef top_k(counts, k):\n    ranked = sorted(counts.items(), key=lambda kv: -kv[1])\n    return ranked[:k]\n\n\ndef summarize(text, k):\n    return top_k(word_count(text), k)\n```\n已知问题：\n1. 标点没剥掉：`hello, hello!` 会把 `hello,` 和 `hello!` 当成两个词\n2. 连续空白没合并：`a  b` 分词后可能有空串\n3. 词频并列时顺序不稳定，期望按字母序升序排列",
+            [_c("hello world", 2, expected=[("hello", 1), ("world", 1)])],
+            [_c("Hello, hello! World.", 2, expected=[("hello", 2), ("world", 1)]),
+             _c("a  b   a", 1, expected=[("a", 2)]),
+             _c("z y x", 3, expected=[("x", 1), ("y", 1), ("z", 1)]),
+             _c("", 3, expected=[])],
+            "import re\n\n\ndef normalize(text):\n    return re.sub(r'\\s+', ' ', text.lower()).strip()\n\n\ndef word_count(text):\n    counts = {}\n    for word in re.findall(r'[a-z0-9]+', normalize(text)):\n        counts[word] = counts.get(word, 0) + 1\n    return counts\n\n\ndef top_k(counts, k):\n    ranked = sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))\n    return ranked[:k]\n\n\ndef summarize(text, k):\n    return top_k(word_count(text), k)\n",
+            ["import re\n\n\ndef normalize(text):\n    return re.sub(r'\\s+', ' ', text.lower()).strip()\n\n\ndef word_count(text):\n    counts = {}\n    for word in normalize(text).split():\n        counts[word] = counts.get(word, 0) + 1\n    return counts\n\n\ndef top_k(counts, k):\n    ranked = sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))\n    return ranked[:k]\n\n\ndef summarize(text, k):\n    return top_k(word_count(text), k)\n",
+             "import re\n\n\ndef normalize(text):\n    return re.sub(r'\\s+', ' ', text.lower()).strip()\n\n\ndef word_count(text):\n    counts = {}\n    for word in re.findall(r'[a-z0-9]+', normalize(text)):\n        counts[word] = counts.get(word, 0) + 1\n    return counts\n\n\ndef top_k(counts, k):\n    ranked = sorted(counts.items(), key=lambda kv: -kv[1])\n    return ranked[:k]\n\n\ndef summarize(text, k):\n    return top_k(word_count(text), k)\n"],
+        ),
     )
 }
 

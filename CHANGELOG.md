@@ -2,6 +2,27 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [2.15.2] - 2026-11-25
+
+多 bug 模块也不难：`debug_textstats` 两次尝试都全对，难度路线彻底关闭。
+
+### Added
+
+- `debug_textstats`：一个 20 行的文本统计模块，埋了三个 bug（标点未剥、连续空白未合并、
+  并列词频顺序不稳）。prompt 给完整代码 + 问题描述，要求修好
+- 两个已知 bug 变体，突变测试通过
+
+### Measured
+
+`command-code / deepseek-v4.1-flash`，两次独立尝试，hidden 均 **1.0**。
+
+### Notes
+
+- 至此五类难度尝试全部失败：纯函数、边界密集、单 bug 调试、多 bug 模块、更大策略空间
+- **结论写死**：在「单文件 Python 函数」这个层面，当前模型已经没有难度。
+  要制造难度必须换任务抽象：多文件依赖、真实项目 bug、需要运行调试的迭代过程
+- 20 题，held-out 划分再次变化
+
 ## [2.15.1] - 2026-11-25
 
 调试题也不难：`debug_lru` 一次全对，题库路线到此为止。
