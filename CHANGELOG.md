@@ -2,6 +2,27 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [2.15.1] - 2026-11-25
+
+调试题也不难：`debug_lru` 一次全对，题库路线到此为止。
+
+### Added
+
+- `debug_lru`：给一段有 bug 的 LRU 实现 + 问题描述，要求修好。
+  prompt 里带完整 buggy 代码，考察的是「定位 + 修复」而不是「从零实现」
+- 两个已知 bug 变体（不更新顺序 / 全返回 -1），突变测试通过
+
+### Measured
+
+`command-code / deepseek-v4.1-flash` 单次调用：hidden **1.0**。
+
+### Notes
+
+- 至此三类任务都试过：纯函数实现、边界密集、给 bug 代码修复。flash 全部一次通过
+- **题库路线到此为止**。继续加同类题是浪费；要制造难度必须换任务抽象
+  （多文件改动、真实项目 bug、需要运行调试的任务），而那不是 `Case` 模型能表达的
+- 19 题，held-out 划分再次变化，旧结果不可比
+
 ## [2.15.0] - 2026-11-25
 
 三道更难的题，真模型仍然全对——题库方向错了。

@@ -194,6 +194,18 @@ TASKS: dict[str, CodeTask] = {
             ["def int_to_roman(n):\n    vals = [(1000,'M'),(500,'D'),(100,'C'),(50,'L'),(10,'X'),(5,'V'),(1,'I')]\n    out = []\n    for v, sym in vals:\n        while n >= v:\n            out.append(sym)\n            n -= v\n    return ''.join(out)\n",
              "def int_to_roman(n):\n    return 'I' * n\n"],
         ),
+        _task(
+            "debug_lru", "lru",
+            "下面这段代码有 bug，请修好它并返回完整实现。\n```python\ndef lru(capacity, ops):\n    data = {}\n    out = []\n    for op in ops:\n        if op[0] == 'put':\n            if len(data) >= capacity:\n                data.pop(next(iter(data)))\n            data[op[1]] = op[2]\n        else:\n            out.append(data.get(op[1], -1))\n    return out\n```\n问题：命中缓存时没有把该 key 移到「最近使用」的位置，淘汰时会先踢掉刚用过的 key。",
+            [_c(2, [("put", 1, 1), ("get", 1)], expected=[1])],
+            [_c(2, [("put", 1, 1), ("put", 2, 2), ("get", 1), ("put", 3, 3), ("get", 2)], expected=[1, -1]),
+             _c(2, [("put", 1, 1), ("put", 2, 2), ("get", 1), ("put", 3, 3), ("get", 3)], expected=[1, 3]),
+             _c(1, [("put", 1, 1), ("put", 2, 2), ("get", 1)], expected=[-1]),
+             _c(3, [("get", 9)], expected=[-1])],
+            "def lru(capacity, ops):\n    data = {}\n    out = []\n    for op in ops:\n        if op[0] == 'put':\n            if op[1] in data:\n                data.pop(op[1])\n            elif len(data) >= capacity:\n                data.pop(next(iter(data)))\n            data[op[1]] = op[2]\n        else:\n            if op[1] in data:\n                v = data.pop(op[1])\n                data[op[1]] = v\n                out.append(v)\n            else:\n                out.append(-1)\n    return out\n",
+            ["def lru(capacity, ops):\n    data = {}\n    out = []\n    for op in ops:\n        if op[0] == 'put':\n            if len(data) >= capacity:\n                data.pop(next(iter(data)))\n            data[op[1]] = op[2]\n        else:\n            out.append(data.get(op[1], -1))\n    return out\n",
+             "def lru(capacity, ops):\n    return [-1 for op in ops if op[0] == 'get']\n"],
+        ),
     )
 }
 
