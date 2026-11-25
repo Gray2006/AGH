@@ -30,6 +30,10 @@ jobs:
         run: pip install -e ".[dev,nats]"
       - name: Lint
         run: python -m ruff check .
+      - name: Dead code check
+        run: |
+          pip install vulture
+          python -m vulture agh --min-confidence 80
       - name: Unit tests
         run: python -m pytest --cov=agh --cov-report=term --cov-fail-under=88
       - name: Run M0 demo
