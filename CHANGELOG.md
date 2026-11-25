@@ -2,6 +2,22 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [2.24.0] - 2026-11-25
+
+CI 验证「装出来能不能用」：构建 wheel → 干净 venv 安装 → 跑命令。
+
+### Added
+
+- `package` job：`python -m build` → 在全新 venv 里 `pip install dist/*.whl` →
+  依次跑 `agh version`、`agh doctor --json`、`agh quickstart`、`agh audit verify`、
+  `agh ui`，并检查产物非空
+
+### Notes
+
+- 之前 CI 只测源码（`pip install -e .`），打包漏文件、entry point 写错都发现不了
+- `agh doctor` 在缺可选组件时返回非零是设计使然，CI 里用 `|| true` 后只校验 JSON 合法性
+- 本地也验证过：干净 venv 里 `agh quickstart` 正常，`audit verify` 和 `audit-timeline` 都能跑
+
 ## [2.23.2] - 2026-11-25
 
 Windows CI 上线，第一次跑就抓到一个真 bug。
