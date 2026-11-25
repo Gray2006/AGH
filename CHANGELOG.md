@@ -2,6 +2,25 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [2.26.0] - 2026-11-25
+
+文档站进 CI：`mkdocs build --strict` 通过，产物作为 artifact。
+
+### Added
+
+- CI 加 `docs` job：装 mkdocs-material，`NO_MKDOCS_2_WARNING=1 mkdocs build --strict`，
+  把 `site/` 作为 `docs-site` artifact 上传
+- `mkdocs.yml` 的 nav 补全：项目自审、状态交接、动机映射、接入指南、发布、模块 API
+- `.gitignore` 加 `site/`
+
+### Notes
+
+- 一开始直接配了 `upload-pages-artifact` + `deploy-pages`，CI 报
+  `No artifacts named "github-pages" were found`——Pages 站点没在仓库设置里启用。
+  改成只构建 + 传 artifact，部署留给仓库设置好 Pages 之后再做
+- `mkdocs build --strict` 有个 `mkdocs 2.0` 的升级警告会让退出码变 1，
+  设 `NO_MKDOCS_2_WARNING=1` 后正常
+
 ## [2.25.6] - 2026-11-25
 
 `agh ui` 的报告顶部加校验状态徽章。
