@@ -51,3 +51,26 @@ jobs:
         run: python -m pytest --cov=agh --cov-report=term --cov-fail-under=88
       - name: Run M0 demo
         run: python -m agh
+
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Build
+        run: pip install build && python -m build
+      - name: Install wheel in a clean venv
+        run: |
+          python -m venv /tmp/venv
+          /tmp/venv/bin/pip install --quiet dist/*.whl
+      - name: Smoke test the installed package
+        run: |
+          /tmp/venv/bin/agh version
+          /tmp/venv/bin/agh doctor --json > /tmp/doctor.json
+          python -c "import json,sys; d=json.load(open('/tmp/doctor.json')); sys.exit(0 if 'checks' in d else 1)"
+          /tmp/venv/bin/agh quickstart --dir /tmp/qs
+          /tmp/venv/bin/agh audit verify --log /tmp/qs/run.jsonl
+          /tmp/venv/bin/agh ui --log /tmp/qs/run.jsonl --out /tmp/r.html --no-open
+          test -s /tmp/r.html
