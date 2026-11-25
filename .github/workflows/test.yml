@@ -82,10 +82,6 @@ jobs:
 
   docs:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -95,7 +91,7 @@ jobs:
         run: |
           pip install mkdocs-material
           NO_MKDOCS_2_WARNING=1 python -m mkdocs build --strict
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
+          name: docs-site
           path: site
-      - uses: actions/deploy-pages@v4
