@@ -2,6 +2,23 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [2.25.0] - 2026-11-25
+
+`agh audit-export`：导出 CSV 或去原文的日志。
+
+### Added
+
+- `agh audit-export --log run.jsonl [--format csv|hashonly] [--out path]`
+  - `csv`：每行一次调用，含 call_id / 模型 / tokens / 哈希 / 是否标记 / 标记原因，
+    可直接用 Excel 或 pandas 分析
+  - `hashonly`：保留完整事件结构但去掉 prompt/response 原文，适合把日志发给别人排查
+- 5 条测试：CSV 表头与行、不泄漏原文、写文件、去原文导出、CLI
+
+### Notes
+
+- CSV 只导元数据，不导原文——这是有意的，导出文件经常会被转发
+- 要带原文用 `agh audit export-failures --with-payload`（那是给 issue 用的，有脱敏提示）
+
 ## [2.24.0] - 2026-11-25
 
 CI 验证「装出来能不能用」：构建 wheel → 干净 venv 安装 → 跑命令。

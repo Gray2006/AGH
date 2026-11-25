@@ -462,6 +462,11 @@ def build_parser() -> argparse.ArgumentParser:
     timeline.add_argument("--limit", type=int, default=0, help="只看最后 N 条，0 表示全部")
     timeline.add_argument("--json", action="store_true")
     timeline.set_defaults(func=cmd_timeline)
+    audit_export = sub.add_parser("audit-export", help="导出 CSV 或去原文的日志")
+    audit_export.add_argument("--log", required=True)
+    audit_export.add_argument("--out", default=None)
+    audit_export.add_argument("--format", choices=["csv", "hashonly"], default="csv")
+    audit_export.set_defaults(func=cmd_audit_export)
     version = sub.add_parser("version", help="打印版本")
     version.set_defaults(func=lambda _a: print(__version__) or 0)
 
@@ -661,6 +666,21 @@ def _ensure_utf8_stdout() -> None:
     for stream in (sys.stdout, sys.stderr):
         with contextlib.suppress(AttributeError, ValueError):
             stream.reconfigure(encoding="utf-8")  # type: ignore[attr-defined]
+
+
+def cmd_audit_export(args: argparse.Namespace) -> int:
+    from .auditexport import export_csv, export_jsonl_hash_only
+
+    _require_file(args.log)
+    if args.format == "csv":
+        out = args.out or str(Path(args.log).with_suffix(".calls.csv"))
+        export_csv(args.log, out)
+        print(json.dumps({"ok": True, "out": out, "format": "csv"}, ensure_ascii=False))
+    else:
+        out = args.out or str(Path(args.log).with_suffix(".hashonly.jsonl"))
+        n = export_jsonl_hash_only(args.log, out)
+        print(json.dumps({"ok": True, "out": out, "entries": n}, ensure_ascii=False))
+    return 0
 
 
 def main(argv: list[str] | None = None) -> int:
