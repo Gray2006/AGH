@@ -2,6 +2,51 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [3.0.0] - 2026-11-26
+
+**定位变更**：从「多智能体进化框架」改为「可验证审计层」。
+
+API 完全兼容，升级不会破坏任何现有调用。这是语义版本里的「承诺变更」，不是「接口破坏」。
+
+### Changed
+
+- 对外定位：README 第一屏、PyPI 描述、`--help` 的 epilog 都按「审计」写，
+  进化实验退到 `docs/research.md`
+- 主推入口从「跑 M0 管线看进化」改为「三行接入记录 → 校验 → 重放 → 报告」
+
+### 为什么是 major
+
+SemVer 的 major 通常指「不兼容的 API 变更」，但还有一种更根本的：**对外承诺变了**。
+
+2.x 承诺的是「能自我进化的多智能体框架」。经过 `docs/what-it-proves.md` 里的自我审计，
+这个承诺没被证明——四个机制（LP、分级目标、plan、策略空间扩大）在真模型上都没有可测收益。
+真正被证明的是治理有效性（伪造 80/80 vs 0/80、超预算 10/10 vs 0/10、篡改 20/20 vs 0/20）。
+
+3.0 承诺的是「可验证审计层」。这是同一个代码库的诚实描述。
+
+### 兼容性
+
+| 接口 | 状态 |
+|---|---|
+| `AuditSession` / `AuditSession.call/flag/verify/replay` | 不变 |
+| `ProvenanceGateway` / `EnvelopeVerifier` | 不变 |
+| `WriteGate` / `Ledger` / `EventLog` | 不变 |
+| `ExecutionVerifier` / `CodeTask` | 不变 |
+| CLI 全部 14 个子命令 | 不变 |
+| 配置格式（`config/frozen/`） | 不变 |
+
+### 保留但降级
+
+- M0 管线、进化、任务族、消融、红队：代码全部保留，文档移到 `docs/research.md`，
+  不再出现在 README 主叙事里
+- 它们仍是可运行的，只是不再声称「能让系统变强」
+
+### Notes
+
+- 已发布的 2.x tag 不回退、不改写
+- 版本规则见 `CONTRIBUTING.md`：major = 对外承诺变更 / 接口破坏；minor = 新能力；
+  patch = 修 bug；纯文档与 CI 不发版
+
 ## [2.29.3] - 2026-11-26
 
 STATUS 的「下一步」全部过时，重写。

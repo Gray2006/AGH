@@ -2,9 +2,9 @@
 
 [English](README.en.md) · [简体中文](README.md) · [PyPI](https://pypi.org/project/agh-gestalt/) · MIT
 
-**Agent Gestalt Hierarchy**：多智能体「整体重构」框架的 M0 垂直切片。母体发骨架与契约，子级按整体重构而不是拼零件，回传带签名与出处；写入门、竞技场、仲裁、治理机、预算账本、哈希链日志串成一条可跑、可测、可重放的链路。
+**Agent Gestalt Hierarchy**：给多智能体流水线做可验证审计的一层。子级回传带签名与出处，母体验签、记账、入哈希链；事后能校验、能逐位重放、能锚定到外部。进化实验保留在 [docs/research.md](docs/research.md)，不是主推。
 
-> 状态：M0（v2.29.3）。子级默认是**规则重构器**；LLM 子级与 LLM 变异器是可插拔的，已有实测数据。M0 管线与 LLM 变异路径都支持 L1 逐位重放。
+> 状态：M0（v3.0.0）。子级默认是**规则重构器**；LLM 子级与 LLM 变异器是可插拔的，已有实测数据。M0 管线与 LLM 变异路径都支持 L1 逐位重放。
 
 ```
 母体 M0

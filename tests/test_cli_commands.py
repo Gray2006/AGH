@@ -22,7 +22,9 @@ def _log(tmp_path: Path) -> Path:
 
 def test_cli_version(capsys) -> None:
     assert main(["version"]) == 0
-    assert "2." in capsys.readouterr().out
+    import agh
+
+    assert capsys.readouterr().out.strip() == agh.__version__
 
 
 def test_cli_audit_summary(tmp_path: Path, capsys) -> None:
