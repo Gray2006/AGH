@@ -2,6 +2,25 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [2.29.1] - 2026-11-26
+
+修 v2.29.0 的 CI：package job 没装包就跑旅程冒烟。
+
+### Fixed
+
+- `package` job 的 Install 步骤改成 `pip install -e ".[dev]" build`。
+  之前只装了 build 工具，`scripts/smoke_journey.py` 用 `PYTHONPATH` + `python -m agh`
+  找不到依赖，9 步全部 FAIL
+
+### Verified
+
+CI package job：`[ok] feedback 0.26s` / `[ok] doctor 0.25s` / `全部通过`
+
+### Notes
+
+- 这个失败只影响 CI 的 package job，本地跑（装了 editable 包）是好的
+- v2.29.0 的 tag 指向了带这个问题的提交；v2.29.1 是修正版
+
 ## [2.29.0] - 2026-11-26
 
 用户旅程冒烟：从零到「看完报告」走一遍所有日常命令。
