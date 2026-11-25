@@ -26,6 +26,7 @@ N_SAMPLES_CHOICES = (1, 2, 3, 5, 8)
 SELECT_CHOICES = ("first", "visible_best", "visible_best_shortest")
 HINT_CHOICES = ("plain", "edge_cases", "step_by_step")
 ROUND_CHOICES = (1, 2, 3)
+PLAN_CHOICES = (False, True)
 
 _HINTS = {
     "plain": "",
@@ -41,6 +42,8 @@ class SolverPolicy:
     select: str = "first"
     hint: str = "plain"
     rounds: int = 1
+    # 两阶段生成：先要实现步骤，再带着步骤写代码。多一次调用，但改的是单次质量。
+    plan: bool = False
 
     def __post_init__(self) -> None:
         if self.n_samples not in N_SAMPLES_CHOICES:
@@ -51,9 +54,11 @@ class SolverPolicy:
             raise ValueError(f"hint 越界: {self.hint}")
         if self.rounds not in ROUND_CHOICES:
             raise ValueError(f"rounds 越界: {self.rounds}")
+        if self.plan not in PLAN_CHOICES:
+            raise ValueError(f"plan 越界: {self.plan}")
 
     def key(self) -> str:
-        return f"n{self.n_samples}|{self.select}|{self.hint}|r{self.rounds}"
+        return f"n{self.n_samples}|{self.select}|{self.hint}|r{self.rounds}|p{int(self.plan)}"
 
 
 def extract_code(text: str) -> str:
@@ -62,11 +67,16 @@ def extract_code(text: str) -> str:
 
 
 def build_prompt(
-    task: CodeTask, policy: SolverPolicy, sample_index: int, feedback: str = ""
+    task: CodeTask,
+    policy: SolverPolicy,
+    sample_index: int,
+    feedback: str = "",
+    plan: str = "",
 ) -> str:
     # 样本序号写进提示：对确定性客户端或带缓存的网关，保证每次采样的输入不同
     tail = f"\n（第 {sample_index + 1} 次尝试）"
-    return f"{task.prompt}{_HINTS[policy.hint]}{feedback}{tail}"
+    plan_block = f"\n参考步骤：\n{plan.strip()}\n" if plan.strip() else ""
+    return f"{task.prompt}{plan_block}{_HINTS[policy.hint]}{feedback}{tail}"
 
 
 def format_feedback(code: str, task: CodeTask, result: Any) -> str:
@@ -97,10 +107,21 @@ def solve_task(task: CodeTask, complete: Callable[[str], str], policy: SolverPol
     codes: list[str] = []
     errors = 0
     feedback = ""
+    plan = ""
+    if policy.plan:
+        # 先要步骤再写代码：改的是单次生成质量，而不是采样数
+        try:
+            plan = complete(
+                f"{task.prompt}\n先只写出实现步骤（不要写代码），不超过 6 行。"
+            )
+        except Exception:
+            errors += 1
     for round_index in range(policy.rounds):
         for i in range(policy.n_samples):
             try:
-                codes.append(extract_code(complete(build_prompt(task, policy, i, feedback))))
+                codes.append(
+                    extract_code(complete(build_prompt(task, policy, i, feedback, plan)))
+                )
             except Exception:  # 网络或模型错误按空候选处理，不中断整轮评估
                 codes.append("")
                 errors += 1

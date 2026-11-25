@@ -19,6 +19,7 @@ from typing import Any
 from .codesolve import (
     HINT_CHOICES,
     N_SAMPLES_CHOICES,
+    PLAN_CHOICES,
     ROUND_CHOICES,
     SELECT_CHOICES,
     SolverPolicy,
@@ -63,21 +64,36 @@ def evaluate_policy(
 
 
 def mutate(policy: SolverPolicy, rng: random.Random) -> SolverPolicy:
-    gene = rng.choice(("n_samples", "select", "hint"))
+    # 之前这里漏了 "rounds"：下面的 rounds 分支永远走不到，那个基因等于冻结
+    gene = rng.choice(("n_samples", "select", "hint", "rounds", "plan"))
     if gene == "n_samples":
         i = N_SAMPLES_CHOICES.index(policy.n_samples)
         j = max(0, min(len(N_SAMPLES_CHOICES) - 1, i + rng.choice((-1, 1))))
-        return SolverPolicy(N_SAMPLES_CHOICES[j], policy.select, policy.hint, policy.rounds)
+        return SolverPolicy(
+            N_SAMPLES_CHOICES[j], policy.select, policy.hint, policy.rounds, policy.plan
+        )
     if gene == "select":
         return SolverPolicy(
-            policy.n_samples, rng.choice(SELECT_CHOICES), policy.hint, policy.rounds
+            policy.n_samples,
+            rng.choice(SELECT_CHOICES),
+            policy.hint,
+            policy.rounds,
+            policy.plan,
         )
     if gene == "rounds":
         return SolverPolicy(
-            policy.n_samples, policy.select, policy.hint, rng.choice(ROUND_CHOICES)
+            policy.n_samples,
+            policy.select,
+            policy.hint,
+            rng.choice(ROUND_CHOICES),
+            policy.plan,
+        )
+    if gene == "plan":
+        return SolverPolicy(
+            policy.n_samples, policy.select, policy.hint, policy.rounds, not policy.plan
         )
     return SolverPolicy(
-        policy.n_samples, policy.select, rng.choice(HINT_CHOICES), policy.rounds
+        policy.n_samples, policy.select, rng.choice(HINT_CHOICES), policy.rounds, policy.plan
     )
 
 
@@ -87,6 +103,7 @@ def random_policy(rng: random.Random) -> SolverPolicy:
         rng.choice(SELECT_CHOICES),
         rng.choice(HINT_CHOICES),
         rng.choice(ROUND_CHOICES),
+        rng.choice(PLAN_CHOICES),
     )
 
 
