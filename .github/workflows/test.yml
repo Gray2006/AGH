@@ -79,3 +79,23 @@ jobs:
           /tmp/venv/bin/agh audit verify --log /tmp/qs/run.jsonl
           /tmp/venv/bin/agh ui --log /tmp/qs/run.jsonl --out /tmp/r.html --no-open
           test -s /tmp/r.html
+
+  docs:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Build docs
+        run: |
+          pip install mkdocs-material
+          NO_MKDOCS_2_WARNING=1 python -m mkdocs build --strict
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - uses: actions/deploy-pages@v4
