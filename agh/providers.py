@@ -18,14 +18,19 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from typing import Any
 
+from .netutil import open_http
+
 Transport = Callable[[str, dict[str, str], dict[str, Any]], dict[str, Any]]
 
 
 def _urllib_transport(url: str, headers: dict[str, str], payload: dict[str, Any]) -> dict[str, Any]:
-    req = urllib.request.Request(
-        url, data=json.dumps(payload).encode(), headers=headers, method="POST"
-    )
-    with urllib.request.urlopen(req, timeout=120) as resp:
+    with open_http(
+        url,
+        data=json.dumps(payload).encode(),
+        headers=headers,
+        method="POST",
+        timeout=120,
+    ) as resp:
         return json.loads(resp.read().decode())
 
 

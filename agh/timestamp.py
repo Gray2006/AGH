@@ -18,11 +18,12 @@ import hashlib
 import hmac
 import json
 import time
-import urllib.request
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Protocol
+
+from .netutil import open_http
 
 
 class TimestampError(Exception):
@@ -91,10 +92,8 @@ Transport = Callable[[str, str, dict[str, Any] | None], dict[str, Any]]
 
 def _urllib_transport(method: str, url: str, payload: dict[str, Any] | None) -> dict[str, Any]:
     data = json.dumps(payload).encode() if payload is not None else None
-    req = urllib.request.Request(url, data=data, method=method)
-    if data is not None:
-        req.add_header("Content-Type", "application/json")
-    with urllib.request.urlopen(req, timeout=15) as resp:
+    headers = {"Content-Type": "application/json"} if data is not None else {}
+    with open_http(url, data=data, headers=headers, method=method, timeout=15) as resp:
         return json.loads(resp.read().decode())
 
 

@@ -2,6 +2,27 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [2.27.0] - 2026-11-25
+
+安全加固：网络调用禁止 file:// 等本地协议。
+
+### Added
+
+- `agh/netutil.py`：`ensure_http_url` 校验 scheme 只允许 http/https 且必须有主机名；
+  `open_http` 是唯一的网络入口
+- `providers`、`billing`、`timestamp` 三处 `urllib.request.urlopen` 全部改走 `open_http`
+- 7 条测试：接受 http/https、拒绝 file/ftp/data/相对路径/空主机、校验发生在发请求之前
+
+### Verified
+
+`bandit -r agh`：High 0 / Medium 0（此前 3 个 Medium，都是 B310「urlopen 允许 file:」）。
+
+### Notes
+
+- `urllib.request.urlopen` 默认接受 `file:`、`ftp:` 等 scheme。URL 若来自配置或用户输入，
+  可以诱导读本地文件。AGH 是安全相关的项目，这类洞不该留着
+- 剩下的 33 个 Low 是 subprocess 调用和 `random.Random(seed)`（确定性用途），不是问题
+
 ## [2.26.1] - 2026-11-25
 
 真实调用示例：`examples/trace_real_call.py`。
