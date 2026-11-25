@@ -1,0 +1,42 @@
+name: release
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "输入 publish 才会真的上传到 PyPI"
+        required: true
+        default: ""
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install build tools
+        run: pip install build twine
+      - name: Build
+        run: python -m build
+      - name: Check
+        run: python -m twine check dist/*
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    needs: build
+    if: ${{ inputs.confirm == 'publish' }}
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1

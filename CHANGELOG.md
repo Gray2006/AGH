@@ -2,6 +2,20 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [2.18.1] - 2026-11-25
+
+发布流程进 CI。
+
+### Added
+
+- \.github/workflows/release.yml\：手动触发；只构建校验，输入 \publish\ 才上传
+- 用 PyPI Trusted Publishing（OIDC），不需要长期 token
+- \docs/release.md\：两种发布方式、一次性配置步骤、发版检查清单
+
+### Notes
+
+- 需要先在 PyPI 添加 pending publisher，并在 GitHub 建 \pypi\ 环境，否则 publish 任务会失败
+- 本地路径仍然可用：\python scripts/publish.py --upload --token-file ...
 ## [2.18.0] - 2026-11-25
 
 `agh audit-diff`：比较两份日志，看哪些调用是新的、哪些消失了。
