@@ -92,3 +92,12 @@ def test_ui_without_log_and_no_quickstart(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.chdir(tmp_path)
     with pytest.raises(SystemExit):
         main(["ui", "--out", str(tmp_path / "x.html"), "--no-open"])
+
+
+def test_ui_has_filters(tmp_path: Path) -> None:
+    html = render_html(_log(tmp_path))
+    assert 'id="f-model"' in html
+    assert 'id="f-flagged"' in html
+    assert 'id="f-search"' in html
+    assert "renderCalls" in html
+    assert "__DATA__" not in html

@@ -52,6 +52,12 @@ summary { cursor:pointer; color:var(--accent); font-size:12px; }
 pre { margin:6px 0 0; padding:10px; background:#0b0d11; border:1px solid var(--line);
       border-radius:8px; overflow:auto; font-size:12px; color:#cfd6e4; }
 .empty { color:var(--muted); padding:14px 0; }
+.filters { display:flex; gap:10px; align-items:center; margin:0 28px 14px; flex-wrap:wrap; }
+.filters select, .filters input[type=text] { background:var(--panel); color:var(--text);
+  border:1px solid var(--line); border-radius:8px; padding:6px 10px; font-size:13px; }
+.filters input[type=text] { min-width:220px; }
+.filters label { color:var(--muted); font-size:13px; display:flex; align-items:center; gap:6px; }
+.count { color:var(--muted); font-size:12px; margin-left:auto; }
 footer { padding:14px 28px 28px; color:var(--muted); font-size:12px; border-top:1px solid var(--line); }
 </style>
 </head>
@@ -63,6 +69,12 @@ footer { padding:14px 28px 28px; color:var(--muted); font-size:12px; border-top:
 <div class="cards" id="cards"></div>
 <section>
   <h2>模型调用</h2>
+  <div class="filters">
+    <select id="f-model"><option value="">全部模型</option></select>
+    <label><input type="checkbox" id="f-flagged"> 只看已标记</label>
+    <input type="text" id="f-search" placeholder="搜索 call_id / 模型 / 哈希">
+    <span class="count" id="f-count"></span>
+  </div>
   <div id="calls"></div>
 </section>
 <section>
@@ -125,22 +137,58 @@ function table(headers, rows) {
 }
 
 const flagged = new Set(DATA.flags.map((f) => f.call_id));
-$("calls").appendChild(table(
-  ["call_id", "模型", "输入", "输出", "tokens", "状态"],
-  DATA.calls.map((c) => {
-    const status = text("span", flagged.has(c.call_id) ? "已标记" : "正常",
-                        flagged.has(c.call_id) ? "pill p-bad" : "pill p-ok");
-    const wrap = document.createElement("div");
-    wrap.appendChild(status);
-    if (c.prompt) {
-      const d = document.createElement("details");
-      d.appendChild(text("summary", "看原文"));
-      d.appendChild(text("pre", `输入：\\n${c.prompt}\\n\\n输出：\\n${c.response || ""}`));
-      wrap.appendChild(d);
+
+// 模型下拉：从数据里收集，按字母序
+const modelSelect = $("f-model");
+const models = [...new Set(DATA.calls.map((c) => c.model).filter(Boolean))].sort();
+for (const m of models) {
+  const opt = document.createElement("option");
+  opt.value = m;
+  opt.textContent = m;
+  modelSelect.appendChild(opt);
+}
+
+function rowFor(c) {
+  const isFlagged = flagged.has(c.call_id);
+  const status = text("span", isFlagged ? "已标记" : "正常",
+                      isFlagged ? "pill p-bad" : "pill p-ok");
+  const wrap = document.createElement("div");
+  wrap.appendChild(status);
+  if (c.prompt) {
+    const d = document.createElement("details");
+    d.appendChild(text("summary", "看原文"));
+    d.appendChild(text("pre", `输入：\n${c.prompt}\n\n输出：\n${c.response || ""}`));
+    wrap.appendChild(d);
+  }
+  return [c.call_id, c.model, short(c.prompt_sha256, 16), short(c.response_sha256, 16), c.tokens, wrap];
+}
+
+function renderCalls() {
+  const model = modelSelect.value;
+  const onlyFlagged = $("f-flagged").checked;
+  const q = $("f-search").value.trim().toLowerCase();
+  const rows = DATA.calls.filter((c) => {
+    if (model && c.model !== model) return false;
+    if (onlyFlagged && !flagged.has(c.call_id)) return false;
+    if (q) {
+      const hay = `${c.call_id} ${c.model} ${c.prompt_sha256} ${c.response_sha256}`.toLowerCase();
+      if (!hay.includes(q)) return false;
     }
-    return [c.call_id, c.model, short(c.prompt_sha256, 16), short(c.response_sha256, 16), c.tokens, wrap];
-  })
-));
+    return true;
+  });
+  const host = $("calls");
+  host.replaceChildren();
+  host.appendChild(table(
+    ["call_id", "模型", "输入", "输出", "tokens", "状态"],
+    rows.map(rowFor)
+  ));
+  $("f-count").textContent = `显示 ${rows.length} / ${DATA.calls.length} 条`;
+}
+
+modelSelect.addEventListener("change", renderCalls);
+$("f-flagged").addEventListener("change", renderCalls);
+$("f-search").addEventListener("input", renderCalls);
+renderCalls();
 
 $("flags").appendChild(table(
   ["call_id", "原因", "备注"],
