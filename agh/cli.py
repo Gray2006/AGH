@@ -566,10 +566,29 @@ def cmd_ui(args: argparse.Namespace) -> int:
         else:
             raise SystemExit(f"找不到 {default}，先跑一次 agh quickstart，或用 --log 指定日志")
     _require_file(log)
+
+    # 大日志默认截断：1 万条能生成 8MB HTML，浏览器打开会卡。
+    # 用户显式给了 --max-calls 就尊重它。
+    max_calls = args.max_calls
+    note = None
+    if max_calls is None:
+        from .eventlog import EventLog
+
+        total = len(EventLog(log).entries)
+        if total > DEFAULT_UI_MAX_CALLS:
+            max_calls = DEFAULT_UI_MAX_CALLS
+            note = (
+                f"日志有 {total} 条事件，超过 {DEFAULT_UI_MAX_CALLS}，"
+                f"已自动截断（被标记的调用优先保留）。要全量用 --max-calls 0"
+            )
+
     out = Path(args.out) if args.out else Path(log).with_suffix(".report.html")
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(render_html(log, max_calls=args.max_calls), encoding="utf-8")
-    print(json.dumps({"ok": True, "out": str(out), "log": log}, ensure_ascii=False))
+    out.write_text(render_html(log, max_calls=max_calls), encoding="utf-8")
+    payload = {"ok": True, "out": str(out), "log": log}
+    if note:
+        payload["note"] = note
+    print(json.dumps(payload, ensure_ascii=False))
     if not args.no_open:
         webbrowser.open(out.resolve().as_uri())
     return 0
@@ -654,6 +673,9 @@ def cmd_timeline(args: argparse.Namespace) -> int:
         for row in rows:
             print(f"{row['seq']:>4}  {row['type']:<22} {row['brief']}")
     return 0
+
+
+DEFAULT_UI_MAX_CALLS = 5000
 
 
 def _ensure_utf8_stdout() -> None:

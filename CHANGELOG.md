@@ -2,6 +2,24 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [2.25.1] - 2026-11-25
+
+大日志自动截断：1 万条能生成 8MB HTML，浏览器打不开。
+
+### Changed
+
+- `agh ui` 在日志超过 5000 条事件时自动截断（被标记的调用优先保留），
+  并在 JSON 输出里加 `note` 说明；显式给 `--max-calls 0` 表示要全量
+
+### Measured
+
+- 1 万条、每条约 500 字节的日志：全量 8.03 MB / 0.38s；截断到 5000 后 4.32 MB
+- `audit-stats` 同样 1 万条 0.33s
+
+### Tests
+
+- 4 条：小日志不截断、大日志截断并提示、显式 `--max-calls` 优先、常量下限
+
 ## [2.25.0] - 2026-11-25
 
 `agh audit-export`：导出 CSV 或去原文的日志。
