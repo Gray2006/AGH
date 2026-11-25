@@ -2,6 +2,19 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [2.28.1] - 2026-11-25
+
+英文 README 同步拆分。
+
+### Changed
+
+- `README.en.md` 从 649 行降到 465 行，同样的 9 个研究章节移到 `docs/research.en.md`
+- `research.en.md` 进 mkdocs nav
+
+### Notes
+
+- 中英文结构保持一致：产品面在前，研究记录在后，各自有指针
+
 ## [2.28.0] - 2026-11-25
 
 README 瘦身：研究类章节移到 docs/research.md。
