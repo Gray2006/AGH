@@ -2,6 +2,20 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [2.21.1] - 2026-11-25
+
+英文版接入教程。
+
+### Added
+
+- `docs/import-guide.en.md`：三种接入方式（导入已有日志 / 调用时接入 / 网关签名），
+  含 Langfuse、LangSmith 的样例 JSON 与边界说明
+- README.en 加链接
+
+### Notes
+
+- 不是逐字翻译：英文版按英文读者的顺序重排了示例，FAQ 也精简过
+
 ## [2.21.0] - 2026-11-25
 
 支持 Python 3.11。
