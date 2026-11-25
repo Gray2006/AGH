@@ -2,6 +2,34 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [2.15.0] - 2026-11-25
+
+三道更难的题，真模型仍然全对——题库方向错了。
+
+### Added
+
+- `wildcard_match`：`?` / `*` 通配符匹配（DP）
+- `expr_eval`：四则运算解析器（括号、优先级、向零截断）
+- `int_to_roman`：1–3999 罗马数字（含 IV/IX/XL/XC/CD/CM 边界）
+- 每题带参考解与两个已知 bug 变体，突变测试通过（每个变体都被 hidden 杀死）
+
+### Measured
+
+`command-code / deepseek-v4.1-flash` 单次调用，hidden 得分：
+
+| 题 | hidden |
+|---|---|
+| wildcard_match | 1.0 |
+| expr_eval | 1.0 |
+| int_to_roman | 1.0 |
+
+### Notes
+
+- **纯函数型任务已经到极限**：18 道题里 flash 全对。继续加同类题没有意义
+- 要制造真难度，需要换任务类型：多文件/需要调试现有代码/需要外部知识/长上下文，
+  而不是继续加「给规格写一个纯函数」
+- 题库从 15 题变成 18 题，**held-out 划分变了，之前的结果不可直接比较**
+
 ## [2.14.1] - 2026-11-25
 
 真模型验证：离线那个「显著」结果不能外推。
