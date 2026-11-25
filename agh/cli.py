@@ -288,9 +288,24 @@ def cmd_report(args: argparse.Namespace) -> int:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="agh", description="AGH 多智能体整体重构框架")
+    parser = argparse.ArgumentParser(
+        prog="agh",
+        description="AGH 多智能体整体重构框架",
+        epilog=(
+            "常用路径：\n"
+            "  agh quickstart            先看效果（不需要 key）\n"
+            "  agh doctor                检查环境\n"
+            "  agh import --from-jsonl   接已有日志（Langfuse / LangSmith / 自定义）\n"
+            "  agh audit summary|verify|replay|export-failures\n"
+            "  agh ui --log run.jsonl    生成可筛选的 HTML 报告\n"
+            "\n"
+            "研究类命令（run/verify/replay/experiment/ablation/evolve/daemon/report/anchor）\n"
+            "是 M0 管线与进化实验，日常审计用不到。参见 docs/what-it-proves.md。"
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
     parser.add_argument("--version", action="version", version=f"AGH {__version__}")
-    sub = parser.add_subparsers(dest="command")
+    sub = parser.add_subparsers(dest="command", metavar="<command>")
 
     run = sub.add_parser("run", help="跑 M0 垂直切片")
     run.add_argument("--root", type=Path, default=None)

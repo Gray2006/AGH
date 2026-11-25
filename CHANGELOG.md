@@ -2,6 +2,21 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [2.25.3] - 2026-11-25
+
+`agh --help` 加了「常用路径」和「研究类命令」的区分。
+
+### Changed
+
+- help 的 epilog 列出五条常用命令，并说明 `run/verify/replay/experiment/...`
+  是 M0 管线与进化实验，日常审计用不到
+- `add_subparsers` 加 `metavar="<command>"`，usage 行不再堆一长串命令名
+
+### Notes
+
+- 20 个子命令平铺时，新人看不出从哪开始。分组信息放在 epilog 里，
+  而不是重排 argparse 的注册顺序（那会打乱既有脚本的肌肉记忆）
+
 ## [2.25.2] - 2026-11-25
 
 用 vulture 扫死代码，清掉一个真参数和两处命名。
