@@ -448,6 +448,9 @@ def build_parser() -> argparse.ArgumentParser:
     audit_diff.add_argument("--a", required=True)
     audit_diff.add_argument("--b", required=True)
     audit_diff.set_defaults(func=cmd_audit_diff)
+    doctor = sub.add_parser("doctor", help="环境自检")
+    doctor.add_argument("--json", action="store_true")
+    doctor.set_defaults(func=cmd_doctor)
     version = sub.add_parser("version", help="打印版本")
     version.set_defaults(func=lambda _a: print(__version__) or 0)
 
@@ -574,6 +577,17 @@ def cmd_audit_diff(args: argparse.Namespace) -> int:
     diff = diff_logs(args.a, args.b)
     print(json.dumps(diff.as_dict(), ensure_ascii=False, indent=2))
     return 0
+
+
+def cmd_doctor(args: argparse.Namespace) -> int:
+    from .doctor import render, run_doctor
+
+    report = run_doctor()
+    if args.json:
+        print(json.dumps(report.as_dict(), ensure_ascii=False, indent=2))
+    else:
+        print(render(report))
+    return 0 if report.ok else 1
 
 
 def main(argv: list[str] | None = None) -> int:

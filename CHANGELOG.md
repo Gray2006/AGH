@@ -2,6 +2,23 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [2.19.0] - 2026-11-25
+
+`agh doctor`：装完先跑这个，看哪一项没准备好。
+
+### Added
+
+- `agh doctor [--json]`：检查 Python 版本、临时目录可写、冻结配置存在、模型 key、
+  nats-py、git；全通过返回 0，有问题返回 1
+- 不读凭证内容，只报「有没有」
+- 4 条测试：检查项齐全、不泄漏 key 值、渲染、CLI
+
+### Notes
+
+- **没有模型 key 不算失败**：审计、校验、重放、报告都不需要它，只有跑模型才需要。
+  这条做成 FAIL 会误导用户以为装坏了
+- 这是「装完自检」而不是「健康监控」：只查静态条件，不跑网络
+
 ## [2.18.1] - 2026-11-25
 
 发布流程进 CI。
