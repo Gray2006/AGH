@@ -444,6 +444,10 @@ def build_parser() -> argparse.ArgumentParser:
         help="字段映射，例如 --map prompt=input_text --map response=output_text",
     )
     imp.set_defaults(func=cmd_import)
+    audit_diff = sub.add_parser("audit-diff", help="比较两份审计日志")
+    audit_diff.add_argument("--a", required=True)
+    audit_diff.add_argument("--b", required=True)
+    audit_diff.set_defaults(func=cmd_audit_diff)
     version = sub.add_parser("version", help="打印版本")
     version.set_defaults(func=lambda _a: print(__version__) or 0)
 
@@ -559,6 +563,16 @@ def cmd_import(args: argparse.Namespace) -> int:
     out = args.out or str(Path(args.from_jsonl).with_suffix(".agh.jsonl"))
     result = import_any(args.from_jsonl, out, fmt=args.format, mapping=parse_map(args.map))
     print(json.dumps(result.as_dict(), ensure_ascii=False, indent=2))
+    return 0
+
+
+def cmd_audit_diff(args: argparse.Namespace) -> int:
+    from .auditdiff import diff_logs
+
+    _require_file(args.a, "日志 A")
+    _require_file(args.b, "日志 B")
+    diff = diff_logs(args.a, args.b)
+    print(json.dumps(diff.as_dict(), ensure_ascii=False, indent=2))
     return 0
 
 

@@ -2,6 +2,22 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [2.18.0] - 2026-11-25
+
+`agh audit-diff`：比较两份日志，看哪些调用是新的、哪些消失了。
+
+### Added
+
+- `agh audit-diff --a run1.jsonl --b run2.jsonl`：输出新增/消失的 call_id、共同条数、
+  两边统计（调用数 / tokens / 各模型计数）
+- 自动提示：b 比 a 多几次调用、tokens 变化、a 的记录是否全部消失
+- 5 条测试：相同日志无差异、新增、全部替换、CLI、缺文件报错
+
+### Notes
+
+- 用途：比较「导入前 vs 导入后」、两次运行、或换模型前后的调用分布
+- 只比较 `llm.call` 事件，其它事件类型不参与
+
 ## [2.17.0] - 2026-11-25
 
 审计报告加筛选：按模型、只看已标记、全文搜索。

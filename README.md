@@ -4,7 +4,7 @@
 
 **Agent Gestalt Hierarchy**：多智能体「整体重构」框架的 M0 垂直切片。母体发骨架与契约，子级按整体重构而不是拼零件，回传带签名与出处；写入门、竞技场、仲裁、治理机、预算账本、哈希链日志串成一条可跑、可测、可重放的链路。
 
-> 状态：M0（v2.17.0）。子级默认是**规则重构器**；LLM 子级与 LLM 变异器是可插拔的，已有实测数据。M0 管线与 LLM 变异路径都支持 L1 逐位重放。
+> 状态：M0（v2.18.0）。子级默认是**规则重构器**；LLM 子级与 LLM 变异器是可插拔的，已有实测数据。M0 管线与 LLM 变异路径都支持 L1 逐位重放。
 
 ```
 母体 M0
@@ -535,7 +535,9 @@ agh import --from-jsonl other.jsonl --map model=model_name --map prompt=input_te
 ```bash
 agh import --from-jsonl langfuse-export.jsonl            # 自动识别
 agh import --from-jsonl runs.jsonl --format langsmith    # 强制指定
-```
+`
+
+三种接入方式的完整说明（含代码示例与边界）见 [docs/import-guide.md](docs/import-guide.md)。``
 
 **边界**：导入是事后记录，它证明「这份日志从导入那一刻起没被改」，不能证明「导入时那条记录本身没被改」。要链上原始调用，得在调用发生时就用 `AuditSession.call()`。
 
