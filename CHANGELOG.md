@@ -2,6 +2,21 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [2.25.6] - 2026-11-25
+
+`agh ui` 的报告顶部加校验状态徽章。
+
+### Added
+
+- HTML 报告顶部显示「哈希链校验通过」；`build_report` 输出 `verified: true`
+- 1 条测试
+
+### Notes
+
+- 之前校验状态只在 CLI 的 JSON 输出里，打开 HTML 的人看不到
+- 「校验通过」在生产路径上等价于「没抛异常」——`build_report` 里 `log.verify()` 失败会直接拒绝生成，
+  所以走到渲染这一步就一定是通过的
+
 ## [2.25.5] - 2026-11-25
 
 README 说清楚 PyPI 版本落后，并验证 release workflow 的构建路径可用。

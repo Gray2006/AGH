@@ -44,6 +44,7 @@ tr:last-child td { border-bottom:none; }
 code { font-family:ui-monospace,Consolas,monospace; font-size:12px; color:var(--accent);
        word-break:break-all; }
 .pill { display:inline-block; padding:1px 8px; border-radius:999px; font-size:11.5px; }
+#verify { margin-top:8px; }
 .p-ok { background:rgba(63,185,80,.15); color:var(--ok); }
 .p-bad { background:rgba(248,81,73,.15); color:var(--bad); }
 .p-warn { background:rgba(210,153,34,.15); color:var(--warn); }
@@ -65,6 +66,7 @@ footer { padding:14px 28px 28px; color:var(--muted); font-size:12px; border-top:
 <header>
   <h1 id="title">AGH 审计报告</h1>
   <div class="sub" id="meta"></div>
+  <div id="verify"></div>
 </header>
 <div class="cards" id="cards"></div>
 <section>
@@ -98,6 +100,10 @@ const text = (tag, value, cls) => {
 const short = (s, n) => { s = String(s || ""); return s.length > n ? s.slice(0, n) + "…" : s; };
 
 $("title").textContent = DATA.title || "AGH 审计报告";
+const badge = document.createElement("span");
+badge.className = DATA.verified ? "pill p-ok" : "pill p-bad";
+badge.textContent = DATA.verified ? "哈希链校验通过" : "哈希链校验未通过";
+$("verify").appendChild(badge);
 $("meta").textContent = `日志：${DATA.log}　链头：${DATA.head.slice(0, 16)}　事件：${DATA.entries}`;
 $("footer").textContent = DATA.footer;
 if (DATA.truncated) {
