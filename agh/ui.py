@@ -100,6 +100,12 @@ const short = (s, n) => { s = String(s || ""); return s.length > n ? s.slice(0, 
 $("title").textContent = DATA.title || "AGH 审计报告";
 $("meta").textContent = `日志：${DATA.log}　链头：${DATA.head.slice(0, 16)}　事件：${DATA.entries}`;
 $("footer").textContent = DATA.footer;
+if (DATA.truncated) {
+  const msg = `日志共 ${DATA.total_calls} 次调用，报告只渲染前 ${DATA.calls.length} 条`
+    + `（已标记的优先保留）。用 --max-calls 调整。`;
+  const banner = text("div", msg, "empty");
+  document.querySelector("header").appendChild(banner);
+}
 
 const cards = [
   ["调用次数", DATA.summary.calls],
@@ -218,7 +224,9 @@ def _brief(event_type: str, payload: dict[str, Any]) -> str:
     return ", ".join(f"{k}={payload[k]}" for k in keys)
 
 
-def build_report(log_path: str | Path, *, title: str = "AGH 审计报告") -> dict[str, Any]:
+def build_report(
+    log_path: str | Path, *, title: str = "AGH 审计报告", max_calls: int | None = None
+) -> dict[str, Any]:
     path = Path(log_path)
     log = EventLog(path)
     log.verify()
@@ -250,8 +258,26 @@ def build_report(log_path: str | Path, *, title: str = "AGH 审计报告") -> di
                 }
             )
 
+    total_calls = len(calls)
+    truncated = False
+    if max_calls is not None and total_calls > max_calls:
+        # 大日志（几万条）会把 HTML 撑到几十 MB，浏览器直接卡死。
+        # 截断时保留标记过的调用，其余按原顺序取前 N 条。
+        flagged_ids = {f["call_id"] for f in flags}
+        kept = [c for c in calls if c["call_id"] in flagged_ids][:max_calls]
+        kept_ids = {c["call_id"] for c in kept}
+        for call in calls:
+            if len(kept) >= max_calls:
+                break
+            if call["call_id"] not in kept_ids:
+                kept.append(call)
+        calls = kept
+        truncated = True
+
     return {
         "title": title,
+        "truncated": truncated,
+        "total_calls": total_calls,
         "log": str(path),
         "head": log.head(),
         "entries": len(log.entries),
@@ -268,8 +294,8 @@ def build_report(log_path: str | Path, *, title: str = "AGH 审计报告") -> di
     }
 
 
-def render_html(log_path: str | Path) -> str:
-    data = build_report(log_path)
+def render_html(log_path: str | Path, *, max_calls: int | None = None) -> str:
+    data = build_report(log_path, max_calls=max_calls)
     payload = json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
     return _TEMPLATE.replace("__DATA__", payload)
 

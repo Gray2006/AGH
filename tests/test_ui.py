@@ -101,3 +101,38 @@ def test_ui_has_filters(tmp_path: Path) -> None:
     assert 'id="f-search"' in html
     assert "renderCalls" in html
     assert "__DATA__" not in html
+
+
+def _big_log(tmp_path: Path, n: int) -> Path:
+    path = tmp_path / "big.jsonl"
+    audit = AuditSession(path)
+    last = ""
+    for i in range(n):
+        last = audit.call(model="m", prompt=f"p{i}", response=f"r{i}", tokens=1)
+    audit.flag(last, reason="wrong")
+    return path
+
+
+def test_large_log_is_truncated(tmp_path: Path) -> None:
+    from agh.ui import build_report
+
+    report = build_report(_big_log(tmp_path, 30), max_calls=10)
+    assert report["truncated"] is True
+    assert report["total_calls"] == 30
+    assert len(report["calls"]) == 10
+
+
+def test_truncation_keeps_flagged_calls(tmp_path: Path) -> None:
+    from agh.ui import build_report
+
+    report = build_report(_big_log(tmp_path, 30), max_calls=5)
+    flagged_id = report["flags"][0]["call_id"]
+    assert any(c["call_id"] == flagged_id for c in report["calls"])
+
+
+def test_no_truncation_under_limit(tmp_path: Path) -> None:
+    from agh.ui import build_report
+
+    report = build_report(_big_log(tmp_path, 5), max_calls=10)
+    assert report["truncated"] is False
+    assert len(report["calls"]) == 5

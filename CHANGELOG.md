@@ -2,6 +2,22 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [2.19.1] - 2026-11-25
+
+大日志不再撑爆报告：`agh ui --max-calls`。
+
+### Added
+
+- `--max-calls N`：超过 N 条时只渲染 N 条，页面顶部提示「共 X 条，显示前 N 条」
+- 截断时**优先保留被标记的调用**，再按原顺序补足
+- 3 条测试：截断生效、标记优先保留、不超限不截断
+
+### Notes
+
+- 几万条调用的 HTML 会有几十 MB，浏览器直接卡死。这是「单文件可分发」的代价，
+  截断是折中：报告仍然完整可读，只是不全
+- 需要全量分析时用 `agh audit summary` / `audit-diff`，它们不渲染 HTML
+
 ## [2.19.0] - 2026-11-25
 
 `agh doctor`：装完先跑这个，看哪一项没准备好。
