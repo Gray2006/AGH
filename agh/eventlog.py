@@ -44,6 +44,27 @@ def _entry_hash(seq: int, ts: int, type_: str, payload: dict, prev_hash: str) ->
 GENESIS = "0" * 64
 
 
+def iter_entries(path: Path):
+    """流式解析 JSONL 日志，逐条 yield LogEntry。解析失败抛 LogTampered。"""
+    text = Path(path).read_text(encoding="utf-8")
+    # 只按 \n 分：JSONL 的换行就是 \n，splitlines 会认 U+2028 等
+    for lineno, line in enumerate(text.split("\n"), 1):
+        if not line.strip():
+            continue
+        try:
+            raw = json.loads(line)
+            yield LogEntry(
+                seq=raw["seq"],
+                ts=raw["ts"],
+                type=raw["type"],
+                payload=raw["payload"],
+                prev_hash=raw["prev_hash"],
+                hash=raw["hash"],
+            )
+        except (ValueError, KeyError, TypeError) as exc:
+            raise LogTampered(f"日志格式损坏（第 {lineno} 条）：{exc}") from exc
+
+
 class EventLog:
     def __init__(
         self,
@@ -92,30 +113,14 @@ class EventLog:
                 )
         return entry
 
+    def stream(self):
+        """逐条产出，不把整个日志留在内存里。大日志统计用这个。"""
+        assert self.path is not None
+        yield from iter_entries(self.path)
+
     def read(self) -> list[LogEntry]:
         assert self.path is not None
-        out: list[LogEntry] = []
-        # 只按 \n 分：JSONL 的换行就是 \n。splitlines() 还会认 U+2028/VT/FF，
-        # 日志内容里带这些字符时会把一条记录切成两半。
-        for line in self.path.read_text(encoding="utf-8").split("\n"):
-            if not line.strip():
-                continue
-            try:
-                raw = json.loads(line)
-                out.append(
-                    LogEntry(
-                        seq=raw["seq"],
-                        ts=raw["ts"],
-                        type=raw["type"],
-                        payload=raw["payload"],
-                        prev_hash=raw["prev_hash"],
-                        hash=raw["hash"],
-                    )
-                )
-            except (ValueError, KeyError, TypeError) as exc:
-                # 解析不了的行就是损坏，不能让它以 KeyError 的形式冒到用户面前
-                raise LogTampered(f"日志格式损坏（第 {len(out) + 1} 条）：{exc}") from exc
-        return out
+        return list(iter_entries(self.path))
 
     def head(self) -> str:
         """当前链头哈希（空日志返回 GENESIS）。"""

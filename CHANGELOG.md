@@ -2,6 +2,26 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [2.20.2] - 2026-11-25
+
+日志解析抽成流式迭代器，顺手修掉一次双读。
+
+### Changed
+
+- `eventlog.iter_entries(path)`：模块级流式解析，逐条 yield，解析失败抛 `LogTampered`
+- `EventLog.read()` 改为 `list(iter_entries(...))`，解析逻辑只剩一份
+- `EventLog.stream()`：给大日志留的流式入口
+
+### Fixed
+
+- 第一次改 `audit-stats` 时用了 `stream()`，但 `EventLog` 构造时已经全量读入，
+  等于每条日志读两遍。改回直接用 `entries`——5000 条统计 0.08s
+
+### Notes
+
+- 真正的大日志优化要改 `EventLog` 的构造语义（惰性读），影响面太大，暂不做
+- 当前性能：5000 条 0.08s，10 万条约 1.6s，可接受
+
 ## [2.20.1] - 2026-11-25
 
 `docs/what-it-proves.md`：项目的自我审计。

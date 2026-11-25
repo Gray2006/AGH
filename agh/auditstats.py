@@ -51,6 +51,8 @@ def compute_stats(log_path: str | Path) -> AuditStats:
     path = Path(log_path)
     log = EventLog(path)
     log.verify()
+    # EventLog 构造时已全量读入并校验；再 stream 一遍等于读两遍，这里直接用 entries
+    entries = log.entries
 
     models: dict[str, dict[str, int]] = defaultdict(lambda: {"calls": 0, "tokens": 0})
     hours: Counter[str] = Counter()
@@ -59,7 +61,7 @@ def compute_stats(log_path: str | Path) -> AuditStats:
     flags = 0
     stamps: list[int] = []
 
-    for entry in log.entries:
+    for entry in entries:
         if entry.ts:
             stamps.append(entry.ts)
         if entry.type == "llm.flag":
