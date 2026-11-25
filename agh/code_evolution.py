@@ -50,13 +50,32 @@ class PolicyEval:
         return self.score - self.lam * (self.calls / len(self.per_task))
 
 
+LADDER_GATE = 0.8
+
+
 def evaluate_policy(
-    policy: SolverPolicy, tasks: Sequence[CodeTask], complete: Callable[[str], str], lam: float = 0.01
+    policy: SolverPolicy,
+    tasks: Sequence[CodeTask],
+    complete: Callable[[str], str],
+    lam: float = 0.01,
+    ladder: bool = False,
 ) -> PolicyEval:
+    """`ladder=True` 时按分级目标打分（Locke & Latham：具体 + 有难度 + 有反馈）。
+
+    第一层是公开用例：没过之前 hidden 权重为 0，梯度集中在「先让公开用例通过」；
+    过了才把 hidden 算进来。
+    """
     outs = [solve_task(t, complete, policy) for t in tasks]
+    hidden = tuple(o.hidden_score for o in outs)
+    if ladder:
+        visible_rate = sum(o.chosen_visible for o in outs) / max(1, len(outs))
+        gate = 1.0 if visible_rate >= LADDER_GATE else 0.0
+        scores = tuple(0.5 * visible_rate + 0.5 * gate * h for h in hidden)
+    else:
+        scores = hidden
     return PolicyEval(
         policy,
-        tuple(o.hidden_score for o in outs),
+        scores,
         sum(o.calls for o in outs),
         lam,
         sum(o.call_errors for o in outs),
@@ -126,6 +145,7 @@ def _search(
     lam: float,
     start: SolverPolicy,
     reward: str = "absolute",
+    ladder: bool = False,
 ) -> SearchResult:
     rng = random.Random(seed)
     cache: dict[str, PolicyEval] = {}
@@ -142,7 +162,7 @@ def _search(
             # 预算软上限：至少评估一个候选，否则调用预算小于单次成本时无从比较
             if archive and spent + cost > call_budget:
                 break
-            ev = evaluate_policy(candidate, train, complete, lam)
+            ev = evaluate_policy(candidate, train, complete, lam, ladder)
             cache[key] = ev
             best_before = max((e.fitness for e in archive), default=0.0)
             ev = replace(ev, progress=ev.fitness - best_before)
@@ -177,7 +197,7 @@ def _random_propose(_archive: list[PolicyEval], rng: random.Random) -> SolverPol
 
 
 def evolve_policy(
-    train, complete, call_budget, seed=0, lam=0.01, start=None, reward="absolute"
+    train, complete, call_budget, seed=0, lam=0.01, start=None, reward="absolute", ladder=False
 ) -> SearchResult:
     return _search(
         "evolution",
@@ -189,15 +209,16 @@ def evolve_policy(
         lam,
         start or SolverPolicy(),
         reward,
+        ladder,
     )
 
 
 def random_search(
-    train, complete, call_budget, seed=0, lam=0.01, reward="absolute"
+    train, complete, call_budget, seed=0, lam=0.01, reward="absolute", ladder=False
 ) -> SearchResult:
     start = random_policy(random.Random(seed))
     return _search(
-        "random", _random_propose, train, complete, call_budget, seed, lam, start, reward
+        "random", _random_propose, train, complete, call_budget, seed, lam, start, reward, ladder
     )
 
 

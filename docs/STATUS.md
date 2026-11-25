@@ -1,4 +1,4 @@
-# AGH 状态交接（v2.13.0，2026-11-25）
+# AGH 状态交接（v2.14.0，2026-11-25）
 
 > 新会话先读这个文件，再读 `README.md` 的「版本与兼容」与 `memory/agh.md`。
 
@@ -88,6 +88,7 @@ python scripts/score_labels.py --labels ... --candidates ...
 | 学习进步奖励（LP） | 离线：absolute 0.5625/0.875/0.875 vs progress 0.5/0.9375/1.0，随机更好 | 中（模拟模型） |
 | 扩大策略空间（135→270） | absolute 下 evolution 0.9375 vs baseline 0.5，区间不跨零（首次显著） | 中（模拟模型） |
 | mutate 的 rounds 基因 | 分支列表漏写 → 该基因从未被选中，已修 | 高 |
+| 分级目标（ladder） | 离线：与单一分数完全相同（0.5/0.9375/0.75），闸门几乎总开着 | 中（模拟模型） |
 | 锚定篡改检出 | 改一条 payload → `LogTampered: 数据被改动于 seq=6`；未篡改 → `signature_verified: true` | 高 |
 | 真实失败样本（8 条） | 种子均值 0.37887 → 规则/LLM 均 0.42151 后停滞；LLM 20107 tokens | 中高（各 1 次） |
 | git tag 锚点 | 写 tag 后读回 head/size/label 一致 | 高（单测） |

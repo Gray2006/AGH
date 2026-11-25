@@ -39,6 +39,7 @@ def main() -> int:
         default="absolute",
         help="父代选择依据：绝对分数，还是相对上一步的进步（Oudeyer 学习进步假设）",
     )
+    p.add_argument("--ladder", action="store_true", help="分级目标：先过公开用例，再看 hidden")
     p.add_argument("--held-out", type=int, default=4)
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--p-correct", type=float, default=0.4, help="仅 --simulate")
@@ -58,10 +59,10 @@ def main() -> int:
     train, test = split_tasks(list(TASKS.values()), args.held_out, seed=args.seed)
     results = {
         "evolution": evolve_policy(
-            train, complete, args.budget, seed=args.seed, reward=args.reward
+            train, complete, args.budget, seed=args.seed, reward=args.reward, ladder=args.ladder
         ),
         "random": random_search(
-            train, complete, args.budget, seed=args.seed, reward=args.reward
+            train, complete, args.budget, seed=args.seed, reward=args.reward, ladder=args.ladder
         ),
     }
     report = held_out_report(results, SolverPolicy(), test, complete)

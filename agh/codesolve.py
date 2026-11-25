@@ -101,6 +101,7 @@ class SolveOutcome:
     hidden_score: float  # 只用于评估，不参与选择
     oracle_hit: bool  # N 个候选里是否至少有一个 hidden 全对（pass@N 的上限）
     call_errors: int = 0  # 模型调用失败的次数；与「模型答错」分开记，否则会误判能力
+    chosen_visible: float = 0.0  # 选中候选在公开用例上的分数（分级目标的第一层）
 
 
 def solve_task(task: CodeTask, complete: Callable[[str], str], policy: SolverPolicy) -> SolveOutcome:
@@ -156,6 +157,7 @@ def solve_task(task: CodeTask, complete: Callable[[str], str], policy: SolverPol
         hidden,
         oracle,
         errors,
+        vis[idx],
     )
 
 

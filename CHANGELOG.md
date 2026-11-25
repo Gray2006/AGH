@@ -2,6 +2,33 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [2.14.0] - 2026-11-25
+
+分级目标（goal ladder）：先过公开用例，再看 hidden。
+
+### Added
+
+- `evaluate_policy(..., ladder=True)`：公开用例通过率低于 0.8 时 hidden 权重为 0，
+  分数由 visible 主导；过闸后才把 hidden 算进来（Locke & Latham：具体 + 有难度 + 有反馈）
+- `SolveOutcome.chosen_visible`：选中候选在公开用例上的分数
+- `scripts/run_code_bench.py --ladder`
+
+### Measured（离线模拟模型，budget 600，15 题）
+
+| 模式 | baseline | evolution | random | evolution − baseline |
+|---|---|---|---|---|
+| 单一分数 | 0.5 | 0.9375 | 0.75 | 区间不跨零 |
+| 分级目标 | 0.5 | 0.9375 | 0.75 | 区间不跨零 |
+
+**没有差异**。原因：模拟模型的公开用例通过率本来就高，闸门几乎总是开着，
+分级等于没分。要测出分级的作用，需要一个「公开用例难过、hidden 更难」的任务族。
+
+### Notes
+
+- 分级目标的实现是「闸门 + 加权」，不是「多阶段训练」——后者需要任务族支持
+- 这一版把 SDT/SRL/目标设定/实施意图里能直接落地的两项（LP、分级）都做了，
+  两项都没测出收益。剩下两项（if-then 策略、自主选择）需要新任务族，暂不做
+
 ## [2.13.0] - 2026-11-25
 
 扩大策略空间后，进化第一次显著优于 baseline；同轮否掉 LP 奖励。
