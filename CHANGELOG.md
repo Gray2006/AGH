@@ -2,6 +2,26 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [2.26.1] - 2026-11-25
+
+真实调用示例：`examples/trace_real_call.py`。
+
+### Added
+
+- 用 command-code 通道跑两次真实调用，全程记进审计日志，然后校验、统计、出报告
+- 从 `client.last_usage` 取真实 token 数（实测 268），不再是 0
+- 没有 API key 时直接跳过（返回 0），不算失败
+- 调用失败也记录成 `llm.error` 事件，不静默跳过
+
+### Verified
+
+本地实跑：两次调用 → `哈希链校验通过` → 统计显示 `2 次 / 268 tokens` → 报告生成。
+
+### Notes
+
+- 这和 `demo_import.py` 的区别：那个演示「导入别人的日志」，这个演示「自己记一条真实调用」
+- 两个示例都不进 CI（需要网络和 key），但 `ruff check examples` 覆盖语法与风格
+
 ## [2.26.0] - 2026-11-25
 
 文档站进 CI：`mkdocs build --strict` 通过，产物作为 artifact。
