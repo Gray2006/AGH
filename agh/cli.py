@@ -456,6 +456,11 @@ def build_parser() -> argparse.ArgumentParser:
     audit_stats.add_argument("--log", required=True)
     audit_stats.add_argument("--json", action="store_true")
     audit_stats.set_defaults(func=cmd_audit_stats)
+    timeline = sub.add_parser("audit-timeline", help="按顺序看事件")
+    timeline.add_argument("--log", required=True)
+    timeline.add_argument("--limit", type=int, default=0, help="只看最后 N 条，0 表示全部")
+    timeline.add_argument("--json", action="store_true")
+    timeline.set_defaults(func=cmd_timeline)
     version = sub.add_parser("version", help="打印版本")
     version.set_defaults(func=lambda _a: print(__version__) or 0)
 
@@ -604,6 +609,44 @@ def cmd_audit_stats(args: argparse.Namespace) -> int:
         print(json.dumps(stats.as_dict(), ensure_ascii=False, indent=2))
     else:
         print(render(stats))
+    return 0
+
+
+def cmd_timeline(args: argparse.Namespace) -> int:
+    from .eventlog import EventLog
+
+    def _brief(kind: str, payload: dict) -> str:
+        if kind == "llm.call":
+            return f"{payload.get('model', '')} · {payload.get('tokens', 0)} tokens"
+        if kind == "llm.flag":
+            return f"{payload.get('reason', '')} · {payload.get('note', '')}"
+        if kind == "session.start":
+            return f"label={payload.get('label', '')}"
+        if kind == "session.end":
+            return "ok" if payload.get("ok") else f"异常：{payload.get('error', '')}"
+        keys = list(payload)[:3]
+        return ", ".join(f"{k}={payload[k]}" for k in keys)
+
+    _require_file(args.log)
+    log = EventLog(args.log)
+    log.verify()
+    entries = log.entries[-args.limit :] if args.limit else log.entries
+    rows = []
+    for entry in entries:
+        payload = entry.payload
+        rows.append(
+            {
+                "seq": entry.seq,
+                "ts": entry.ts,
+                "type": entry.type,
+                "brief": _brief(entry.type, payload),
+            }
+        )
+    if args.json:
+        print(json.dumps(rows, ensure_ascii=False, indent=2))
+    else:
+        for row in rows:
+            print(f"{row['seq']:>4}  {row['type']:<22} {row['brief']}")
     return 0
 
 

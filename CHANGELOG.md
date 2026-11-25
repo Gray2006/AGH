@@ -2,6 +2,21 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [2.23.0] - 2026-11-25
+
+`agh audit-timeline`：按顺序看事件，`--limit` 看最近 N 条。
+
+### Added
+
+- `agh audit-timeline --log run.jsonl [--limit N] [--json]`：序号、事件类型、摘要
+- `ledger` 显式导出 `BudgetVector`（此前是隐式转发，mypy strict 会报 attr-defined）
+
+### Notes
+
+- 和 `agh ui` 的时间线视图互补：这个是给脚本和终端用的，`ui` 是给浏览器看的
+- 事件摘要规则：llm.call 显示模型和 tokens，llm.flag 显示原因和备注，
+  session.start/end 显示 label 和状态，其它取前三个字段
+
 ## [2.22.0] - 2026-11-25
 
 可运行的端到端示例：`examples/demo_import.py`。
