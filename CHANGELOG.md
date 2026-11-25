@@ -2,6 +2,21 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [2.20.0] - 2026-11-25
+
+`agh audit-stats`：按模型和小时看一份日志的分布。
+
+### Added
+
+- `agh audit-stats --log run.jsonl [--json]`：总调用/tokens/标记数、按模型聚合、
+  按小时聚合、时间范围、token 消耗最多的模型
+- 5 条测试：按模型聚合、时间范围、渲染、CLI、缺文件
+
+### Notes
+
+- 和 `audit-diff` 互补：diff 比较两份，stats 看一份的分布
+- 按小时聚合用事件时间戳（UTC），跨时区分析要自己换算
+
 ## [2.19.1] - 2026-11-25
 
 大日志不再撑爆报告：`agh ui --max-calls`。

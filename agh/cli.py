@@ -452,6 +452,10 @@ def build_parser() -> argparse.ArgumentParser:
     doctor = sub.add_parser("doctor", help="环境自检")
     doctor.add_argument("--json", action="store_true")
     doctor.set_defaults(func=cmd_doctor)
+    audit_stats = sub.add_parser("audit-stats", help="按模型/小时统计一份日志")
+    audit_stats.add_argument("--log", required=True)
+    audit_stats.add_argument("--json", action="store_true")
+    audit_stats.set_defaults(func=cmd_audit_stats)
     version = sub.add_parser("version", help="打印版本")
     version.set_defaults(func=lambda _a: print(__version__) or 0)
 
@@ -589,6 +593,18 @@ def cmd_doctor(args: argparse.Namespace) -> int:
     else:
         print(render(report))
     return 0 if report.ok else 1
+
+
+def cmd_audit_stats(args: argparse.Namespace) -> int:
+    from .auditstats import compute_stats, render
+
+    _require_file(args.log)
+    stats = compute_stats(args.log)
+    if args.json:
+        print(json.dumps(stats.as_dict(), ensure_ascii=False, indent=2))
+    else:
+        print(render(stats))
+    return 0
 
 
 def main(argv: list[str] | None = None) -> int:
