@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 
 from agh.eventlog import EventLog
-from agh.importers import import_jsonl, parse_map
+from agh.importers import import_any, import_jsonl, parse_map
 
 
 def _src(tmp_path: Path) -> Path:
@@ -84,3 +84,86 @@ def test_reimport_overwrites(tmp_path: Path) -> None:
     log = EventLog(out)
     calls = [e for e in log.entries if e.type == "llm.call"]
     assert len(calls) == 2
+
+
+def test_langfuse_export_roundtrip(tmp_path: Path) -> None:
+    src = tmp_path / "langfuse.jsonl"
+    src.write_text(
+        json.dumps(
+            {
+                "type": "generation",
+                "trace_id": "t1",
+                "input": "把 [3,1,2] 排序",
+                "output": "[1,2,3]",
+                "model": "gpt-x",
+                "usage": {"input": 10, "output": 5},
+            },
+            ensure_ascii=False,
+        ),
+        encoding="utf-8",
+    )
+    result = import_any(src, tmp_path / "out.jsonl")
+    assert result.detected_format == "langfuse"
+    assert result.imported == 1
+    log = EventLog(result.out)
+    call = next(e for e in log.entries if e.type == "llm.call")
+    assert call.payload["model"] == "gpt-x"
+    assert call.payload["tokens"] == 15
+    assert "排序" in call.payload["prompt"]
+
+
+def test_langsmith_export_roundtrip(tmp_path: Path) -> None:
+    src = tmp_path / "langsmith.jsonl"
+    src.write_text(
+        json.dumps(
+            {
+                "run_type": "llm",
+                "inputs": {"messages": [{"role": "user", "content": "什么是哈希链"}]},
+                "outputs": {
+                    "messages": [{"role": "assistant", "content": "一种链式结构"}],
+                    "token_usage": {"prompt_tokens": 7, "completion_tokens": 3},
+                },
+                "extra": {"metadata": {"ls_model_name": "claude-x"}},
+            },
+            ensure_ascii=False,
+        ),
+        encoding="utf-8",
+    )
+    result = import_any(src, tmp_path / "out.jsonl")
+    assert result.detected_format == "langsmith"
+    log = EventLog(result.out)
+    call = next(e for e in log.entries if e.type == "llm.call")
+    assert call.payload["model"] == "claude-x"
+    assert call.payload["prompt"] == "什么是哈希链"
+    assert call.payload["response"] == "一种链式结构"
+    assert call.payload["tokens"] == 10
+
+
+def test_langsmith_skips_non_llm_runs(tmp_path: Path) -> None:
+    src = tmp_path / "ls.jsonl"
+    src.write_text(
+        "\n".join(
+            [
+                json.dumps({"run_type": "chain", "inputs": {"a": 1}, "outputs": {"b": 2}}),
+                json.dumps(
+                    {
+                        "run_type": "llm",
+                        "inputs": {"messages": [{"content": "q"}]},
+                        "outputs": {"messages": [{"content": "a"}]},
+                    }
+                ),
+            ]
+        ),
+        encoding="utf-8",
+    )
+    result = import_any(src, tmp_path / "out.jsonl")
+    assert result.imported == 1
+    assert result.skipped == 1
+
+
+def test_format_flag_overrides_detection(tmp_path: Path) -> None:
+    src = tmp_path / "x.jsonl"
+    src.write_text(json.dumps({"model": "m", "prompt": "p", "response": "r"}), encoding="utf-8")
+    result = import_any(src, tmp_path / "out.jsonl", fmt="generic")
+    assert result.detected_format == "generic"
+    assert result.imported == 1

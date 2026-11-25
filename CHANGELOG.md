@@ -2,6 +2,24 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [2.16.0] - 2026-11-25
+
+`agh import` 支持 Langfuse / LangSmith 导出，带格式自动识别。
+
+### Added
+
+- `import_any(..., fmt="auto"|"generic"|"langfuse"|"langsmith")`：按第一行判断来源格式
+- Langfuse：读 `type` / `input` / `output` / `model` / `usage`（`usage.input + usage.output` 算 tokens）
+- LangSmith：读 `run_type=llm` 的 `inputs.messages` / `outputs.messages`，
+  模型名从 `extra.metadata.ls_model_name` 取；`chain`/`tool` 等非 llm run 跳过
+- CLI `--format`，默认 auto
+- 4 条测试：两种平台往返、非 llm run 跳过、强制格式
+
+### Notes
+
+- 自动识别只看第一行：混合格式的文件需要显式 `--format`
+- 仍是事后记录，不改变「导入前无法证明」的边界
+
 ## [2.15.2] - 2026-11-25
 
 多 bug 模块也不难：`debug_textstats` 两次尝试都全对，难度路线彻底关闭。

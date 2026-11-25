@@ -432,6 +432,12 @@ def build_parser() -> argparse.ArgumentParser:
     imp.add_argument("--from-jsonl", required=True)
     imp.add_argument("--out", default=None)
     imp.add_argument(
+        "--format",
+        choices=["auto", "generic", "langfuse", "langsmith"],
+        default="auto",
+        help="源日志格式；auto 按第一行判断",
+    )
+    imp.add_argument(
         "--map",
         action="append",
         default=None,
@@ -547,11 +553,11 @@ def cmd_ui(args: argparse.Namespace) -> int:
 
 
 def cmd_import(args: argparse.Namespace) -> int:
-    from .importers import import_jsonl, parse_map
+    from .importers import import_any, parse_map
 
     _require_file(args.from_jsonl, "源日志")
     out = args.out or str(Path(args.from_jsonl).with_suffix(".agh.jsonl"))
-    result = import_jsonl(args.from_jsonl, out, mapping=parse_map(args.map))
+    result = import_any(args.from_jsonl, out, fmt=args.format, mapping=parse_map(args.map))
     print(json.dumps(result.as_dict(), ensure_ascii=False, indent=2))
     return 0
 

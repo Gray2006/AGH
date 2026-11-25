@@ -4,7 +4,7 @@
 
 **Agent Gestalt Hierarchy** — an M0 vertical slice of a multi-agent "gestalt reconstruction" framework. A parent issues a skeleton and a contract; children reconstruct the whole rather than reassembling parts; every submission is signed and provenance-checked. Gate, arena, arbitration, governance, budget ledger and a hash-chained log form one runnable, testable, replayable pipeline.
 
-> Status: M0 (v2.15.2). The default child is a **rule-based reconstructor**; LLM children and the LLM mutator are pluggable and already measured. Both the M0 pipeline and the LLM mutation path support bit-exact L1 replay.
+> Status: M0 (v2.16.0). The default child is a **rule-based reconstructor**; LLM children and the LLM mutator are pluggable and already measured. Both the M0 pipeline and the LLM mutation path support bit-exact L1 replay.
 
 ```
 Parent M0
@@ -538,6 +538,21 @@ agh import --from-jsonl other.jsonl --map model=model_name --map prompt=input_te
 
 One JSON object per line, at least `model` / `prompt` / `response` (`tokens` optional). Lines with missing fields or
 bad JSON are skipped and counted.
+
+### Supported source formats
+
+`agh import` reads three export shapes; `--format auto` (default) sniffs the first line:
+
+| Format | Fields | Notes |
+|---|---|---|
+| generic | `model` / `prompt` / `response` / `tokens` | your own jsonl; `--map` renames fields |
+| langfuse | `type` / `input` / `output` / `model` / `usage` | Langfuse JSONL export |
+| langsmith | `run_type` / `inputs.messages` / `outputs.messages` | LangSmith run export; only `run_type=llm` |
+
+```bash
+agh import --from-jsonl langfuse-export.jsonl            # auto-detect
+agh import --from-jsonl runs.jsonl --format langsmith    # force
+```
 
 **Boundary**: an import is a retroactive record. It proves the log has not changed since import, not that the
 original record was truthful. To chain calls at source, use `AuditSession.call()` when the call happens.
