@@ -2,6 +2,21 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [2.25.2] - 2026-11-25
+
+用 vulture 扫死代码，清掉一个真参数和两处命名。
+
+### Changed
+
+- `experiment.run_experiment` 删掉 `benchmark` 参数：全仓库没有一处传它，是纯死参数
+- `AuditSession.__exit__` 的 `tb` 改名 `_tb`（协议要求，但确实不用）
+- `JetStreamLike.pull_subscribe` 的 `durable` 改名 `_durable`（同上）
+
+### Notes
+
+- vulture 80% 置信度现在无输出；60% 置信度的其余条目都是公共 API（被外部或测试调用），不删
+- 这类清理的价值不在代码量，在于「看到未使用的东西时不必再判断一次」
+
 ## [2.25.1] - 2026-11-25
 
 大日志自动截断：1 万条能生成 8MB HTML，浏览器打不开。

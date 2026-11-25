@@ -49,7 +49,7 @@ class AuditSession:
     def __enter__(self) -> AuditSession:
         return self
 
-    def __exit__(self, exc_type: Any, exc: Any, tb: Any) -> None:
+    def __exit__(self, exc_type: Any, exc: Any, _tb: Any) -> None:
         self.log.append(
             "session.end",
             {"ok": exc_type is None, "error": None if exc is None else repr(exc)},

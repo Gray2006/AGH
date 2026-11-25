@@ -195,7 +195,6 @@ def run_experiment(
     seeds: Iterable[int] = range(100),
     resamples: int = 2_000,
     alpha: float = 0.05,
-    benchmark: str = "seed",
     benign_arms: Sequence[str] | None = None,
 ) -> ExperimentReport:
     """跑多子级竞技场实验，返回带统计结论的报告。"""

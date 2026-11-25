@@ -1,6 +1,6 @@
 [project]
 name = "agh-gestalt"
-version = "2.25.1"
+version = "2.25.2"
 description = "Agent Gestalt Hierarchy (AGH): provenance-signed, budget-ledgered, replayable multi-agent reconstruction. M0 vertical slice."
 readme = "README.md"
 license = { text = "MIT" }
