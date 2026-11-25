@@ -2,6 +2,20 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [2.25.4] - 2026-11-25
+
+文档与实现的一致性测试：README 里写的命令必须真实存在。
+
+### Added
+
+- `tests/test_readme_commands.py`：从 README 代码块提取所有 `agh <command>`，
+  检查每个都在 CLI 里注册过；并逐个跑 `--help` 确认退出码为 0
+
+### Notes
+
+- 文档漂移是「看起来能用其实不能」的典型来源。这条测试让 README 里写错命令名时 CI 直接红
+- 包体积顺手查了：64 个文件、0.46 MB，只有 `agh/` 和 dist-info，没有打包进 tests 或 docs
+
 ## [2.25.3] - 2026-11-25
 
 `agh --help` 加了「常用路径」和「研究类命令」的区分。

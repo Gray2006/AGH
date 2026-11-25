@@ -1,4 +1,4 @@
-# AGH 状态交接（v2.25.3，2026-11-25）
+# AGH 状态交接（v2.25.4，2026-11-25）
 
 > 新会话先读这个文件，再读 `README.md` 的「版本与兼容」与 `memory/agh.md`。
 
@@ -112,6 +112,7 @@ python scripts/score_labels.py --labels ... --candidates ...
 | 大日志性能 | 1 万条：ui 0.38s/8MB（自动截断到 4.3MB），stats 0.33s | 高 |
 | 死代码清理 | vulture 80% 无输出；删 run_experiment 的死参数 | 高 |
 | CLI 帮助分组 | --help 加常用路径 epilog，研究类命令单独说明 | 高 |
+| 文档-实现一致性 | README 里的命令必须存在且 --help 能跑；包体积 0.46 MB | 高 |
 | 锚定篡改检出 | 改一条 payload → `LogTampered: 数据被改动于 seq=6`；未篡改 → `signature_verified: true` | 高 |
 | 真实失败样本（8 条） | 种子均值 0.37887 → 规则/LLM 均 0.42151 后停滞；LLM 20107 tokens | 中高（各 1 次） |
 | git tag 锚点 | 写 tag 后读回 head/size/label 一致 | 高（单测） |
