@@ -2,6 +2,28 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [2.29.2] - 2026-11-26
+
+`docs/security.md`：威胁模型、依赖清单、复查方法。
+
+### Added
+
+- 明确「防什么」与「不防什么」：防伪造/篡改/超预算/URL 诱导；不防恶意代码执行、
+  有 push 权限的人、密钥泄露、拒绝服务
+- 运行时依赖清单（只有四个包）
+- 复查命令：bandit 静态扫描、pip-audit 依赖漏洞、安全测试子集
+
+### Measured
+
+- bandit：High 0 / Medium 0
+- pip-audit 在开发环境报 `soupsieve` CVE——来自 `beautifulsoup4`（文档工具的间接依赖），
+  不在 AGH 运行时依赖里，不影响用户
+
+### Notes
+
+- 把「不防什么」写清楚比只列「防什么」更重要：执行验证器不隔离网络和文件权限，
+  评估不可信输出必须放进容器
+
 ## [2.29.1] - 2026-11-26
 
 修 v2.29.0 的 CI：package job 没装包就跑旅程冒烟。

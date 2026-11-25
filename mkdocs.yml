@@ -16,6 +16,7 @@ nav:
   - 动机映射: motivation.md
   - 接入指南: import-guide.md
   - 发布: release.md
+  - 安全边界: security.md
   - 模块 API: api.md
 markdown_extensions:
   - tables
