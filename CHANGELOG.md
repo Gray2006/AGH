@@ -2,6 +2,22 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [2.22.0] - 2026-11-25
+
+可运行的端到端示例：`examples/demo_import.py`。
+
+### Added
+
+- 模拟一份 Langfuse generation 导出 → `agh import` → `audit-stats` → `agh ui`，
+  一条命令跑完，产物落在 `examples/out/`
+- 示例数据里故意有一条「要求降序但返回升序」的调用，用来说明真实场景里为什么要标记
+- `.gitignore` 加 `examples/out/`
+
+### Notes
+
+- 这是给「想先看效果再决定要不要接」的人准备的，和 `agh quickstart` 的区别是：
+  quickstart 用内置 mock 演示审计链路，这个演示真实的导入流程
+
 ## [2.21.1] - 2026-11-25
 
 英文版接入教程。

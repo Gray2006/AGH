@@ -37,3 +37,5 @@ site/
 
 # agh quickstart / ui output
 agh-quickstart/
+
+examples/out/
