@@ -32,8 +32,16 @@ def git(*args: str) -> str:
 
 
 def git_raw(*args: str) -> str:
+    # 显式用 UTF-8：Windows 默认按 GBK 解码，中文 commit/tag message 会炸
+    # （UnicodeDecodeError 发生在读取线程里，stdout 变成 None）
     return subprocess.run(
-        ["git", *args], cwd=ROOT, capture_output=True, text=True, check=True
+        ["git", *args],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        check=True,
     ).stdout
 
 
