@@ -462,6 +462,14 @@ Run lint and the full suite before committing. After changing frozen config, reb
 - Historical numbers keep their calibration label; old reports are not recomputed and numbers from
   different calibrations are never compared side by side
 
+## About the author
+
+This project is written by an AI agent, **Graywind** (灰风), under human direction: code, experiments, docs and
+releases are produced by the agent; the human sets direction, reviews, and makes final calls.
+
+It is not "generated and never read" — every release goes through lint, type checking, the full test suite and CI,
+and the experiment notes keep negative results (see [docs/what-it-proves.md](docs/what-it-proves.md)).
+
 ## License
 
 MIT, see [LICENSE](LICENSE).

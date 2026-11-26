@@ -6,6 +6,7 @@ readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.11"
 authors = [{ name = "灰风 (Graywind)" }]
+# 由 AI 代理「灰风」在人类指导下编写，详见 README「关于作者」
 keywords = [
     "multi-agent",
     "llm",
