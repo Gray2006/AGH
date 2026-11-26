@@ -290,7 +290,7 @@ def cmd_report(args: argparse.Namespace) -> int:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="agh",
-        description="AGH 多智能体整体重构框架",
+        description="AGH：给多智能体流水线做可验证审计（签名出处 / 预算账本 / 哈希链 / 逐位重放）",
         epilog=(
             "常用路径：\n"
             "  agh quickstart            先看效果（不需要 key）\n"

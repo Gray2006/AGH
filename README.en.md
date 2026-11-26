@@ -2,7 +2,7 @@
 
 [English](README.en.md) · [简体中文](README.md) · [PyPI](https://pypi.org/project/agh-gestalt/) · MIT
 
-**Agent Gestalt Hierarchy** — an M0 vertical slice of a multi-agent "gestalt reconstruction" framework. A parent issues a skeleton and a contract; children reconstruct the whole rather than reassembling parts; every submission is signed and provenance-checked. Gate, arena, arbitration, governance, budget ledger and a hash-chained log form one runnable, testable, replayable pipeline.
+**Agent Gestalt Hierarchy** — a verifiable audit layer for multi-agent pipelines. Child submissions carry signed provenance; the parent verifies, books the budget, and appends to a hash-chained log. Afterwards you can verify, replay bit-exactly, and anchor externally. The evolution experiments live in [docs/research.en.md](docs/research.en.md) and are no longer the main story.
 
 > Status: M0 (v3.0.0). The default child is a **rule-based reconstructor**; LLM children and the LLM mutator are pluggable and already measured. Both the M0 pipeline and the LLM mutation path support bit-exact L1 replay.
 
