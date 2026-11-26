@@ -114,9 +114,9 @@ python scripts/score_labels.py --labels ... --candidates ...
 | 死代码清理 | vulture 80% 无输出；删 run_experiment 的死参数 | 高 |
 | CLI 帮助分组 | --help 加常用路径 epilog，研究类命令单独说明 | 高 |
 | 文档-实现一致性 | README 里的命令必须存在且 --help 能跑；包体积 0.46 MB | 高 |
-| release workflow | build 路径验证通过；publish 需 PyPI 配 Trusted Publishing | 高 |
+| release workflow | 已验证：2026-11-26 用 Trusted Publishing 发布 3.3.3，OIDC 无 token，带 attestations | 完成 |
 | 报告校验徽章 | HTML 顶部显示哈希链校验状态 | 高 |
-| 文档站构建 | CI 跑 mkdocs --strict，产物 docs-site artifact；部署待 Pages 启用 | 高 |
+| 文档站构建 + 部署 | CI 跑 mkdocs --strict，deploy-docs job 推 Pages：https://gray2006.github.io/AGH/ | 完成 |
 | 真实调用示例 | trace_real_call.py：2 次真实调用 → 校验 → 统计（268 tokens）→ 报告 | 高 |
 | 安全扫描（bandit） | High 0 / Medium 0；三处 urlopen 改走 scheme 校验 | 高 |
 | 基准回归测试 | 模拟模型分数精确断言（0.2875 / 0.1875 / 0.4375），改动即红 | 高 |
@@ -153,15 +153,16 @@ python scripts/score_labels.py --labels ... --candidates ...
 
 ## 下一步（按优先级）
 
-1. **PyPI 同步最新版**：PyPI 上停在 2.1.0。`release.yml` 与 `docs/release.md` 已就绪，
-   需要在 PyPI 配 Trusted Publishing（pending publisher），然后触发 workflow
-2. **文档站部署**：CI 已构建 `docs-site` artifact；需要在 GitHub Settings → Pages
-   把 Source 设为 GitHub Actions，之后可加 deploy 步骤
-3. **任务抽象**：题库路线已终止（五类难度尝试全部一次通过）。要验证策略搜索，
+1. **任务抽象**：题库路线已终止（五类难度尝试全部一次通过）。要验证策略搜索，
    必须换成多文件改动 / 真实项目 bug / 需要运行调试的任务——`Case` 模型表达不了
-4. **真实用户**：目前零真实接入。`agh import` 是最低门槛的验证方式——
+2. **真实用户**：目前零真实接入。`agh import` 是最低门槛的验证方式——
    没人拿它导自己的日志，说明「审计」这个需求本身要重新审视
-5. NATS 集成：CI 已起 `nats:2.10` service 并跑真实联调；本地需要 docker
+3. NATS 集成：CI 已起 `nats:2.10` service 并跑真实联调；本地需要 docker
+4. **升级 Actions 版本**：`checkout@v4` / `setup-python@v5` / `upload-artifact@v4`
+   已被强制跑在 Node 24（GitHub 报 Node 20 弃用）。不紧急，但迟早要迁到 v5/v6
+
+> 2026-11-26 已解决：PyPI 发布（3.3.3 上线，Trusted Publishing + OIDC）、
+> 文档站部署（GitHub Pages，deploy-docs job）。
 
 ## 踩坑清单
 
