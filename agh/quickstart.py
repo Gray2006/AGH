@@ -52,6 +52,7 @@ class QuickstartReport:
     run_dir: Path
     log_path: Path
     failures_path: Path
+    report_path: Path | None = None
     summary: dict[str, Any] = field(default_factory=dict)
     replay: dict[str, Any] = field(default_factory=dict)
     steps: list[str] = field(default_factory=list)
@@ -61,6 +62,7 @@ class QuickstartReport:
             "run_dir": str(self.run_dir),
             "log": str(self.log_path),
             "failures": str(self.failures_path),
+            "report": str(self.report_path) if self.report_path else None,
             "summary": self.summary,
             "replay": self.replay,
             "steps": self.steps,
@@ -108,10 +110,17 @@ def run_quickstart(workdir: str | Path | None = None) -> QuickstartReport:
     count = export_failures(log_path, failures_path)
     steps.append(f"7. 导出失败样本：{count} 条 → {failures_path}")
 
+    report_path = run_dir / "report.html"
+    from .ui import render_html
+
+    report_path.write_text(render_html(log_path), encoding="utf-8")
+    steps.append(f"8. 生成可视化报告：{report_path}")
+
     return QuickstartReport(
         run_dir=run_dir,
         log_path=log_path,
         failures_path=failures_path,
+        report_path=report_path,
         summary=summary,
         replay=replay,
         steps=steps,
@@ -134,6 +143,7 @@ def render_quickstart(report: QuickstartReport) -> str:
         '  audit = AuditSession("run.jsonl")',
         '  audit.call(model="...", prompt=p, response=r)',
         "",
+        f"用浏览器打开：{report.report_path}" if report.report_path else "",
         f"产物目录：{report.run_dir}",
     ]
     return "\n".join(lines)

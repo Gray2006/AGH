@@ -41,3 +41,10 @@ def test_render_mentions_next_steps(tmp_path: Path) -> None:
     assert "quickstart" in text
     assert "agh audit verify" in text
     assert "AuditSession" in text
+
+
+def test_quickstart_writes_report(tmp_path: Path) -> None:
+    report = run_quickstart(tmp_path / "qs")
+    assert report.report_path is not None
+    assert report.report_path.exists()
+    assert "AGH 审计报告" in report.report_path.read_text(encoding="utf-8")

@@ -2,6 +2,20 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [3.0.1] - 2026-11-26
+
+`agh quickstart` 顺手把可视化报告也生成出来。
+
+### Changed
+
+- quickstart 第 8 步生成 `report.html`，收尾提示里给出「用浏览器打开」的路径
+- `QuickstartReport.report_path` 新字段
+
+### 为什么算 patch
+
+用户跑完 `agh quickstart` 之后最自然的下一步是「看看报告长什么样」，
+之前得再敲一次 `agh ui --from-run`。现在少一步。
+
 ## [3.0.0] - 2026-11-26
 
 **定位变更**：从「多智能体进化框架」改为「可验证审计层」。
