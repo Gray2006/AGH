@@ -10,7 +10,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from .eventlog import EventLog
+from .eventlog import EventLog, LogEntry, LogTampered
 
 _TEMPLATE = """<!doctype html>
 <html lang="zh-CN">
@@ -108,6 +108,9 @@ const badge = document.createElement("span");
 badge.className = DATA.verified ? "pill p-ok" : "pill p-bad";
 badge.textContent = DATA.verified ? "哈希链校验通过" : "哈希链校验未通过";
 $("verify").appendChild(badge);
+if (!DATA.verified && DATA.verify_error) {
+  $("verify").appendChild(text("div", DATA.verify_error, "sub"));
+}
 $("meta").textContent = `日志：${DATA.log}　链头：${DATA.head.slice(0, 16)}　事件：${DATA.entries}`;
 $("footer").textContent = DATA.footer;
 if (DATA.truncated) {
@@ -254,12 +257,50 @@ def _brief(event_type: str, payload: dict[str, Any]) -> str:
     return ", ".join(f"{k}={payload[k]}" for k in keys)
 
 
+def _salvage(path: Path) -> list[Any]:
+    """日志整体读不回来时，逐条捡能解析的行，保住报告里可看的部分。"""
+    entries: list[Any] = []
+    try:
+        text = path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return entries
+    for line in text.split("\n"):
+        if not line.strip():
+            continue
+        try:
+            raw = json.loads(line)
+            entries.append(
+                LogEntry(
+                    seq=raw["seq"],
+                    ts=raw["ts"],
+                    type=raw["type"],
+                    payload=raw["payload"],
+                    prev_hash=raw["prev_hash"],
+                    hash=raw["hash"],
+                )
+            )
+        except (ValueError, KeyError, TypeError):
+            continue
+    return entries
+
+
 def build_report(
     log_path: str | Path, *, title: str = "AGH 审计报告", max_calls: int | None = None
 ) -> dict[str, Any]:
     path = Path(log_path)
-    log = EventLog(path)
-    log.verify()
+    # 校验失败不能让报告生成失败：报告的最大用途恰恰是「把一份可疑日志发给别人看」。
+    # JSON 坏到读不回来的，逐条尽力收回能读的部分，页面顶上标红说明原因。
+    log = EventLog()
+    log.path = path
+    verified = True
+    verify_error = ""
+    try:
+        log.entries = log.read()
+        log.verify()
+    except LogTampered as exc:
+        verified = False
+        verify_error = str(exc)
+        log.entries = _salvage(path)
 
     calls: list[dict[str, Any]] = []
     flags: list[dict[str, Any]] = []
@@ -306,6 +347,8 @@ def build_report(
 
     return {
         "title": title,
+        "verified": verified,
+        "verify_error": verify_error,
         "truncated": truncated,
         "total_calls": total_calls,
         "log": str(path),

@@ -4,7 +4,7 @@
 
 **Agent Gestalt Hierarchy** — a verifiable audit layer for multi-agent pipelines. Child submissions carry signed provenance; the parent verifies, books the budget, and appends to a hash-chained log. Afterwards you can verify, replay bit-exactly, and anchor externally. The evolution experiments live in [docs/research.en.md](docs/research.en.md) and are no longer the main story.
 
-> Status: M0 (v3.3.2). The default child is a **rule-based reconstructor**; LLM children and the LLM mutator are pluggable and already measured. Both the M0 pipeline and the LLM mutation path support bit-exact L1 replay.
+> Status: M0 (v3.3.3). The default child is a **rule-based reconstructor**; LLM children and the LLM mutator are pluggable and already measured. Both the M0 pipeline and the LLM mutation path support bit-exact L1 replay.
 
 ```
 Parent M0

@@ -44,17 +44,38 @@ def test_render_html_escapes_closing_tags(tmp_path: Path) -> None:
     assert "<\\/script>" in html
 
 
-def test_report_verifies_tampered_log(tmp_path: Path) -> None:
-    import pytest
+def test_valid_log_reports_verified(tmp_path: Path) -> None:
+    data = build_report(_log(tmp_path))
+    assert data["verified"] is True
+    assert data["verify_error"] == ""
 
-    from agh.eventlog import LogTampered
 
+def test_tampered_log_renders_unverified_instead_of_crashing(tmp_path: Path) -> None:
     path = _log(tmp_path)
     lines = path.read_text(encoding="utf-8").splitlines()
     lines[1] = lines[1].replace('"tokens": 42', '"tokens": 999')
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
-    with pytest.raises(LogTampered):
-        build_report(path)
+
+    data = build_report(path)
+    assert data["verified"] is False
+    assert "seq=" in data["verify_error"]
+    # 篡改只影响校验结论，历史调用仍应尽量保住
+    assert data["summary"]["calls"] == 2
+
+    html = render_html(path)
+    assert '"verified": false' in html
+
+
+def test_unparsable_log_still_renders(tmp_path: Path) -> None:
+    path = _log(tmp_path)
+    text = path.read_text(encoding="utf-8")
+    path.write_text("{not json at all\n" + text, encoding="utf-8")
+
+    data = build_report(path)
+    assert data["verified"] is False
+    # 坏行被跳过，好行保留
+    assert data["summary"]["calls"] == 2
+    assert '"verified": false' in render_html(path)
 
 
 def test_ui_cli_writes_file(tmp_path: Path) -> None:

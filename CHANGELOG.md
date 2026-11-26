@@ -2,6 +2,23 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [3.3.3] - 2026-11-26
+
+HTML 审计报告的校验状态之前是错的：好日志报红，坏日志直接崩。
+
+### Fixed
+
+- `agh ui` / `agh quickstart` 生成的报告，无论日志是否完好都显示「哈希链校验未通过」——
+  `build_report` 从未写入 `verified` 字段，模板里 `DATA.verified` 恒为 `undefined`
+- 被篡改的日志会让 `agh ui` 直接抛 `LogTampered` 崩掉，报告根本出不来。
+  现在照常生成，顶栏标红并附上具体失败位置（如「内容被改动于 seq=2」）
+- 日志存在无法解析的行时，逐条捡回能读的部分再渲染，不再整份作废
+
+### Notes
+
+- 3 条测试：好日志 verified=true、篡改日志 false 且保留调用、坏行跳过
+- 431 passed + 1 skipped
+
 ## [3.3.2] - 2026-11-26
 
 `agh import` 失败时不再毁掉已有日志。
