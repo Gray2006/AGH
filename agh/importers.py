@@ -88,6 +88,9 @@ def detect_format(sample: dict[str, Any]) -> str:
         return "langsmith"
     if "trace_id" in sample or ("input" in sample and "output" in sample):
         return "langfuse"
+    # OpenAI 的 chat completion 响应：choices[0].message.content
+    if isinstance(sample.get("choices"), list) and sample["choices"]:
+        return "openai"
     return "generic"
 
 
@@ -99,6 +102,29 @@ def _extract_langfuse(row: dict[str, Any]) -> tuple[str, str, str, int] | None:
     response = _flatten(row.get("output"))
     if not prompt and not response:
         return None
+    return model, prompt, response, _tokens_from_usage(row.get("usage"))
+
+
+def _extract_openai(row: dict[str, Any]) -> tuple[str, str, str, int] | None:
+    """OpenAI chat completion 响应（或带 messages 的请求）。"""
+    choices = row.get("choices")
+    if not isinstance(choices, list) or not choices:
+        return None
+    first = choices[0] if isinstance(choices[0], dict) else {}
+    message = first.get("message") or {}
+    response = _flatten(message.get("content") if isinstance(message, dict) else message)
+    if not response:
+        return None
+    messages = row.get("messages")
+    prompt = ""
+    if isinstance(messages, list):
+        parts = [
+            _flatten(m.get("content"))
+            for m in messages
+            if isinstance(m, dict) and m.get("role") == "user"
+        ]
+        prompt = "\n".join(p for p in parts if p)
+    model = _flatten(row.get("model") or "openai-unknown")
     return model, prompt, response, _tokens_from_usage(row.get("usage"))
 
 
@@ -178,10 +204,13 @@ def import_any(
     extractors: dict[str, Callable[[dict[str, Any]], tuple[str, str, str, int] | None]] = {
         "langfuse": _extract_langfuse,
         "langsmith": _extract_langsmith,
+        "openai": _extract_openai,
         "generic": lambda row: _extract_generic(row, field_map),
     }
     if detected not in extractors:
-        raise ValueError(f"未知格式 {detected}，可用：auto / langfuse / langsmith / generic")
+        raise ValueError(
+            f"未知格式 {detected}，可用：auto / langfuse / langsmith / openai / generic"
+        )
     extract = extractors[detected]
 
     if dst.exists():

@@ -177,3 +177,28 @@ def test_import_zero_records_is_an_error(tmp_path: Path) -> None:
     src.write_text('{"foo": "bar"}\n{"baz": 1}\n', encoding="utf-8")
     code = main(["import", "--from-jsonl", str(src), "--out", str(tmp_path / "o.jsonl")])
     assert code == 2
+
+
+def test_import_openai_format(tmp_path: Path) -> None:
+    """OpenAI chat completion 响应：choices[0].message.content。"""
+    src = tmp_path / "openai.jsonl"
+    src.write_text(
+        json.dumps(
+            {
+                "model": "gpt-4o",
+                "messages": [{"role": "user", "content": "hi"}],
+                "choices": [{"message": {"role": "assistant", "content": "hello"}}],
+                "usage": {"total_tokens": 12},
+            },
+            ensure_ascii=False,
+        ),
+        encoding="utf-8",
+    )
+    result = import_jsonl(src, tmp_path / "out.jsonl")
+    assert result.imported == 1
+    log = EventLog(tmp_path / "out.jsonl")
+    call = next(e for e in log.entries if e.type == "llm.call")
+    assert call.payload["model"] == "gpt-4o"
+    assert call.payload["prompt"] == "hi"
+    assert call.payload["response"] == "hello"
+    assert call.payload["tokens"] == 12

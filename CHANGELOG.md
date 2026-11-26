@@ -2,6 +2,23 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [3.3.0] - 2026-11-26
+
+`agh import` 支持 OpenAI chat completion 格式。
+
+### Added
+
+- 自动检测 `choices[0].message.content` 结构，识别为 `openai` 格式
+- 从 `messages` 里取 user 内容作为 prompt，从 `usage.total_tokens` 取 token 数
+- `--format openai` 可显式指定
+- 1 条测试
+
+### Notes
+
+- 之前这类日志会被当成 `generic`，因为字段名是 `choices` 不是 `prompt`/`response`，
+  结果一条都导不进来（v3.1.1 起会报错而不是静默成功）
+- 现在三种常见格式都覆盖：Langfuse、LangSmith、OpenAI
+
 ## [3.2.0] - 2026-11-26
 
 `agh audit-stats --by day`：按天聚合。
