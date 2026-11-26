@@ -15,8 +15,12 @@ nav:
   - 状态交接: STATUS.md
   - 动机映射: motivation.md
   - 接入指南: import-guide.md
+  - Integration guide (EN): import-guide.en.md
   - 发布: release.md
   - 安全边界: security.md
+  - M0 实现: M0-implementation.md
+  - NATS 验证: verification-nats.md
+  - 引用核验: verification-references.md
   - 模块 API: api.md
 markdown_extensions:
   - tables
