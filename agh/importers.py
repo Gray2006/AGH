@@ -255,7 +255,8 @@ def import_any(
 def import_jsonl(
     source: str | Path, out: str | Path, *, mapping: Mapping[str, str] | None = None, label: str = "imported"
 ) -> ImportResult:
-    return import_any(source, out, fmt="generic", mapping=mapping, label=label)
+    # 用 auto 而不是写死 generic：否则 openai / langfuse 结构会被当成 generic 全部跳过
+    return import_any(source, out, fmt="auto", mapping=mapping, label=label)
 
 
 __all__ = [

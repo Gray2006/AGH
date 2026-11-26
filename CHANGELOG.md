@@ -2,6 +2,21 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [3.3.1] - 2026-11-26
+
+修 v3.3.0 的回归：`import_jsonl` 写死了 generic，OpenAI 格式仍被跳过。
+
+### Fixed
+
+- `import_jsonl()` 内部从 `fmt="generic"` 改为 `fmt="auto"`。
+  之前它绕过了格式检测，所以 v3.3.0 加的 openai 支持对旧 API 不生效
+
+### Notes
+
+- v3.3.0 的测试用的是 `import_jsonl`，暴露了这个不一致：CLI 走 `import_any`（会检测），
+  库函数走 `import_jsonl`（不检测）。现在两者行为一致
+- 这个 bug 在 v3.3.0 的 CI 里就红了，但提交已经推上去——v3.3.1 是修正版
+
 ## [3.3.0] - 2026-11-26
 
 `agh import` 支持 OpenAI chat completion 格式。
