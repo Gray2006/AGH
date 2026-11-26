@@ -616,6 +616,14 @@ def cmd_import(args: argparse.Namespace) -> int:
     out = args.out or str(Path(args.from_jsonl).with_suffix(".agh.jsonl"))
     result = import_any(args.from_jsonl, out, fmt=args.format, mapping=parse_map(args.map))
     print(json.dumps(result.as_dict(), ensure_ascii=False, indent=2))
+    if result.imported == 0:
+        # 一条都没导进来不是成功：用户会以为文件已经转好了
+        print(
+            f"没有导入任何记录（跳过 {result.skipped} 条）。"
+            "检查源文件字段名，或用 --map 指定，例如 --map prompt=input_text",
+            file=sys.stderr,
+        )
+        return 2
     return 0
 
 

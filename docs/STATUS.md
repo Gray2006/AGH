@@ -1,4 +1,4 @@
-# AGH 状态交接（v3.1.0，2026-11-26）
+# AGH 状态交接（v3.1.1，2026-11-26）
 
 > 新会话先读这个文件，再读 `README.md` 的「版本与兼容」与 `memory/agh.md`。
 
@@ -125,6 +125,8 @@ python scripts/score_labels.py --labels ... --candidates ...
 | 安全文档 | docs/security.md：威胁模型（防/不防）、依赖清单、复查方法 | 高 |
 | quickstart 出报告 | 第 8 步生成 report.html，收尾给打开路径 | 高 |
 | 报告内 CSV 下载 | 纯前端，从内嵌数据生成，字段与 audit-export 一致 | 高 |
+| 路径边界 | 中文/空格/Unicode 目录下 quickstart/verify/ui/export/import 全通 | 高 |
+| 空导入不再静默 | imported=0 时返回 2 并提示 --map | 高 |
 | 锚定篡改检出 | 改一条 payload → `LogTampered: 数据被改动于 seq=6`；未篡改 → `signature_verified: true` | 高 |
 | 真实失败样本（8 条） | 种子均值 0.37887 → 规则/LLM 均 0.42151 后停滞；LLM 20107 tokens | 中高（各 1 次） |
 | git tag 锚点 | 写 tag 后读回 head/size/label 一致 | 高（单测） |

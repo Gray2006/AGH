@@ -167,3 +167,13 @@ def test_format_flag_overrides_detection(tmp_path: Path) -> None:
     result = import_any(src, tmp_path / "out.jsonl", fmt="generic")
     assert result.detected_format == "generic"
     assert result.imported == 1
+
+
+def test_import_zero_records_is_an_error(tmp_path: Path) -> None:
+    """一条都没导进来时不能返回成功。"""
+    from agh.cli import main
+
+    src = tmp_path / "unknown.jsonl"
+    src.write_text('{"foo": "bar"}\n{"baz": 1}\n', encoding="utf-8")
+    code = main(["import", "--from-jsonl", str(src), "--out", str(tmp_path / "o.jsonl")])
+    assert code == 2

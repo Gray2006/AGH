@@ -2,6 +2,25 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [3.1.1] - 2026-11-26
+
+`agh import` 一条都没导进来时返回失败，不再静默成功。
+
+### Fixed
+
+- `imported == 0` 时打印原因（跳过多少条、怎么用 `--map`）并返回 2
+- 之前会输出 `{"imported": 0, "skipped": 2}` 然后 exit 0——用户以为文件转好了，
+  实际是空的
+
+### Added
+
+- 4 条路径边界测试：含中文、空格、Unicode 的目录名（quickstart / verify / ui / export / import）
+
+### Notes
+
+- 这类「空结果当成功」和之前修过的「不存在的日志返回 ok」是同一类问题：
+  工具说成功，但什么都没做
+
 ## [3.1.0] - 2026-11-26
 
 报告页加「下载 CSV」按钮。
