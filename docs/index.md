@@ -1,14 +1,19 @@
 # AGH
 
-**可审计的多智能体重构框架**：契约约束子级输出，签名保证出处，竞技场做多候选比对，进化在受限基因组上迭代，所有过程可重放、可校准。
+**给多智能体流水线做可验证审计的一层**：子级回传带签名与出处，母体验签、记账、入哈希链；事后能校验、能逐位重放、能锚定到外部。
+
+进化实验保留在[研究记录](research.md)里，不是主推。
 
 ## 快速开始
 
 ```bash
-pip install -e ".[dev]"
-python -m pytest
-python -m agh run
-python -m agh report --runs runs
+pip install agh-gestalt
+agh quickstart          # 30 秒看完整链路，不需要 key
+
+# 或者接你自己的日志
+agh import --from-jsonl my_log.jsonl
+agh audit verify --log my_log.jsonl
+agh ui --log my_log.jsonl
 ```
 
 ## 能做什么
