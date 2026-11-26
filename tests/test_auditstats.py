@@ -50,3 +50,15 @@ def test_stats_missing_log(tmp_path: Path) -> None:
 
     with pytest.raises(SystemExit):
         main(["audit-stats", "--log", "nope.jsonl"])
+
+
+def test_stats_by_day(tmp_path: Path) -> None:
+    stats = compute_stats(_log(tmp_path), granularity="day")
+    assert all(len(k) == 10 for k in stats.by_hour)
+
+
+def test_stats_rejects_bad_granularity(tmp_path: Path) -> None:
+    import pytest
+
+    with pytest.raises(ValueError):
+        compute_stats(_log(tmp_path), granularity="week")

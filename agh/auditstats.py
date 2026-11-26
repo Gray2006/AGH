@@ -47,7 +47,10 @@ def _iso(ts_ms: int) -> str:
         return ""
 
 
-def compute_stats(log_path: str | Path) -> AuditStats:
+def compute_stats(log_path: str | Path, *, granularity: str = "hour") -> AuditStats:
+    """granularity: "hour" 或 "day"。"""
+    if granularity not in ("hour", "day"):
+        raise ValueError(f"granularity 只能是 hour 或 day，收到 {granularity!r}")
     path = Path(log_path)
     log = EventLog(path)
     log.verify()
@@ -79,9 +82,9 @@ def compute_stats(log_path: str | Path) -> AuditStats:
         models[model]["calls"] += 1
         models[model]["tokens"] += tokens
         total_tokens += tokens
-        hour = _iso(entry.ts)[:13]
-        if hour:
-            hours[hour] += 1
+        bucket = _iso(entry.ts)[: 13 if granularity == "hour" else 10]
+        if bucket:
+            hours[bucket] += 1
 
     notes: list[str] = []
     if calls == 0:
@@ -119,7 +122,8 @@ def render(stats: AuditStats) -> str:
     else:
         lines.append("  （无）")
     if stats.by_hour:
-        lines += ["", "按小时："]
+        unit = "按天" if len(next(iter(stats.by_hour))) == 10 else "按小时"
+        lines += ["", f"{unit}："]
         for hour, count in stats.by_hour.items():
             lines.append(f"  {hour}: {count}")
     if stats.notes:

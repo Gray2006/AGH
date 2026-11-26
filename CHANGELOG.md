@@ -2,6 +2,21 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [3.2.0] - 2026-11-26
+
+`agh audit-stats --by day`：按天聚合。
+
+### Added
+
+- `compute_stats(..., granularity="hour"|"day")`，CLI 加 `--by {hour,day}`
+- 渲染时自动用「按天」/「按小时」标题
+- 2 条测试：按天聚合的键长度、非法粒度报错
+
+### Notes
+
+- 之前只有按小时，跨天看趋势要自己数。审计日志通常按天看更有意义
+- 默认仍是 hour，不改变现有输出
+
 ## [3.1.1] - 2026-11-26
 
 `agh import` 一条都没导进来时返回失败，不再静默成功。

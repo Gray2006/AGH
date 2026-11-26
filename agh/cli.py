@@ -471,6 +471,7 @@ def build_parser() -> argparse.ArgumentParser:
     audit_stats = sub.add_parser("audit-stats", help="按模型/小时统计一份日志")
     audit_stats.add_argument("--log", required=True)
     audit_stats.add_argument("--json", action="store_true")
+    audit_stats.add_argument("--by", choices=["hour", "day"], default="hour", help="聚合粒度")
     audit_stats.set_defaults(func=cmd_audit_stats)
     timeline = sub.add_parser("audit-timeline", help="按顺序看事件")
     timeline.add_argument("--log", required=True)
@@ -652,7 +653,7 @@ def cmd_audit_stats(args: argparse.Namespace) -> int:
     from .auditstats import compute_stats, render
 
     _require_file(args.log)
-    stats = compute_stats(args.log)
+    stats = compute_stats(args.log, granularity=args.by)
     if args.json:
         print(json.dumps(stats.as_dict(), ensure_ascii=False, indent=2))
     else:
