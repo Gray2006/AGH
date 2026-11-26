@@ -2,6 +2,27 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [3.3.4] - 2026-11-26
+
+`agh report` 遇到读不懂的结果文件不再整张表崩；`agh audit-diff` 不再把「换了模型」报成零差异。
+
+### Fixed
+
+- `agh report` 碰到非 UTF-8 的结果文件（别的工具按 GBK 写的）会抛 `UnicodeDecodeError` 整个崩掉，
+  尽管文档写的是「缺哪个文件就跳过哪个」。现在坏编码、坏 JSON、读不动一律跳过该文件
+- 结果文件是合法 JSON 但不是对象（如数组）时，`collect` 抛 `AttributeError`；现在跳过
+- 字段类型不对（`scores` 是列表、`rows` 是字符串）时降级取默认值，不再崩
+- `agh audit-diff` 把「同样的 prompt 换了模型」报成 `common: 1`、零差异 ——
+  因为 `call_id` 只由 prompt/response 内容 + 序号生成，不含模型名。
+  现在会对 id 相同但 model/tokens/输入输出哈希不同的记录给出明确提示
+  （如 `call-xxx-0 的模型不同：deepseek-chat → gpt-4o`）
+
+### Notes
+
+- 7 条新测试：非 UTF-8 跳过、非对象 JSON 跳过、字段类型容错、换模型检测、
+  同内容不误报、token 变化识别
+- 437 passed + 1 skipped
+
 ## [3.3.3] - 2026-11-26
 
 HTML 审计报告的校验状态之前是错的：好日志报红，坏日志直接崩。

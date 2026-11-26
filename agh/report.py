@@ -38,9 +38,43 @@ def _load(path: Path) -> dict[str, Any] | None:
     if not path.exists():
         return None
     try:
-        return json.loads(path.read_text(encoding="utf-8"))
-    except json.JSONDecodeError:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, UnicodeDecodeError, OSError):
+        # 非 UTF-8（别的工具按 GBK 写的）、坏 JSON、读不动：跳过这一份，不连累整张表
         return None
+    if not isinstance(data, dict):
+        # 合法 JSON 但不是对象，字段取不到，同样跳过
+        return None
+    return data
+
+
+def _row(name: str, data: dict[str, Any]) -> Row:
+    row = Row(name=name)
+    if name == "m0":
+        scores = data.get("scores")
+        scores = scores if isinstance(scores, dict) else {}
+        row.values = {"winner": data.get("winner"), "score": scores.get(data.get("winner"))}
+    elif name == "experiment":
+        row.values = {"contested": data.get("contested_rate"), "metrics": data.get("metrics")}
+    elif name == "ablation":
+        rows = data.get("rows")
+        row.values = {"rows": len(rows) if isinstance(rows, list) else 0}
+    elif name.startswith("llm_"):
+        delta = data.get("delta")
+        row.values = {
+            "n": data.get("benchmarks") or data.get("valid"),
+            "llm": data.get("llm_mean"),
+            "rule": data.get("rule_mean"),
+            "delta": delta.get("mean") if isinstance(delta, dict) else None,
+        }
+    elif name.startswith("human"):
+        row.values = {
+            "n": data.get("n"),
+            "agreement": data.get("agreement"),
+            "kappa": data.get("cohen_kappa"),
+            "ece": data.get("ece"),
+        }
+    return row
 
 
 def collect(runs_dir: str | Path) -> dict[str, Any]:
@@ -50,28 +84,7 @@ def collect(runs_dir: str | Path) -> dict[str, Any]:
         data = _load(root / rel)
         if data is None:
             continue
-        row = Row(name=name)
-        if name == "m0":
-            row.values = {"winner": data.get("winner"), "score": data.get("scores", {}).get(data.get("winner"))}
-        elif name == "experiment":
-            row.values = {"contested": data.get("contested_rate"), "metrics": data.get("metrics")}
-        elif name == "ablation":
-            row.values = {"rows": len(data.get("rows", []))}
-        elif name.startswith("llm_"):
-            row.values = {
-                "n": data.get("benchmarks") or data.get("valid"),
-                "llm": data.get("llm_mean"),
-                "rule": data.get("rule_mean"),
-                "delta": (data.get("delta") or {}).get("mean"),
-            }
-        elif name.startswith("human"):
-            row.values = {
-                "n": data.get("n"),
-                "agreement": data.get("agreement"),
-                "kappa": data.get("cohen_kappa"),
-                "ece": data.get("ece"),
-            }
-        rows.append(row)
+        rows.append(_row(name, data))
     return {"runs_dir": str(root), "available": [r.name for r in rows], "rows": [r.as_dict() for r in rows]}
 
 

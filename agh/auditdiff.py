@@ -55,6 +55,16 @@ def _stats(calls: dict[str, dict[str, Any]]) -> dict[str, Any]:
     return {"calls": len(calls), "tokens": tokens, "models": models}
 
 
+def _changed(before: dict[str, Any], after: dict[str, Any]) -> bool:
+    """同一条 call_id 在两次日志里是否真的指向同一次调用。
+
+    只看会改变结论的字段：模型、token、输入输出哈希。
+    timestamp / latency 天然会变，不能算差异。
+    """
+    keys = ("model", "tokens", "prompt_sha256", "response_sha256")
+    return any(before.get(key) != after.get(key) for key in keys)
+
+
 def diff_logs(a: str | Path, b: str | Path) -> LogDiff:
     path_a, path_b = Path(a), Path(b)
     calls_a = _calls(path_a)
@@ -63,7 +73,8 @@ def diff_logs(a: str | Path, b: str | Path) -> LogDiff:
     ids_a, ids_b = set(calls_a), set(calls_b)
     only_a = tuple(sorted(ids_a - ids_b))
     only_b = tuple(sorted(ids_b - ids_a))
-    common = len(ids_a & ids_b)
+    shared = ids_a & ids_b
+    common = len(shared)
 
     notes: list[str] = []
     stats_a, stats_b = _stats(calls_a), _stats(calls_b)
@@ -73,6 +84,19 @@ def diff_logs(a: str | Path, b: str | Path) -> LogDiff:
         notes.append(f"tokens 变化 {stats_b['tokens'] - stats_a['tokens']:+d}")
     if ids_a and len(only_a) == len(ids_a):
         notes.append("a 的记录在 b 里全部消失（可能是重新导入或换了日志）")
+
+    # call_id 只由 prompt/response 内容 + 序号决定，不含模型。
+    # 同样的输入换模型跑，id 不变但实际是不同的一次调用——diff 必须说出来。
+    changed = [cid for cid in sorted(shared) if _changed(calls_a[cid], calls_b[cid])]
+    for cid in changed[:5]:
+        before = calls_a[cid].get("model", "")
+        after = calls_b[cid].get("model", "")
+        if before != after:
+            notes.append(f"{cid} 的模型不同：{before} → {after}")
+        else:
+            notes.append(f"{cid} 的内容不同（同 id 不同 payload）")
+    if len(changed) > 5:
+        notes.append(f"……另有 {len(changed) - 5} 条同 id 记录内容不同")
 
     return LogDiff(
         a=str(path_a),

@@ -28,6 +28,35 @@ def test_collect_skips_broken_json(tmp_path: Path) -> None:
     assert collect(tmp_path)["rows"] == []
 
 
+def test_collect_skips_non_utf8_file(tmp_path: Path) -> None:
+    # 别的工具按 GBK 写的结果文件：跳过这一份，别让整张表崩
+    (tmp_path / "m0").mkdir()
+    (tmp_path / "m0" / "report.json").write_bytes('{"winner": "中文"}'.encode("gbk"))
+    assert collect(tmp_path)["rows"] == []
+
+
+def test_collect_skips_json_that_is_not_an_object(tmp_path: Path) -> None:
+    (tmp_path / "m0").mkdir()
+    (tmp_path / "m0" / "report.json").write_text('["not", "a", "dict"]', encoding="utf-8")
+    assert collect(tmp_path)["rows"] == []
+
+
+def test_collect_tolerates_wrong_field_types(tmp_path: Path) -> None:
+    # 字段类型不对时降级取默认值，而不是抛 AttributeError
+    (tmp_path / "m0").mkdir()
+    (tmp_path / "m0" / "report.json").write_text(
+        json.dumps({"winner": "x", "scores": [1, 2, 3]}), encoding="utf-8"
+    )
+    (tmp_path / "g1").mkdir()
+    (tmp_path / "g1" / "ablation.json").write_text(
+        json.dumps({"rows": "oops"}), encoding="utf-8"
+    )
+    payload = collect(tmp_path)
+    by_name = {r["name"]: r for r in payload["rows"]}
+    assert by_name["m0"]["score"] is None
+    assert by_name["ablation"]["rows"] == 0
+
+
 def test_collect_llm_rows(tmp_path: Path) -> None:
     (tmp_path / "g1").mkdir()
     (tmp_path / "g1" / "llm-hard50.json").write_text(
