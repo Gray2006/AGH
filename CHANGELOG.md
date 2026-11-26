@@ -2,6 +2,22 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [3.3.2] - 2026-11-26
+
+`agh import` 失败时不再毁掉已有日志。
+
+### Fixed
+
+- 导入 0 条记录时，原目标日志会被先删掉再写一个空日志——导入失败反而造成数据丢失。
+  现在先解析全部行，确认有记录才落盘；0 条时原日志原样保留，CLI 仍返回 2
+- 落盘改为「写临时文件 → 原子替换」：中途失败不会留下半份日志
+- `--map` 与自动检测出的非 generic 格式冲突时直接报错，不再静默忽略字段映射
+
+### Notes
+
+- 5 条测试：失败保留原日志（库 + CLI）、无临时文件残留、--map 冲突报错
+- 429 passed + 1 skipped
+
 ## [3.3.1] - 2026-11-26
 
 修 v3.3.0 的回归：`import_jsonl` 写死了 generic，OpenAI 格式仍被跳过。

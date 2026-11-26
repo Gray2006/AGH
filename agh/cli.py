@@ -615,7 +615,8 @@ def cmd_import(args: argparse.Namespace) -> int:
 
     _require_file(args.from_jsonl, "源日志")
     out = args.out or str(Path(args.from_jsonl).with_suffix(".agh.jsonl"))
-    result = import_any(args.from_jsonl, out, fmt=args.format, mapping=parse_map(args.map))
+    mapping = parse_map(args.map) if args.map else None
+    result = import_any(args.from_jsonl, out, fmt=args.format, mapping=mapping)
     print(json.dumps(result.as_dict(), ensure_ascii=False, indent=2))
     if result.imported == 0:
         # 一条都没导进来不是成功：用户会以为文件已经转好了

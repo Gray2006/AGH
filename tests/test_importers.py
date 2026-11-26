@@ -202,3 +202,67 @@ def test_import_openai_format(tmp_path: Path) -> None:
     assert call.payload["prompt"] == "hi"
     assert call.payload["response"] == "hello"
     assert call.payload["tokens"] == 12
+
+
+def test_failed_import_keeps_existing_log(tmp_path: Path) -> None:
+    """导入失败不能毁掉上一次的结果：0 条时原日志必须原样保留。"""
+    out = tmp_path / "out.jsonl"
+    import_jsonl(_src(tmp_path), out)
+    before = EventLog(out)
+    before.verify()
+    head_before = before.head()
+
+    bad = tmp_path / "bad.jsonl"
+    bad.write_text('not json\n{"x": 1}\n', encoding="utf-8")
+    result = import_jsonl(bad, out)
+
+    assert result.imported == 0
+    assert result.skipped == 2
+    after = EventLog(out)
+    after.verify()
+    assert after.head() == head_before
+    assert len([e for e in after.entries if e.type == "llm.call"]) == 2
+
+
+def test_failed_import_cli_keeps_existing_log(tmp_path: Path) -> None:
+    from agh.cli import main
+
+    out = tmp_path / "cli.jsonl"
+    assert main(["import", "--from-jsonl", str(_src(tmp_path)), "--out", str(out)]) == 0
+    head_before = EventLog(out).head()
+
+    bad = tmp_path / "bad.jsonl"
+    bad.write_text('{"foo": "bar"}\n', encoding="utf-8")
+    assert main(["import", "--from-jsonl", str(bad), "--out", str(out)]) == 2
+    assert EventLog(out).head() == head_before
+
+
+def test_import_leaves_no_temp_file(tmp_path: Path) -> None:
+    out = tmp_path / "out.jsonl"
+    import_jsonl(_src(tmp_path), out)
+    leftovers = [p.name for p in tmp_path.iterdir() if p.name.endswith(".tmp")]
+    assert leftovers == []
+
+
+def test_map_with_non_generic_format_is_an_error(tmp_path: Path) -> None:
+    """--map 只对 generic 生效，静默忽略会让用户以为映射已应用。"""
+    import pytest
+
+    src = tmp_path / "langfuse.jsonl"
+    src.write_text(
+        json.dumps({"type": "generation", "input": "q", "output": "a", "model": "m"}),
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError, match="generic"):
+        import_any(src, tmp_path / "out.jsonl", mapping=parse_map(["prompt=question"]))
+
+
+def test_zero_import_with_corrupt_existing_log_does_not_raise(tmp_path: Path) -> None:
+    """原日志已损坏时，0 条导入仍应正常返回，而不是抛 LogTampered。"""
+    out = tmp_path / "out.jsonl"
+    out.write_text('{"seq": 1, "broken": true}\n', encoding="utf-8")
+    bad = tmp_path / "bad.jsonl"
+    bad.write_text('{"foo": "bar"}\n', encoding="utf-8")
+    result = import_jsonl(bad, out)
+    assert result.imported == 0
+    assert result.log_head == ""

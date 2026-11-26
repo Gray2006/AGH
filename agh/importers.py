@@ -12,12 +12,14 @@
 from __future__ import annotations
 
 import json
+import os
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 from .audit import AuditSession
+from .eventlog import EventLog, LogTampered
 
 DEFAULT_MAP = {
     "model": "model",
@@ -211,40 +213,73 @@ def import_any(
         raise ValueError(
             f"未知格式 {detected}，可用：auto / langfuse / langsmith / openai / generic"
         )
+    if mapping is not None and detected != "generic":
+        # --map 只对 generic 生效；静默忽略会让用户以为字段映射已经应用
+        raise ValueError(
+            f"--map 只对 generic 格式生效，但检测到 {detected}。"
+            "要按自定义字段导入，请加 --format generic"
+        )
     extract = extractors[detected]
 
-    if dst.exists():
-        dst.unlink()
-    audit = AuditSession(dst, label=label)
-    imported = skipped = 0
-    with audit:
-        for lineno, line in enumerate(lines, 1):
+    # 先全部解析，再落盘：解析阶段失败不能动已有日志
+    records: list[tuple[str, str, str, int, int]] = []
+    skipped = 0
+    for lineno, line in enumerate(lines, 1):
+        try:
+            row = json.loads(line)
+        except json.JSONDecodeError:
+            skipped += 1
+            continue
+        if not isinstance(row, dict):
+            skipped += 1
+            continue
+        parsed = extract(row)
+        if parsed is None:
+            skipped += 1
+            continue
+        model, prompt, response, tokens = parsed
+        records.append((model, prompt, response, tokens, lineno))
+
+    if not records:
+        # 一条都没导进来：保留原日志，返回 0 让调用方报错
+        existing = ""
+        if dst.exists():
             try:
-                row = json.loads(line)
-            except json.JSONDecodeError:
-                skipped += 1
-                continue
-            if not isinstance(row, dict):
-                skipped += 1
-                continue
-            parsed = extract(row)
-            if parsed is None:
-                skipped += 1
-                continue
-            model, prompt, response, tokens = parsed
-            audit.call(
-                model=model,
-                prompt=prompt,
-                response=response,
-                tokens=tokens,
-                meta={"source_line": lineno, "source_format": detected},
-            )
-            imported += 1
+                existing = EventLog(dst).head()
+            except LogTampered:
+                # 原日志本身已损坏：不阻止用户重导，但也不谎报链头
+                existing = ""
+        return ImportResult(
+            source=str(src),
+            out=str(dst),
+            imported=0,
+            skipped=skipped,
+            log_head=existing,
+            detected_format=detected,
+        )
+
+    # 写临时文件再原子替换：中途失败不会留下半份日志，也不会毁掉旧日志
+    tmp = dst.with_name(f"{dst.name}.{os.getpid()}.tmp")
+    try:
+        audit = AuditSession(tmp, label=label)
+        with audit:
+            for model, prompt, response, tokens, lineno in records:
+                audit.call(
+                    model=model,
+                    prompt=prompt,
+                    response=response,
+                    tokens=tokens,
+                    meta={"source_line": lineno, "source_format": detected},
+                )
+        os.replace(tmp, dst)
+    finally:
+        if tmp.exists():
+            tmp.unlink()
 
     return ImportResult(
         source=str(src),
         out=str(dst),
-        imported=imported,
+        imported=len(records),
         skipped=skipped,
         log_head=audit.log.head(),
         detected_format=detected,

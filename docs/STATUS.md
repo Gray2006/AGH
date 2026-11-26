@@ -1,4 +1,4 @@
-# AGH 状态交接（v3.3.1，2026-11-26）
+# AGH 状态交接（v3.3.2，2026-11-26）
 
 > 新会话先读这个文件，再读 `README.md` 的「版本与兼容」与 `memory/agh.md`。
 
@@ -8,7 +8,7 @@
 
 ## 当前版本
 
-- v2.6.0，`356 passed + 1 skipped`（NATS 在 CI 跑），ruff 干净，mypy 48 文件零错误
+- v3.3.2，`429 passed + 1 skipped`（NATS 在 CI 跑），ruff 干净，mypy 58 文件零错误
 - 仓库 <https://github.com/Gray2006/AGH>，CI 双版本绿
 - 依赖：pydantic v2、numpy、jsonschema、cryptography；Python 3.12+
 
@@ -85,6 +85,7 @@ python scripts/score_labels.py --labels ... --candidates ...
 | 接入已有日志（agh import） | 5 条测试：可验证输出、字段映射、坏行跳过 | 高 |
 | 自检（2.11.1） | 修 4 处静默成功：缺文件返回 ok、坏行 KeyError、重复导入追加、参数冲突 | 高 |
 | 自检（2.11.2） | 修 splitlines 切坏日志、feedback note 未清理、围栏未适配 | 高 |
+| 自检（3.3.2） | 导入 0 条时先删后写会毁掉原日志；改为先解析后原子替换，5 条测试 | 高 |
 | 学习进步奖励（LP） | 离线：absolute 0.5625/0.875/0.875 vs progress 0.5/0.9375/1.0，随机更好 | 中（模拟模型） |
 | 扩大策略空间（135→270） | absolute 下 evolution 0.9375 vs baseline 0.5，区间不跨零（首次显著） | 中（模拟模型） |
 | mutate 的 rounds 基因 | 分支列表漏写 → 该基因从未被选中，已修 | 高 |
