@@ -45,6 +45,9 @@ code { font-family:ui-monospace,Consolas,monospace; font-size:12px; color:var(--
        word-break:break-all; }
 .pill { display:inline-block; padding:1px 8px; border-radius:999px; font-size:11.5px; }
 #verify { margin-top:8px; }
+.btn { background:var(--panel); color:var(--text); border:1px solid var(--line);
+       border-radius:8px; padding:5px 12px; font-size:12.5px; cursor:pointer; }
+.btn:hover { border-color:var(--accent); color:var(--accent); }
 .p-ok { background:rgba(63,185,80,.15); color:var(--ok); }
 .p-bad { background:rgba(248,81,73,.15); color:var(--bad); }
 .p-warn { background:rgba(210,153,34,.15); color:var(--warn); }
@@ -72,6 +75,7 @@ footer { padding:14px 28px 28px; color:var(--muted); font-size:12px; border-top:
 <section>
   <h2>模型调用</h2>
   <div class="filters">
+    <button id="dl-csv" class="btn">下载 CSV</button>
     <select id="f-model"><option value="">全部模型</option></select>
     <label><input type="checkbox" id="f-flagged"> 只看已标记</label>
     <input type="text" id="f-search" placeholder="搜索 call_id / 模型 / 哈希">
@@ -206,6 +210,26 @@ $("flags").appendChild(table(
   ["call_id", "原因", "备注"],
   DATA.flags.map((f) => [f.call_id, f.reason, f.note])
 ));
+
+$("dl-csv").addEventListener("click", () => {
+  const head = ["call_id","model","tokens","prompt_sha256","response_sha256","flagged","flag_reason","flag_note"];
+  const flaggedMap = new Map(DATA.flags.map((f) => [f.call_id, f]));
+  const esc = (v) => `"${String(v == null ? "" : v).replace(/"/g, '""')}"`;
+  const lines = [head.join(",")];
+  for (const c of DATA.calls) {
+    const f = flaggedMap.get(c.call_id) || {};
+    lines.push([
+      c.call_id, c.model, c.tokens, c.prompt_sha256, c.response_sha256,
+      f.call_id ? "yes" : "no", f.reason || "", f.note || "",
+    ].map(esc).join(","));
+  }
+  const blob = new Blob(["\ufeff" + lines.join("\n")], { type: "text/csv;charset=utf-8" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "agh-calls.csv";
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
 
 $("timeline").appendChild(table(
   ["#", "事件", "摘要"],

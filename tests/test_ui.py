@@ -136,3 +136,11 @@ def test_no_truncation_under_limit(tmp_path: Path) -> None:
     report = build_report(_big_log(tmp_path, 5), max_calls=10)
     assert report["truncated"] is False
     assert len(report["calls"]) == 5
+
+
+def test_report_has_csv_download(tmp_path: Path) -> None:
+    """报告里要有纯前端的 CSV 下载入口（不请求后端）。"""
+    html = render_html(_log(tmp_path))
+    assert "下载 CSV" in html
+    assert "agh-calls.csv" in html
+    assert "Blob(" in html

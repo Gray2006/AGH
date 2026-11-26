@@ -2,6 +2,22 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [3.1.0] - 2026-11-26
+
+报告页加「下载 CSV」按钮。
+
+### Added
+
+- `agh ui` 生成的 HTML 里加一个下载按钮：从页面内嵌数据直接生成 CSV，
+  不请求后端、不联网
+- CSV 字段与 `agh audit-export` 一致（call_id / 模型 / tokens / 两个哈希 /
+  是否标记 / 原因 / 备注），带 BOM 以便 Excel 正确识别中文
+
+### Notes
+
+- 之前的路径是「命令行导出 CSV」和「浏览器看报告」二选一，现在看完可以直接下载
+- 数据本来就在页面里，所以纯前端实现，不需要服务器
+
 ## [3.0.1] - 2026-11-26
 
 `agh quickstart` 顺手把可视化报告也生成出来。
