@@ -24,6 +24,14 @@ class LogTampered(Exception):
     pass
 
 
+class LogUnreadable(LogTampered):
+    """文件根本读不成日志（编码不对 / 不是文本）。
+
+    继承 LogTampered 是为了让既有的 `except LogTampered` 调用点继续可用：
+    对调用方来说结论一样——这份日志用不了，别崩，给个说法。
+    """
+
+
 @dataclass(frozen=True)
 class LogEntry:
     seq: int
@@ -46,7 +54,19 @@ GENESIS = "0" * 64
 
 def iter_entries(path: Path):
     """流式解析 JSONL 日志，逐条 yield LogEntry。解析失败抛 LogTampered。"""
-    text = Path(path).read_text(encoding="utf-8")
+    try:
+        # utf-8-sig：接受普通 UTF-8，也接受记事本另存为加的 BOM。
+        # BOM 是编码标记不是内容，不影响哈希链——不该让它看起来像「日志损坏」。
+        text = Path(path).read_text(encoding="utf-8-sig")
+    except UnicodeDecodeError as exc:
+        # 用户常把「自己导出的原始日志」或别的工具的输出传进来。
+        # AGH 日志固定 UTF-8，读不动就是选错文件了，不该甩 Python 堆栈。
+        raise LogUnreadable(
+            f"{path} 不是 UTF-8 编码，不像是 AGH 日志（AGH 日志固定 UTF-8）。"
+            "如果你要导入别家的原始日志，用 `agh import --from-jsonl`"
+        ) from exc
+    except OSError as exc:
+        raise LogUnreadable(f"无法读取 {path}：{exc}") from exc
     # 只按 \n 分：JSONL 的换行就是 \n，splitlines 会认 U+2028 等
     for lineno, line in enumerate(text.split("\n"), 1):
         if not line.strip():

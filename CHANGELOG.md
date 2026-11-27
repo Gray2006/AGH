@@ -2,6 +2,26 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [3.3.6] - 2026-11-27
+
+`--log` 指错文件时给一句人话，不再甩 Python 堆栈；带 BOM 的日志不再被误判成损坏。
+
+### Fixed
+
+- **非 UTF-8 文件直接崩**：所有 audit 命令读日志时用死 UTF-8，
+  用户把别的工具的输出（GBK）或二进制文件传给 `--log`，会抛 `UnicodeDecodeError` 并甩出堆栈。
+  新增 `LogUnreadable`（继承 `LogTampered`，既有调用点行为不变），提示
+  「不是 UTF-8 编码，不像是 AGH 日志」，并指路 `agh import --from-jsonl`
+- **带 BOM 的日志被误判为损坏**：记事本另存为会给日志加 BOM，原来报
+  「日志格式损坏（第 1 条）」，但 BOM 是编码标记不是内容、不影响哈希链。
+  改为 `utf-8-sig` 读取，链照常校验通过
+- CLI 区分两种失败：读不动 → 「无法读取日志：…」，链不对 → 「日志校验失败：…」
+
+### Notes
+
+- 3 条新测试：GBK 日志报 `LogUnreadable`、BOM 日志链仍校验通过、CLI 干净退出
+- 445 passed + 1 skipped
+
 ## [3.3.5] - 2026-11-27
 
 `agh import` 能读真实世界里的日志文件了：GBK 编码不再崩，UTF-8 BOM 不再静默丢数据。

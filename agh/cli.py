@@ -737,7 +737,7 @@ def cmd_audit_export(args: argparse.Namespace) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
-    from .eventlog import LogTampered
+    from .eventlog import LogTampered, LogUnreadable
 
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -746,6 +746,10 @@ def main(argv: list[str] | None = None) -> int:
     _ensure_utf8_stdout()
     try:
         return int(args.func(args))
+    except LogUnreadable as exc:
+        # 选错了文件（编码不对 / 不是日志）：先说清这一点，别叫「校验失败」
+        print(f"无法读取日志：{exc}", file=sys.stderr)
+        return 2
     except LogTampered as exc:
         # 校验失败是预期内的结论，不该以 traceback 的形式甩给用户
         print(f"日志校验失败：{exc}", file=sys.stderr)

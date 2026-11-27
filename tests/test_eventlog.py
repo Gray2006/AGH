@@ -107,3 +107,43 @@ def test_unicode_line_separators_survive(tmp_path: Path) -> None:
     fresh.verify()
     assert len(fresh.entries) == 2
     assert fresh.entries[0].payload["text"] == "前\u2028后"
+
+
+def test_non_utf8_log_raises_logunreadable(tmp_path: Path) -> None:
+    """用户把别的工具的 GBK 输出当日志传进来，不能甩 UnicodeDecodeError。"""
+    import pytest
+
+    from agh.eventlog import EventLog, LogTampered, LogUnreadable
+
+    path = tmp_path / "gbk.jsonl"
+    path.write_bytes('{"seq": 1, "type": "中文"}'.encode("gbk") + b"\n")
+
+    with pytest.raises(LogUnreadable, match="UTF-8"):
+        EventLog(path)
+    # 继承关系：既有 except LogTampered 的调用点继续可用
+    assert issubclass(LogUnreadable, LogTampered)
+
+
+def test_bom_in_log_is_transparent(tmp_path: Path) -> None:
+    """记事本另存为加的 BOM 是编码标记，不是内容：链仍然应该校验通过。"""
+    from agh.eventlog import EventLog
+
+    path = tmp_path / "log.jsonl"
+    log = EventLog(path)
+    log.append("t", {"text": "内容"})
+    expected_head = log.head()
+
+    raw = path.read_bytes()
+    path.write_bytes(b"\xef\xbb\xbf" + raw)
+
+    fresh = EventLog(path)
+    fresh.verify()
+    assert fresh.head() == expected_head
+
+
+def test_cli_reports_unreadable_log_cleanly(tmp_path: Path) -> None:
+    from agh.cli import main
+
+    path = tmp_path / "gbk.jsonl"
+    path.write_bytes('{"seq": 1, "type": "中文"}'.encode("gbk") + b"\n")
+    assert main(["audit", "summary", "--log", str(path)]) == 2
