@@ -17,7 +17,7 @@ _TEMPLATE = r"""<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AGH 审计报告</title>
+<title>@@L:title@@</title>
 <style>
 :root { --bg:#0f1115; --panel:#171a21; --line:#262b36; --text:#e6e8ee; --muted:#8b93a7;
         --ok:#3fb950; --warn:#d29922; --bad:#f85149; --accent:#58a6ff; }
@@ -67,28 +67,28 @@ footer { padding:14px 28px 28px; color:var(--muted); font-size:12px; border-top:
 </head>
 <body>
 <header>
-  <h1 id="title">AGH 审计报告</h1>
+  <h1 id="title">@@L:title@@</h1>
   <div class="sub" id="meta"></div>
   <div id="verify"></div>
 </header>
 <div class="cards" id="cards"></div>
 <section>
-  <h2>模型调用</h2>
+  <h2>@@L:calls@@</h2>
   <div class="filters">
-    <button id="dl-csv" class="btn">下载 CSV</button>
-    <select id="f-model"><option value="">全部模型</option></select>
-    <label><input type="checkbox" id="f-flagged"> 只看已标记</label>
-    <input type="text" id="f-search" placeholder="搜索 call_id / 模型 / 哈希">
+    <button id="dl-csv" class="btn">@@L:dl_csv@@</button>
+    <select id="f-model"><option value="">@@L:all_models@@</option></select>
+    <label><input type="checkbox" id="f-flagged"> @@L:only_flagged@@</label>
+    <input type="text" id="f-search" placeholder="@@L:search@@">
     <span class="count" id="f-count"></span>
   </div>
   <div id="calls"></div>
 </section>
 <section>
-  <h2>被标记的问题</h2>
+  <h2>@@L:flagged_section@@</h2>
   <div id="flags"></div>
 </section>
 <section>
-  <h2>事件时间线</h2>
+  <h2>@@L:timeline@@</h2>
   <div id="timeline"></div>
 </section>
 <footer id="footer"></footer>
@@ -103,28 +103,27 @@ const text = (tag, value, cls) => {
 };
 const short = (s, n) => { s = String(s || ""); return s.length > n ? s.slice(0, n) + "…" : s; };
 
-$("title").textContent = DATA.title || "AGH 审计报告";
+$("title").textContent = DATA.title || "@@L:title@@";
 const badge = document.createElement("span");
 badge.className = DATA.verified ? "pill p-ok" : "pill p-bad";
-badge.textContent = DATA.verified ? "哈希链校验通过" : "哈希链校验未通过";
+badge.textContent = DATA.verified ? "@@L:verified_ok@@" : "@@L:verified_bad@@";
 $("verify").appendChild(badge);
 if (!DATA.verified && DATA.verify_error) {
   $("verify").appendChild(text("div", DATA.verify_error, "sub"));
 }
-$("meta").textContent = `日志：${DATA.log}　链头：${DATA.head.slice(0, 16)}　事件：${DATA.entries}`;
+$("meta").textContent = `@@L:meta@@`;
 $("footer").textContent = DATA.footer;
 if (DATA.truncated) {
-  const msg = `日志共 ${DATA.total_calls} 次调用，报告只渲染前 ${DATA.calls.length} 条`
-    + `（已标记的优先保留）。用 --max-calls 调整。`;
+  const msg = `@@L:truncated@@`;
   const banner = text("div", msg, "empty");
   document.querySelector("header").appendChild(banner);
 }
 
 const cards = [
-  ["调用次数", DATA.summary.calls],
+  ["@@L:card_calls@@", DATA.summary.calls],
   ["Tokens", DATA.summary.tokens],
-  ["标记问题", DATA.summary.flags],
-  ["模型", (DATA.summary.models || []).join(" / ") || "—"],
+  ["@@L:card_flags@@", DATA.summary.flags],
+  ["@@L:card_models@@", (DATA.summary.models || []).join(" / ") || "—"],
 ];
 for (const [k, v] of cards) {
   const c = text("div", "", "card");
@@ -134,7 +133,7 @@ for (const [k, v] of cards) {
 }
 
 function table(headers, rows) {
-  if (!rows.length) return text("div", "没有记录。", "empty");
+  if (!rows.length) return text("div", "@@L:empty@@", "empty");
   const t = document.createElement("table");
   const thead = document.createElement("thead");
   const tr = document.createElement("tr");
@@ -169,14 +168,14 @@ for (const m of models) {
 
 function rowFor(c) {
   const isFlagged = flagged.has(c.call_id);
-  const status = text("span", isFlagged ? "已标记" : "正常",
+  const status = text("span", isFlagged ? "@@L:status_flagged@@" : "@@L:status_ok@@",
                       isFlagged ? "pill p-bad" : "pill p-ok");
   const wrap = document.createElement("div");
   wrap.appendChild(status);
   if (c.prompt) {
     const d = document.createElement("details");
-    d.appendChild(text("summary", "看原文"));
-    d.appendChild(text("pre", `输入：\n${c.prompt}\n\n输出：\n${c.response || ""}`));
+    d.appendChild(text("summary", "@@L:show_raw@@"));
+    d.appendChild(text("pre", `@@L:io@@`));
     wrap.appendChild(d);
   }
   return [c.call_id, c.model, short(c.prompt_sha256, 16), short(c.response_sha256, 16), c.tokens, wrap];
@@ -198,10 +197,10 @@ function renderCalls() {
   const host = $("calls");
   host.replaceChildren();
   host.appendChild(table(
-    ["call_id", "模型", "输入", "输出", "tokens", "状态"],
+    ["call_id", "@@L:th_model@@", "@@L:th_input@@", "@@L:th_output@@", "tokens", "@@L:th_status@@"],
     rows.map(rowFor)
   ));
-  $("f-count").textContent = `显示 ${rows.length} / ${DATA.calls.length} 条`;
+  $("f-count").textContent = `@@L:count@@`;
 }
 
 modelSelect.addEventListener("change", renderCalls);
@@ -210,7 +209,7 @@ $("f-search").addEventListener("input", renderCalls);
 renderCalls();
 
 $("flags").appendChild(table(
-  ["call_id", "原因", "备注"],
+  ["call_id", "@@L:th_reason@@", "@@L:th_note@@"],
   DATA.flags.map((f) => [f.call_id, f.reason, f.note])
 ));
 
@@ -235,7 +234,7 @@ $("dl-csv").addEventListener("click", () => {
 });
 
 $("timeline").appendChild(table(
-  ["#", "事件", "摘要"],
+  ["#", "@@L:th_event@@", "@@L:th_summary@@"],
   DATA.events.map((e) => [e.seq, e.type, e.brief])
 ));
 </script>
@@ -367,10 +366,102 @@ def build_report(
     }
 
 
-def render_html(log_path: str | Path, *, max_calls: int | None = None) -> str:
+_LABELS: dict[str, dict[str, str]] = {
+    "zh": {
+        "title": "AGH 审计报告",
+        "calls": "模型调用",
+        "dl_csv": "下载 CSV",
+        "all_models": "全部模型",
+        "only_flagged": "只看已标记",
+        "search": "搜索 call_id / 模型 / 哈希",
+        "flagged_section": "被标记的问题",
+        "timeline": "事件时间线",
+        "verified_ok": "哈希链校验通过",
+        "verified_bad": "哈希链校验未通过",
+        "meta": "日志：${DATA.log}　链头：${DATA.head.slice(0, 16)}　事件：${DATA.entries}",
+        "truncated": (
+            "日志共 ${DATA.total_calls} 次调用，报告只渲染前 ${DATA.calls.length} 条"
+            "（已标记的优先保留）。用 --max-calls 调整。"
+        ),
+        "card_calls": "调用次数",
+        "card_flags": "标记问题",
+        "card_models": "模型",
+        "empty": "没有记录。",
+        "status_flagged": "已标记",
+        "status_ok": "正常",
+        "show_raw": "看原文",
+        "io": '输入：\\n${c.prompt}\\n\\n输出：\\n${c.response || ""}',
+        "th_model": "模型",
+        "th_input": "输入哈希",
+        "th_output": "输出哈希",
+        "th_status": "状态",
+        "count": "显示 ${rows.length} / ${DATA.calls.length} 条",
+        "th_reason": "原因",
+        "th_note": "备注",
+        "th_event": "事件",
+        "th_summary": "摘要",
+        "footer": "本页面由 agh ui 生成，数据内嵌、不联网。哈希链校验请在命令行运行 agh audit verify。",
+    },
+    "en": {
+        "title": "AGH Audit Report",
+        "calls": "Model calls",
+        "dl_csv": "Download CSV",
+        "all_models": "All models",
+        "only_flagged": "Flagged only",
+        "search": "Search call_id / model / hash",
+        "flagged_section": "Flagged issues",
+        "timeline": "Event timeline",
+        "verified_ok": "Hash chain verified",
+        "verified_bad": "Hash chain verification FAILED",
+        "meta": "Log: ${DATA.log}　Head: ${DATA.head.slice(0, 16)}　Events: ${DATA.entries}",
+        "truncated": (
+            "Log has ${DATA.total_calls} calls; report renders the first "
+            "${DATA.calls.length} (flagged kept first). Adjust with --max-calls."
+        ),
+        "card_calls": "Calls",
+        "card_flags": "Flagged",
+        "card_models": "Models",
+        "empty": "No records.",
+        "status_flagged": "flagged",
+        "status_ok": "ok",
+        "show_raw": "Show raw",
+        "io": 'Input:\\n${c.prompt}\\n\\nOutput:\\n${c.response || ""}',
+        "th_model": "model",
+        "th_input": "input hash",
+        "th_output": "output hash",
+        "th_status": "status",
+        "count": "Showing ${rows.length} / ${DATA.calls.length}",
+        "th_reason": "reason",
+        "th_note": "note",
+        "th_event": "event",
+        "th_summary": "summary",
+        "footer": (
+            "Generated by agh ui. Data is embedded; no network calls. "
+            "Verify the hash chain with `agh audit verify` on the command line."
+        ),
+    },
+}
+
+LANGS = tuple(_LABELS)
+
+
+def _apply_labels(html: str, lang: str) -> str:
+    labels = _LABELS.get(lang) or _LABELS["zh"]
+    for key, value in labels.items():
+        html = html.replace(f"@@L:{key}@@", value)
+    return html
+
+
+def render_html(
+    log_path: str | Path, *, max_calls: int | None = None, lang: str = "zh"
+) -> str:
     data = build_report(log_path, max_calls=max_calls)
+    labels = _LABELS.get(lang) or _LABELS["zh"]
+    data["title"] = labels["title"]
+    data["footer"] = labels["footer"]
     payload = json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
-    return _TEMPLATE.replace("__DATA__", payload)
+    # 先替换文案占位符，再塞数据：数据里的内容不会被当成占位符
+    return _apply_labels(_TEMPLATE, lang).replace("__DATA__", payload)
 
 
-__all__ = ["build_report", "render_html"]
+__all__ = ["LANGS", "build_report", "render_html"]

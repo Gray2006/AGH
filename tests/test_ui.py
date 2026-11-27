@@ -183,3 +183,45 @@ def test_report_has_csv_download(tmp_path: Path) -> None:
     assert "下载 CSV" in html
     assert "agh-calls.csv" in html
     assert "Blob(" in html
+
+
+def test_report_defaults_to_chinese(tmp_path: Path) -> None:
+    html = render_html(_log(tmp_path))
+    assert "AGH 审计报告" in html
+    assert "哈希链校验通过" in html
+    assert "输入哈希" in html
+
+
+def test_report_english_labels(tmp_path: Path) -> None:
+    html = render_html(_log(tmp_path), lang="en")
+    for probe in (
+        "AGH Audit Report",
+        "Hash chain verified",
+        "Model calls",
+        "Download CSV",
+        "input hash",
+        "output hash",
+        "Show raw",
+    ):
+        assert probe in html, probe
+    # 中文 UI 文案不该残留
+    assert "哈希链校验通过" not in html
+    assert "下载 CSV" not in html
+
+
+def test_report_has_no_unresolved_placeholders(tmp_path: Path) -> None:
+    """两种语言都不能留下 @@L:xxx@@ 占位符。"""
+    import re
+
+    for lang in ("zh", "en"):
+        html = render_html(_log(tmp_path), lang=lang)
+        assert not re.search(r"@@L:[a-z_]+@@", html), lang
+
+
+def test_ui_cli_accepts_lang(tmp_path: Path) -> None:
+    from agh.cli import main
+
+    out = tmp_path / "r.html"
+    code = main(["ui", "--log", str(_log(tmp_path)), "--out", str(out), "--lang", "en", "--no-open"])
+    assert code == 0
+    assert "AGH Audit Report" in out.read_text(encoding="utf-8")

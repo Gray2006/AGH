@@ -2,6 +2,27 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [3.3.9] - 2026-11-27
+
+`agh ui --lang en` 生成英文报告；表头改成更准确的「输入哈希 / 输出哈希」。
+
+### Added
+
+- `agh ui --lang {zh,en}`，默认 `zh`。英文报告把标题、徽章、按钮、表头、
+  状态、提示全部换成英文，数据部分（模型名、哈希、数字）不变
+- 文案走 `ui._LABELS` 字典 + `@@L:key@@` 占位符，加语言只需补一组键
+
+### Changed
+
+- 中文表头「输入 / 输出」改为「输入哈希 / 输出哈希」——
+  单元格里显示的本来就是 `prompt_sha256` / `response_sha256` 前缀，原文在「看原文」里。
+  原名容易让人以为能看到内容
+
+### Notes
+
+- 5 条新测试：默认中文、英文文案、无残留占位符、CLI 传 --lang
+- 455 passed + 1 skipped
+
 ## [3.3.8] - 2026-11-27
 
 **`agh ui` 生成的 HTML 报告一直是白页**（自 v3.1.0 起），只显示标题和筛选控件，数据一条都不渲染。

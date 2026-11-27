@@ -444,6 +444,12 @@ def build_parser() -> argparse.ArgumentParser:
     ui.add_argument("--out", default=None)
     ui.add_argument("--no-open", action="store_true", help="只生成，不自动打开浏览器")
     ui.add_argument("--max-calls", type=int, default=None, help="最多渲染多少条调用（大日志防卡）")
+    ui.add_argument(
+        "--lang",
+        choices=["zh", "en"],
+        default="zh",
+        help="报告语言：zh（默认）/ en",
+    )
     ui.set_defaults(func=cmd_ui)
     imp = sub.add_parser("import", help="把已有 jsonl 日志搬进可验证格式")
     imp.add_argument("--from-jsonl", required=True)
@@ -600,8 +606,11 @@ def cmd_ui(args: argparse.Namespace) -> int:
 
     out = Path(args.out) if args.out else Path(log).with_suffix(".report.html")
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(render_html(log, max_calls=max_calls), encoding="utf-8")
-    payload = {"ok": True, "out": str(out), "log": log}
+    out.write_text(
+        render_html(log, max_calls=max_calls, lang=getattr(args, "lang", "zh")),
+        encoding="utf-8",
+    )
+    payload = {"ok": True, "out": str(out), "log": log, "lang": getattr(args, "lang", "zh")}
     if note:
         payload["note"] = note
     print(json.dumps(payload, ensure_ascii=False))
