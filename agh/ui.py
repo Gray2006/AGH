@@ -12,7 +12,7 @@ from typing import Any
 
 from .eventlog import EventLog, LogEntry, LogTampered
 
-_TEMPLATE = """<!doctype html>
+_TEMPLATE = r"""<!doctype html>
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">

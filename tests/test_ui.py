@@ -35,6 +35,24 @@ def test_render_html_embeds_data(tmp_path: Path) -> None:
     assert "__DATA__" not in html
 
 
+def test_report_js_strings_keep_escapes(tmp_path: Path) -> None:
+    """模板是普通字符串时，JS 里的 "\\n" 会变成真换行 → 整段脚本语法错误 → 白页。
+
+    v3.1.0 加 CSV 下载时就踩了这个：`lines.join("\\n")` 变成跨行字符串，
+    报告从此渲染不出来，而只做字符串断言的测试全绿。
+    """
+    html = render_html(_log(tmp_path))
+    script = html.split("<script>", 1)[1]
+
+    # 必须保留字面反斜杠 + n
+    assert 'lines.join("\\n")' in script
+    # 真换行出现在 join 的引号之间 = JS 未闭合字符串
+    assert 'lines.join("\n")' not in script
+    # BOM 同理：必须是转义序列，不是裸字符
+    assert '"\\ufeff"' in script
+    assert '"\ufeff"' not in script
+
+
 def test_render_html_escapes_closing_tags(tmp_path: Path) -> None:
     path = tmp_path / "run.jsonl"
     audit = AuditSession(path)

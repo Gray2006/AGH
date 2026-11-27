@@ -1,4 +1,4 @@
-# AGH 状态交接（v3.3.7，2026-11-27）
+# AGH 状态交接（v3.3.8，2026-11-27）
 
 > 新会话先读这个文件，再读 `README.md` 的「版本与兼容」与 `memory/agh.md`。
 
@@ -8,7 +8,7 @@
 
 ## 当前版本
 
-- v3.3.7，`450 passed + 1 skipped`（NATS 在 CI 跑），ruff 干净，mypy 58 文件零错误
+- v3.3.8，`451 passed + 1 skipped`（NATS 在 CI 跑），ruff 干净，mypy 58 文件零错误
 - 仓库 <https://github.com/Gray2006/AGH>，CI 双版本绿
 - 依赖：pydantic v2、numpy、jsonschema、cryptography；Python 3.12+
 
@@ -163,6 +163,30 @@ python scripts/score_labels.py --labels ... --candidates ...
 
 > 2026-11-26 已解决：PyPI 发布（3.3.3 上线，Trusted Publishing + OIDC）、
 > 文档站部署（GitHub Pages，deploy-docs job）。
+
+## 真实使用发现（2026-11-27）
+
+拿本机 DSH 会话日志（7 个会话、3693 次真实模型调用、96.1 小时跨度）跑了一遍完整链路。
+详细报告在 `runs/real-usage/REPORT.md`（本地，未入库）。
+
+**发现一个致命 bug 并已修**：`agh ui` 的 HTML 报告从 v3.1.0 起一直是**白页**——
+模板是普通 Python 字符串，JS 里的 `\n` 被 Python 转成真实换行，造成
+`Uncaught SyntaxError`，整段脚本不执行。之前的测试只做字符串断言，从没真渲染过。
+v3.3.8 已修（模板改 raw string）+ 加了能抓住它的回归测试。
+
+**两个未修的真问题**
+
+1. **导入丢时间戳**：`importers.DEFAULT_MAP` 没有 `ts`，`AuditSession.call` 也不接受外部
+   时间戳。96 小时的真实跨度导入后变成 2 秒，`audit-timeline` 和 `audit-stats --by hour`
+   对导入数据完全失效。修法：DEFAULT_MAP 加 `ts`，call 加可选 `ts`。改动小、收益最大
+2. **token 口径太笼统**：真实数据里缓存读占 97%（997M / 1026M），
+   单一 `tokens` 字段会让成本判断失真。建议拆「新算 / 缓存」两列
+
+**一个产品定位问题**
+
+`flags: 0`——审计层只做「记录 + 校验」，不做异常检测。报告能证明「没被改」，
+但回答不了「哪次贵、哪次慢、有没有重复 prompt」。用户看完会问「所以呢」。
+审计 ≠ 可观测性。要么补异常检测，要么明确边界。
 
 ## 现状评估（2026-11-27，暂停点）
 

@@ -2,6 +2,27 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [3.3.8] - 2026-11-27
+
+**`agh ui` 生成的 HTML 报告一直是白页**（自 v3.1.0 起），只显示标题和筛选控件，数据一条都不渲染。
+
+### Fixed
+
+- 根因：`ui._TEMPLATE` 是普通 Python 字符串，模板里 JS 的 `lines.join("\n")`
+  和 `"\ufeff"` 被 Python 当成转义序列，`\n` 变成**真实换行**塞进 JS 双引号字符串，
+  导致 `Uncaught SyntaxError: Invalid or unexpected token`，整段脚本不执行。
+  改为 raw string（`r"""`），转义原样保留
+- CSV 下载按钮是 v3.1.0 加进来的，所以这个白页问题从 v3.1.0 一直存在到 v3.3.7
+- 之前所有 UI 测试只做字符串断言（`"verified": true` 在不在 HTML 里），
+  从没真正渲染过页面，所以一直全绿
+
+### Notes
+
+- 新增回归测试 `test_report_js_strings_keep_escapes`：断言 `join("\n")` 保留字面反斜杠、
+  真换行不出现在字符串里、BOM 是转义序列。已验证它能在旧模板下失败
+- 用真实数据发现：3693 次 DSH 会话调用导入后生成的报告，修复前截图空白，修复后正常
+- 451 passed + 1 skipped
+
 ## [3.3.7] - 2026-11-27
 
 日志字段类型不对时报得清；两个写入者共用一个日志文件不再静默写坏链。
