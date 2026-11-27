@@ -1,4 +1,4 @@
-# AGH 状态交接（v3.7.1，2026-11-27）
+# AGH 状态交接（v3.8.0，2026-11-27）
 
 > 新会话先读这个文件，再读 `README.md` 的「版本与兼容」与 `memory/agh.md`。
 
@@ -8,12 +8,13 @@
 
 ## 当前版本
 
-- v3.7.1，`484 passed + 1 skipped`（NATS 在 CI 跑），ruff 干净，mypy 60 文件零错误
+- v3.8.0，`484 passed + 1 skipped`（NATS 在 CI 跑），ruff 干净，mypy 60 文件零错误
 - 仓库 <https://github.com/Gray2006/AGH>，CI 双版本绿
 - 依赖：pydantic v2、numpy、jsonschema、cryptography；Python 3.12+
 - 自动异常检查（v3.5.0）：`agh/anomaly.py` 四条统计规则，报告出「自动发现」
 - 导入保留时间戳（v3.6.0）：`ts` 字段 + 报告「时间」列，timeline 恢复可用
 - **AGI 线开工（v3.7.0）**：`agh/repotask.py` 仓库级任务判定；方案见 `docs/agi-track.md`
+- **AGI 阶段 1（v3.8.0）**：click 上 10 道题，基线 9/10（90%，上界）；三条泄漏已记录，容器隔离是下一步前提
 
 ## 能跑什么
 
@@ -156,9 +157,9 @@ python scripts/score_labels.py --labels ... --candidates ...
 
 ## 下一步（按优先级）
 
-1. **任务抽象（已开工）**：`agh/repotask.py` 已能跑「真实仓库 + 隐藏测试」判定，
-   方案见 `docs/agi-track.md`。下一步是拿一个真实仓库切 10 道历史 bug，
-   跑基线看真模型通过率是否落在 10%–70%
+1. **AGI 阶段 1 已完成，阶段 2 卡在隔离**：click 上 10 道题基线 9/10（90%，上界）。
+   下一步不是加题，是**容器隔离**——候选不能读宿主文件系统、不能有预装的目标包、要断网。
+   没有隔离，任何通过率都不可信。详见 `docs/agi-track.md`
 2. **真实用户**：目前零真实接入。`agh import` 是最低门槛的验证方式——
    没人拿它导自己的日志，说明「审计」这个需求本身要重新审视
 3. NATS 集成：CI 已起 `nats:2.10` service 并跑真实联调；本地需要 docker
