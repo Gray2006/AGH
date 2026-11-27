@@ -2,6 +2,25 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [3.3.5] - 2026-11-27
+
+`agh import` 能读真实世界里的日志文件了：GBK 编码不再崩，UTF-8 BOM 不再静默丢数据。
+
+### Fixed
+
+- **GBK 源文件直接崩**：`agh import` 用 `read_text(encoding="utf-8")` 读源日志，
+  Windows 工具导出的 GBK 文件会抛 `UnicodeDecodeError` 并甩出 Python 堆栈。
+  现在先试 `utf-8-sig`，失败再试 GBK，都不行给一句可操作的提示
+- **UTF-8 BOM 静默导入 0 条**：记事本另存为会加 BOM，第一行 JSON 解析失败，
+  报「imported 0, skipped 1」——用户不知道发生了什么。`utf-8-sig` 一并解决
+- **CLI 层不再甩堆栈**：源文件编码不对、`--map` 写错、格式冲突，现在都输出
+  `导入失败：<原因>` 并返回退出码 2，而不是 traceback
+
+### Notes
+
+- 5 条新测试：GBK 导入、BOM 导入、不可解码源报 ValueError、CLI 干净退出（编码 / 坏 --map）
+- 442 passed + 1 skipped
+
 ## [3.3.4] - 2026-11-26
 
 `agh report` 遇到读不懂的结果文件不再整张表崩；`agh audit-diff` 不再把「换了模型」报成零差异。

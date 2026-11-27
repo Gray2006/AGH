@@ -266,3 +266,64 @@ def test_zero_import_with_corrupt_existing_log_does_not_raise(tmp_path: Path) ->
     result = import_jsonl(bad, out)
     assert result.imported == 0
     assert result.log_head == ""
+
+
+def test_import_accepts_gbk_source(tmp_path: Path) -> None:
+    """Windows 工具导出的日志常是 GBK，不能直接崩 UnicodeDecodeError。"""
+    src = tmp_path / "gbk.jsonl"
+    row = {"model": "gpt-4o", "prompt": "你好，总结一下", "response": "好的", "tokens": 12}
+    src.write_bytes((json.dumps(row, ensure_ascii=False) + "\n").encode("gbk"))
+
+    result = import_jsonl(src, tmp_path / "out.jsonl")
+    assert result.imported == 1
+    assert result.skipped == 0
+
+
+def test_import_accepts_utf8_bom_source(tmp_path: Path) -> None:
+    """记事本另存为会加 BOM；不处理的话第一行解析失败、静默导入 0 条。"""
+    src = tmp_path / "bom.jsonl"
+    row = {"model": "m", "prompt": "p", "response": "r", "tokens": 5}
+    src.write_bytes(b"\xef\xbb\xbf" + (json.dumps(row) + "\n").encode("utf-8"))
+
+    result = import_jsonl(src, tmp_path / "out.jsonl")
+    assert result.imported == 1
+    assert result.skipped == 0
+
+
+def test_import_undecodable_source_raises_value_error(tmp_path: Path) -> None:
+    """既不是 UTF-8 也不是 GBK 时给明确提示，而不是 UnicodeDecodeError。"""
+    import pytest
+
+    src = tmp_path / "latin1.jsonl"
+    src.write_bytes(b'{"model": "m", "prompt": "caf\xe9 \xff\xfe"}\n')
+    with pytest.raises(ValueError, match="UTF-8"):
+        import_jsonl(src, tmp_path / "out.jsonl")
+
+
+def test_import_cli_undecodable_source_exits_cleanly(tmp_path: Path) -> None:
+    """CLI 层不该把 Python 堆栈甩给用户。"""
+    from agh.cli import main
+
+    src = tmp_path / "latin1.jsonl"
+    src.write_bytes(b'{"model": "m", "prompt": "caf\xe9 \xff\xfe"}\n')
+    assert main(["import", "--from-jsonl", str(src), "--out", str(tmp_path / "o.jsonl")]) == 2
+
+
+def test_import_cli_bad_map_exits_cleanly(tmp_path: Path) -> None:
+    from agh.cli import main
+
+    src = _src(tmp_path)
+    assert (
+        main(
+            [
+                "import",
+                "--from-jsonl",
+                str(src),
+                "--out",
+                str(tmp_path / "o.jsonl"),
+                "--map",
+                "nonsense=field",
+            ]
+        )
+        == 2
+    )

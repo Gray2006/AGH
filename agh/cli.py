@@ -615,8 +615,14 @@ def cmd_import(args: argparse.Namespace) -> int:
 
     _require_file(args.from_jsonl, "源日志")
     out = args.out or str(Path(args.from_jsonl).with_suffix(".agh.jsonl"))
-    mapping = parse_map(args.map) if args.map else None
-    result = import_any(args.from_jsonl, out, fmt=args.format, mapping=mapping)
+    try:
+        mapping = parse_map(args.map) if args.map else None
+        result = import_any(args.from_jsonl, out, fmt=args.format, mapping=mapping)
+    except ValueError as exc:
+        # 源文件编码不对、--map 写错、格式冲突：都是用户能自己修的问题，
+        # 给一句话结论，不要把 Python 堆栈甩出去
+        print(f"导入失败：{exc}", file=sys.stderr)
+        return 2
     print(json.dumps(result.as_dict(), ensure_ascii=False, indent=2))
     if result.imported == 0:
         # 一条都没导进来不是成功：用户会以为文件已经转好了

@@ -177,6 +177,28 @@ def parse_map(pairs: list[str] | None) -> dict[str, str]:
     return mapping
 
 
+def _read_source(src: Path) -> str:
+    """读源日志，容忍真实世界里的编码。
+
+    用户从别的工具导出的 jsonl 常见两种坑：
+    - Windows 工具按 GBK 写（中文直接崩 UnicodeDecodeError）
+    - 记事本另存为加了 UTF-8 BOM（第一行 JSON 解析失败，静默导入 0 条）
+
+    utf-8-sig 同时处理 BOM 和普通 UTF-8；失败再试 GBK；都不行给明确提示，
+    而不是把 Python 堆栈甩给用户。
+    """
+    raw = src.read_bytes()
+    for encoding in ("utf-8-sig", "gbk"):
+        try:
+            return raw.decode(encoding)
+        except UnicodeDecodeError:
+            continue
+    raise ValueError(
+        f"源日志 {src} 既不是 UTF-8 也不是 GBK 编码，无法读取。"
+        "请先转成 UTF-8 再导入，例如：iconv -f latin1 -t utf-8 源文件 > 新文件"
+    )
+
+
 def import_any(
     source: str | Path,
     out: str | Path,
@@ -190,7 +212,7 @@ def import_any(
     dst = Path(out)
     field_map = dict(DEFAULT_MAP if mapping is None else mapping)
 
-    lines = [ln for ln in src.read_text(encoding="utf-8").split("\n") if ln.strip()]
+    lines = [ln for ln in _read_source(src).split("\n") if ln.strip()]
     detected = fmt
     if fmt == "auto":
         detected = "generic"
