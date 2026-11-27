@@ -281,3 +281,16 @@ def test_category_survives_import(tmp_path: Path) -> None:
     import_jsonl(src, log)
     report = build_report(log)
     assert report["calls"][0]["category"] == "检索"
+
+
+def test_report_shows_full_hashes(tmp_path: Path) -> None:
+    """报告里不能把哈希截断——用户要能直接看到完整 64 位。"""
+    path = _log(tmp_path)
+    report = build_report(path)
+    prompt_hash = report["calls"][0]["prompt_sha256"]
+    assert len(prompt_hash) == 64
+
+    html = render_html(path)
+    assert prompt_hash in html
+    # 不再出现「哈希前 16 位 + …」这种截断
+    assert f"{prompt_hash[:16]}…" not in html

@@ -46,6 +46,9 @@ tr:last-child td { border-bottom:none; }
 code { font-family:ui-monospace,Consolas,monospace; font-size:12px; color:var(--accent);
        word-break:break-all; }
 .pill { display:inline-block; padding:1px 8px; border-radius:999px; font-size:11.5px; }
+.hash { font-family:ui-monospace,Consolas,monospace; font-size:11.5px; line-height:1.35;
+        color:var(--accent); word-break:break-all; user-select:all; }
+td.hash-col { width:26%; }
 #verify { margin-top:8px; }
 .btn { background:var(--panel); color:var(--text); border:1px solid var(--line);
        border-radius:8px; padding:5px 12px; font-size:12.5px; cursor:pointer; }
@@ -204,8 +207,10 @@ function rowFor(c) {
     d.appendChild(text("pre", `@@L:io@@`));
     wrap.appendChild(d);
   }
-  return [c.call_id, c.model, c.category || "—", short(c.prompt_sha256, 16),
-          short(c.response_sha256, 16), c.tokens, wrap];
+  return [c.call_id, c.model, c.category || "—",
+          text("code", c.prompt_sha256 || "—", "hash"),
+          text("code", c.response_sha256 || "—", "hash"),
+          c.tokens, wrap];
 }
 
 function renderCalls() {
