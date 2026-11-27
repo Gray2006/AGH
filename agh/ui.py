@@ -10,6 +10,7 @@ import json
 from pathlib import Path
 from typing import Any
 
+from .anomaly import RULE_LABELS, Thresholds, detect
 from .eventlog import EventLog, LogEntry, LogTampered
 
 _TEMPLATE = r"""<!doctype html>
@@ -48,7 +49,15 @@ code { font-family:ui-monospace,Consolas,monospace; font-size:12px; color:var(--
 .pill { display:inline-block; padding:1px 8px; border-radius:999px; font-size:11.5px; }
 .hash { font-family:ui-monospace,Consolas,monospace; font-size:11.5px; line-height:1.35;
         color:var(--accent); word-break:break-all; user-select:all; }
-td.hash-col { width:26%; }
+/* 固定列宽：哈希列吃掉剩余空间，类别/tokens/状态 保持窄且不折行 */
+#calls table { table-layout:fixed; }
+#calls th:nth-child(1), #calls td:nth-child(1) { width:17%; }
+#calls th:nth-child(2), #calls td:nth-child(2) { width:15%; }
+#calls th:nth-child(3), #calls td:nth-child(3) { width:7%; white-space:nowrap; }
+#calls th:nth-child(4), #calls td:nth-child(4) { width:23%; }
+#calls th:nth-child(5), #calls td:nth-child(5) { width:23%; }
+#calls th:nth-child(6), #calls td:nth-child(6) { width:7%; white-space:nowrap; }
+#calls th:nth-child(7), #calls td:nth-child(7) { width:8%; }
 #verify { margin-top:8px; }
 .btn { background:var(--panel); color:var(--text); border:1px solid var(--line);
        border-radius:8px; padding:5px 12px; font-size:12.5px; cursor:pointer; }
@@ -103,6 +112,10 @@ footer { padding:14px 28px 28px; color:var(--muted); font-size:12px; border-top:
   <div id="calls"></div>
 </section>
 <section>
+  <h2>@@L:anomaly_section@@</h2>
+  <div id="anomalies"></div>
+</section>
+<section>
   <h2>@@L:flagged_section@@</h2>
   <div id="flags"></div>
 </section>
@@ -142,6 +155,7 @@ const cards = [
   ["@@L:card_calls@@", DATA.summary.calls, ""],
   ["Tokens", DATA.summary.tokens, ""],
   ["@@L:card_flags@@", DATA.summary.flags, ""],
+  ["@@L:card_anomalies@@", DATA.summary.anomalies || 0, ""],
   ["@@L:card_models@@", (DATA.summary.models || []).join(" / ") || "—", "small"],
 ];
 for (const [k, v, cls] of cards) {
@@ -184,6 +198,13 @@ function table(headers, rows) {
 }
 
 const flagged = new Set(DATA.flags.map((f) => f.call_id));
+const anomalous = new Map();
+for (const a of (DATA.anomalies || [])) {
+  for (const cid of (a.call_ids || [a.call_id])) {
+    if (!anomalous.has(cid)) anomalous.set(cid, []);
+    if (!anomalous.get(cid).includes(a.label)) anomalous.get(cid).push(a.label);
+  }
+}
 
 // 模型下拉：从数据里收集，按字母序
 const modelSelect = $("f-model");
@@ -201,6 +222,13 @@ function rowFor(c) {
                       isFlagged ? "pill p-bad" : "pill p-ok");
   const wrap = document.createElement("div");
   wrap.appendChild(status);
+  const hits = anomalous.get(c.call_id);
+  if (hits && hits.length) {
+    const pill = text("span", `@@L:status_anomaly@@ ${hits.join(" / ")}`, "pill p-warn");
+    pill.style.marginTop = "4px";
+    pill.title = hits.join("\n");
+    wrap.appendChild(pill);
+  }
   if (c.prompt) {
     const d = document.createElement("details");
     d.appendChild(text("summary", "@@L:show_raw@@"));
@@ -244,21 +272,28 @@ $("f-flagged").addEventListener("change", renderCalls);
 $("f-search").addEventListener("input", renderCalls);
 renderCalls();
 
+$("anomalies").appendChild(table(
+  ["@@L:th_rule@@", "@@L:th_call_id@@", "@@L:th_detail@@"],
+  (DATA.anomalies || []).map((a) => [a.label, a.call_id, a.detail])
+));
+
 $("flags").appendChild(table(
   ["@@L:th_call_id@@", "@@L:th_reason@@", "@@L:th_note@@"],
   DATA.flags.map((f) => [f.call_id, f.reason, f.note])
 ));
 
 $("dl-csv").addEventListener("click", () => {
-  const head = ["call_id","model","tokens","prompt_sha256","response_sha256","flagged","flag_reason","flag_note"];
+  const head = ["call_id","model","category","tokens","prompt_sha256","response_sha256",
+                "flagged","flag_reason","flag_note","anomalies"];
   const flaggedMap = new Map(DATA.flags.map((f) => [f.call_id, f]));
   const esc = (v) => `"${String(v == null ? "" : v).replace(/"/g, '""')}"`;
   const lines = [head.join(",")];
   for (const c of DATA.calls) {
     const f = flaggedMap.get(c.call_id) || {};
     lines.push([
-      c.call_id, c.model, c.tokens, c.prompt_sha256, c.response_sha256,
+      c.call_id, c.model, c.category || "", c.tokens, c.prompt_sha256, c.response_sha256,
       f.call_id ? "yes" : "no", f.reason || "", f.note || "",
+      (anomalous.get(c.call_id) || []).join("|"),
     ].map(esc).join(","));
   }
   const blob = new Blob(["\ufeff" + lines.join("\n")], { type: "text/csv;charset=utf-8" });
@@ -329,7 +364,12 @@ def _count_categories(calls: list[dict[str, Any]]) -> dict[str, int]:
 
 
 def build_report(
-    log_path: str | Path, *, title: str = "AGH 审计报告", max_calls: int | None = None
+    log_path: str | Path,
+    *,
+    title: str = "AGH 审计报告",
+    max_calls: int | None = None,
+    anomalies: bool = True,
+    thresholds: Thresholds | None = None,
 ) -> dict[str, Any]:
     path = Path(log_path)
     # 校验失败不能让报告生成失败：报告的最大用途恰恰是「把一份可疑日志发给别人看」。
@@ -390,6 +430,8 @@ def build_report(
         calls = kept
         truncated = True
 
+    findings = detect(calls, thresholds=thresholds) if anomalies else []
+
     return {
         "title": title,
         "verified": verified,
@@ -402,10 +444,22 @@ def build_report(
         "calls": calls,
         "flags": flags,
         "events": events,
+        "anomalies": [
+            {
+                "rule": f.rule,
+                "label": RULE_LABELS.get(f.rule, f.rule),
+                "call_id": f.call_id,
+                # 组级命中只标代表调用，否则一轮对话几十步会全部染红
+                "call_ids": list(f.all_ids()) if not f.group else [f.call_id],
+                "detail": f.detail,
+            }
+            for f in findings
+        ],
         "summary": {
             "calls": len(calls),
             "tokens": sum(int(c["tokens"] or 0) for c in calls),
             "flags": len(flags),
+            "anomalies": len(findings),
             "models": sorted({c["model"] for c in calls if c["model"]}),
             "categories": _count_categories(calls),
         },
@@ -422,6 +476,11 @@ _LABELS: dict[str, dict[str, str]] = {
         "only_flagged": "只看已标记",
         "search": "搜索 call_id / 模型 / 哈希",
         "flagged_section": "被标记的问题",
+        "anomaly_section": "自动检查（纯统计，不判断对错）",
+        "card_anomalies": "自动发现",
+        "status_anomaly": "自动",
+        "th_rule": "规则",
+        "th_detail": "说明",
         "timeline": "事件时间线",
         "verified_ok": "哈希链校验通过",
         "verified_bad": "哈希链校验未通过",
@@ -464,6 +523,9 @@ _LABELS: dict[str, dict[str, str]] = {
 不是账单；如果导入时只记了「新算 token」，缓存读的部分不含在内。</li>
 <li><b>标记问题</b>：调用 <code>session.flag()</code> 记录的人工标记数。为 0 只说明
 「没人标过」，不代表「没有问题」。</li>
+<li><b>自动发现</b>：纯统计规则挑出来的可疑调用（token 突增、重复输入、空响应、
+tokens 为 0）。它不判断对错，只是提示「这条值得看一眼」。人工标记和自动发现分开计，
+不要混着看。</li>
 <li><b>模型</b>：日志里出现过的模型名，按字母序。同一个模型的不同写法会被算成两个。</li>
 </ul>
 
@@ -490,6 +552,7 @@ _LABELS: dict[str, dict[str, str]] = {
 <li>日志是不是被整条替换过 —— 本地哈希链发现不了，需要外部锚定
 （<code>agh anchor</code>）</li>
 <li>记录本身在写入前是否真实 —— 签名只能证明「从某一刻起没被改」</li>
+<li>所有问题 —— 自动检查只有四条统计规则，它没报不等于没问题</li>
 </ul>
 
 <h3>隐私</h3>
@@ -506,6 +569,11 @@ _LABELS: dict[str, dict[str, str]] = {
         "only_flagged": "Flagged only",
         "search": "Search call_id / model / hash",
         "flagged_section": "Flagged issues",
+        "anomaly_section": "Automatic checks (statistics only, not a verdict)",
+        "card_anomalies": "Auto-flagged",
+        "status_anomaly": "auto",
+        "th_rule": "rule",
+        "th_detail": "detail",
         "timeline": "Event timeline",
         "verified_ok": "Hash chain verified",
         "verified_bad": "Hash chain verification FAILED",
@@ -550,6 +618,9 @@ and the failing position is shown right under the badge.
 not a bill. If the import only recorded freshly computed tokens, cached reads are not included.</li>
 <li><b>Flagged</b>: number of manual <code>session.flag()</code> marks. Zero only means
 "nobody flagged anything", not "nothing is wrong".</li>
+<li><b>Auto-flagged</b>: calls picked out by purely statistical rules (token spike,
+repeated input, empty response, zero tokens). It is not a verdict — just "worth a look".
+Manual flags and automatic findings are counted separately on purpose.</li>
 <li><b>Models</b>: model names found in the log, alphabetically. Different spellings of the
 same model are counted as separate entries.</li>
 </ul>
@@ -579,6 +650,8 @@ when the page was generated; it does not replace your own check.
 you need external anchoring (<code>agh anchor</code>)</li>
 <li>Whether the record was true before it was written — a signature only proves
 "unchanged since a certain moment"</li>
+<li>Every problem — the automatic checks are four statistical rules only;
+silence is not proof of health</li>
 </ul>
 
 <h3>Privacy</h3>
@@ -603,9 +676,13 @@ def _apply_labels(html: str, lang: str) -> str:
 
 
 def render_html(
-    log_path: str | Path, *, max_calls: int | None = None, lang: str = "zh"
+    log_path: str | Path,
+    *,
+    max_calls: int | None = None,
+    lang: str = "zh",
+    anomalies: bool = True,
 ) -> str:
-    data = build_report(log_path, max_calls=max_calls)
+    data = build_report(log_path, max_calls=max_calls, anomalies=anomalies)
     labels = _LABELS.get(lang) or _LABELS["zh"]
     data["title"] = labels["title"]
     data["footer"] = labels["footer"]

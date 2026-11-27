@@ -450,6 +450,11 @@ def build_parser() -> argparse.ArgumentParser:
         default="zh",
         help="报告语言：zh（默认）/ en",
     )
+    ui.add_argument(
+        "--no-anomaly",
+        action="store_true",
+        help="不做自动检查（默认会跑纯统计的异常检测）",
+    )
     ui.set_defaults(func=cmd_ui)
     imp = sub.add_parser("import", help="把已有 jsonl 日志搬进可验证格式")
     imp.add_argument("--from-jsonl", required=True)
@@ -607,7 +612,12 @@ def cmd_ui(args: argparse.Namespace) -> int:
     out = Path(args.out) if args.out else Path(log).with_suffix(".report.html")
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(
-        render_html(log, max_calls=max_calls, lang=getattr(args, "lang", "zh")),
+        render_html(
+            log,
+            max_calls=max_calls,
+            lang=getattr(args, "lang", "zh"),
+            anomalies=not getattr(args, "no_anomaly", False),
+        ),
         encoding="utf-8",
     )
     payload = {"ok": True, "out": str(out), "log": log, "lang": getattr(args, "lang", "zh")}

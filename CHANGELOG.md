@@ -2,6 +2,34 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [3.5.0] - 2026-11-27
+
+报告加了自动异常检查——「标记问题」原来只在人手动 `session.flag()` 时才有，真实日志里永远是 0。
+
+### Added
+
+- 新模块 `agh/anomaly.py`：纯统计规则，不发网络请求、不调模型、成本为零
+  - `token_spike`：单次 tokens 超过同模型 P95 的 3 倍（样本 < 20 不判）
+  - `duplicate_prompt`：同一输入出现 ≥ 20 次且产生 ≥ 5 种不同输出（像卡在重试里）
+  - `empty_response`：输出哈希等于空串的哈希
+  - `zero_tokens`：有输出但 tokens 记成 0
+- 报告新增「自动发现」卡片和「自动检查」区块；命中的调用行上有橙色标签
+- `summary.anomalies` 给出条数，CSV 导出新增 `category` 和 `anomalies` 列
+- 阈值可配：`Thresholds(min_samples, spike_factor, duplicate_min, duplicate_outputs)`
+- `agh ui --no-anomaly` 可关闭
+
+### Design
+
+- 自动结论**不写进日志**，只在报告里算——避免把机器判断和人工标记混在一条哈希链里
+- 组级命中（重复输入）只报一条、只标代表调用，否则一轮对话几十步会全部染红
+  （第一版没这么做，真实数据上是 3441/3829 = 90% 命中，等于没标）
+
+### Notes
+
+- 10 条新测试：样本不足不报、突增触发、重复只报一条、稳定输出不算、空响应、
+  tokens 为 0、报告集成、开关、英文文案
+- 470 passed + 1 skipped
+
 ## [3.4.1] - 2026-11-27
 
 报告里的输入/输出哈希不再截断，显示完整 64 位。
