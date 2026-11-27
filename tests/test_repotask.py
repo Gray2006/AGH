@@ -130,3 +130,43 @@ def test_result_as_dict(patch: str, tmp_path: Path) -> None:
     payload = result.as_dict()
     assert payload["passed"] is True
     assert "duration_s" in payload
+
+
+def test_env_is_passed_to_tests(tmp_path: Path) -> None:
+    """src 布局的仓库要靠环境变量才能 import。"""
+    repo = _make_repo(tmp_path)
+    (repo / "pkg").mkdir()
+    (repo / "pkg" / "__init__.py").write_text("VALUE = 42\n", encoding="utf-8")
+    (repo / "test_env.py").write_text(
+        "from pkg import VALUE\n\n\ndef test_value():\n    assert VALUE == 42\n",
+        encoding="utf-8",
+    )
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "add pkg")
+
+    task = RepoTask(
+        name="env",
+        repo=repo,
+        issue="x",
+        hidden_tests=(f'"{sys.executable}" -m pytest -q test_env.py',),
+        timeout_s=60,
+        env=(("PYTHONPATH", str(repo)),),
+    )
+    result = run_task(task, keep_dir=tmp_path / "keep")
+    # 副本里 PYTHONPATH 指向原仓库也能 import，说明 env 确实传下去了
+    assert result.passed is True, result.reason + result.stdout
+
+
+def test_setup_failure_is_reported(tmp_path: Path) -> None:
+    repo = _make_repo(tmp_path)
+    task = RepoTask(
+        name="setup-fail",
+        repo=repo,
+        issue="x",
+        hidden_tests=(f'"{sys.executable}" -c "pass"',),
+        timeout_s=30,
+        setup=(f'"{sys.executable}" -c "import sys; sys.exit(3)"',),
+    )
+    result = run_task(task)
+    assert result.passed is False
+    assert "准备步骤失败" in result.reason

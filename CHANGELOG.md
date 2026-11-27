@@ -2,6 +2,34 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [3.7.1] - 2026-11-27
+
+仓库级任务判定补上环境支持，并在真实仓库上验证了可判别性。
+
+### Added
+
+- `RepoTask` 新增 `setup`（跑测试前的准备命令）和 `env`（额外环境变量）
+  - src 布局的仓库需要 `PYTHONPATH=src`，否则 `ModuleNotFoundError` 会让所有候选
+    看起来都「失败」，其实是环境坏了
+  - 测试依赖（如 `freezegun`）用 `setup` 装
+
+### Verified
+
+在 `itsdangerous`（665 个提交）上验证任务构造：
+
+- **错误构造**：只 checkout 父提交 → 代码和测试一起回退，测试永远绿，无区分度
+- **正确构造**：父提交代码 + 修复提交的测试文件覆盖 → 应失败；再应用源码修复 → 应通过
+- 结果：7 个候选里 **2 个可用**（`access sha1 lazily`、`catch OSError on Windows`），
+  产出率 29%
+
+结论写进 `docs/agi-track.md`：候选筛选不能只看「碰了 src 和 tests」，
+要按提交信息或新增断言进一步过滤；要 10 道题需先扫 ~35 个候选。
+
+### Notes
+
+- 2 条新测试：env 传进子进程、setup 失败有明确原因
+- 484 passed + 1 skipped
+
 ## [3.7.0] - 2026-11-27
 
 **AGI 线开工：仓库级任务判定**。题库存量任务被证实测不出差异（真模型全对），

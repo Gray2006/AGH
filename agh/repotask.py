@@ -12,6 +12,7 @@
 
 from __future__ import annotations
 
+import os
 import shutil
 import subprocess
 import tempfile
@@ -30,6 +31,10 @@ class RepoTask:
     hidden_tests: tuple[str, ...]   # 判定用命令，候选看不到
     base_ref: str = "HEAD"
     timeout_s: int = 120
+    # 跑测试前的准备命令（如 pip install -e ".[dev]"）；空表示不需要
+    setup: tuple[str, ...] = ()
+    # 额外环境变量。src 布局的仓库通常要 PYTHONPATH=src
+    env: tuple[tuple[str, str], ...] = ()
 
 
 @dataclass(frozen=True)
@@ -138,6 +143,30 @@ def run_task(
                     duration_s=time.perf_counter() - started, reason=why,
                 )
 
+        env = os.environ.copy()
+        for key, value in task.env:
+            env[key] = value
+
+        for cmd in task.setup:
+            try:
+                prep = subprocess.run(
+                    cmd, cwd=work, shell=True, capture_output=True, text=True,
+                    encoding="utf-8", errors="replace", timeout=task.timeout_s, env=env,
+                )
+            except subprocess.TimeoutExpired:
+                return TaskResult(
+                    passed=False, applied=True, exit_code=-1, stdout="", stderr="",
+                    duration_s=time.perf_counter() - started,
+                    reason=f"准备步骤超时：{cmd}",
+                )
+            if prep.returncode != 0:
+                tail = (prep.stderr or prep.stdout or "").strip()[-300:]
+                return TaskResult(
+                    passed=False, applied=True, exit_code=-1, stdout="", stderr="",
+                    duration_s=time.perf_counter() - started,
+                    reason=f"准备步骤失败：{cmd} -> {tail}",
+                )
+
         outputs: list[str] = []
         exit_code = 0
         combined_out = ""
@@ -153,6 +182,7 @@ def run_task(
                     encoding="utf-8",
                     errors="replace",
                     timeout=task.timeout_s,
+                    env=env,
                 )
             except subprocess.TimeoutExpired:
                 return TaskResult(

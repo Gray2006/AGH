@@ -100,6 +100,43 @@ RepoTask
 而且审计层正好是 AGI 层需要的基础设施——每道题的每次尝试都会被哈希链记录下来，
 可以回答「这次提升是真的还是随机波动」。
 
+## 实测：itsdangerous 上的可判别性验证（2026-11-27）
+
+不花 token 的第一步：拿真实仓库的历史提交，验证「坏代码 + 修复后的测试 → 失败，
+应用修复 → 通过」。
+
+**踩到的三个坑**（都写进了实现）：
+
+1. **只 checkout 父提交没有区分度**。整个提交（代码 + 测试）一起回退，测试自然还是绿的。
+   正确构造是：父提交的代码 + **修复提交里的测试文件**覆盖上来。
+2. **src 布局要 PYTHONPATH**。否则 `ModuleNotFoundError`，全部候选都「失败」，
+   看起来像可用，其实是环境坏了。`RepoTask.env` 就是为此加的。
+3. **测试依赖要装**。itsdangerous 的测试要 `freezegun`，缺了同样全红。
+   `RepoTask.setup` 用来跑准备命令。
+
+**结果**（itsdangerous，665 个提交里扫描最近 400 个）：
+
+| 提交 | 坏代码+新测试 | 修复后 | 可用 |
+|---|---|---|---|
+| 7edfa12e drop end of life python versions | 通过 | 通过 | ✗ |
+| 7f4dcf83 access sha1 lazily | **失败** | 通过 | ✓ |
+| 9a25d989 update project files | 通过 | 通过 | ✗ |
+| 11e882bb update dev dependencies | 通过 | 通过 | ✗ |
+| 177196d3 catch OSError on Windows | **失败** | 通过 | ✓ |
+| 506ca21d remove deprecated code | 通过 | 通过 | ✗ |
+| aed5b260 add typing with mypy | 通过 | 通过 | ✗ |
+
+**产出率 2/7 ≈ 29%**。同时改 src 和 tests 的提交里，大多数不是「测试能看见的 bugfix」——
+改依赖、改类型标注、删废弃代码都会碰两边但测试始终绿。
+
+**这对方案的修正**：候选来源不能只看「碰了 src 和 tests」，要更严格：
+- 提交信息含 fix/bug/crash/wrong/incorrect 等词
+- 或者提交本身新增了断言（测试文件里 `+` 行包含 `assert`）
+- 或者 CI 上该提交确实修了一个红的测试
+
+产出率 29% 意味着**要 10 道题得先筛 ~35 个候选提交**。可接受，但下一个仓库要选
+bugfix 密度更高的（`requests`、`flask`、`click` 这类活跃项目）。
+
 ## 第一个交付物
 
 `agh/repotask.py`：
