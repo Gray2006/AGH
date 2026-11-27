@@ -2,6 +2,29 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [3.6.0] - 2026-11-27
+
+**导入保留原始时间戳** —— 之前导入的日志时间全被改写成导入时刻，timeline 和按小时统计等于废掉。
+
+### Added
+
+- `DEFAULT_MAP` 新增 `ts`，`agh import` 会读源数据的 `ts` 字段并保留原始发生时间
+- `_parse_ts()` 兼容毫秒整数、秒整数、数字字符串、ISO 8601 字符串；
+  解析不了返回 `None`（不猜），退回写入时刻
+- `AuditSession.call(ts=...)` 和 `EventLog.append(ts=...)` 支持显式时间
+- 报告新增「时间」列（本地时区格式化），CSV 导出也带 `time`
+
+### Why
+
+真实数据验证时发现：7 个 DSH 会话、96.1 小时的真实跨度，导入后时间范围变成
+`10:02:03 → 10:02:05`（2 秒），`audit-timeline` 和 `audit-stats --by hour` 完全失效。
+修完后同一份数据时间跨度恢复为 2026-11-23 → 11-27，按小时分布正常。
+
+### Notes
+
+- 4 条新测试：时间戳保留、`_parse_ts` 各种输入、无 ts 时用当前时间、报告带 ts
+- 474 passed + 1 skipped
+
 ## [3.5.0] - 2026-11-27
 
 报告加了自动异常检查——「标记问题」原来只在人手动 `session.flag()` 时才有，真实日志里永远是 0。

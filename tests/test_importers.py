@@ -327,3 +327,52 @@ def test_import_cli_bad_map_exits_cleanly(tmp_path: Path) -> None:
         )
         == 2
     )
+
+
+def test_import_preserves_source_timestamp(tmp_path: Path) -> None:
+    """导入必须保留原始发生时间，否则 timeline / 按小时统计全废。"""
+    from agh.eventlog import EventLog
+
+    src = tmp_path / "src.jsonl"
+    original_ms = 1_763_000_000_000
+    src.write_text(
+        json.dumps({"model": "m", "prompt": "p", "response": "r", "tokens": 1, "ts": original_ms})
+        + "\n",
+        encoding="utf-8",
+    )
+    out = tmp_path / "out.jsonl"
+    import_jsonl(src, out)
+
+    calls = [e for e in EventLog(out).entries if e.type == "llm.call"]
+    assert calls[0].ts == original_ms
+
+
+def test_parse_ts_handles_common_shapes() -> None:
+    from agh.importers import _parse_ts
+
+    assert _parse_ts(1_763_000_000_000) == 1_763_000_000_000  # 毫秒
+    assert _parse_ts(1_763_000_000) == 1_763_000_000_000       # 秒 → 毫秒
+    assert _parse_ts("1763000000000") == 1_763_000_000_000     # 数字字符串
+    assert _parse_ts("2025-11-09T00:00:00Z") is not None       # ISO 8601
+    assert _parse_ts(None) is None
+    assert _parse_ts("") is None
+    assert _parse_ts("不是时间") is None
+    assert _parse_ts(True) is None
+
+
+def test_import_without_ts_uses_now(tmp_path: Path) -> None:
+    """没给 ts 时用写入时刻，不能变成 0 或 None。"""
+    import time
+
+    from agh.eventlog import EventLog
+
+    src = tmp_path / "src.jsonl"
+    src.write_text(
+        json.dumps({"model": "m", "prompt": "p", "response": "r", "tokens": 1}) + "\n",
+        encoding="utf-8",
+    )
+    out = tmp_path / "out.jsonl"
+    before = int(time.time() * 1000) - 5000
+    import_jsonl(src, out)
+    calls = [e for e in EventLog(out).entries if e.type == "llm.call"]
+    assert calls[0].ts > before

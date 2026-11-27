@@ -1,4 +1,4 @@
-# AGH 状态交接（v3.5.0，2026-11-27）
+# AGH 状态交接（v3.6.0，2026-11-27）
 
 > 新会话先读这个文件，再读 `README.md` 的「版本与兼容」与 `memory/agh.md`。
 
@@ -8,10 +8,11 @@
 
 ## 当前版本
 
-- v3.5.0，`470 passed + 1 skipped`（NATS 在 CI 跑），ruff 干净，mypy 59 文件零错误
+- v3.6.0，`474 passed + 1 skipped`（NATS 在 CI 跑），ruff 干净，mypy 59 文件零错误
 - 仓库 <https://github.com/Gray2006/AGH>，CI 双版本绿
 - 依赖：pydantic v2、numpy、jsonschema、cryptography；Python 3.12+
 - 自动异常检查（v3.5.0）：`agh/anomaly.py` 四条统计规则，报告出「自动发现」
+- 导入保留时间戳（v3.6.0）：`ts` 字段 + 报告「时间」列，timeline 恢复可用
 
 ## 能跑什么
 

@@ -64,12 +64,16 @@ class AuditSession:
         tokens: int = 0,
         latency_ms: int = 0,
         category: str = "",
+        ts: int | None = None,
         meta: dict[str, Any] | None = None,
     ) -> str:
         """记一次模型调用，返回 call_id（用于后续 flag）。
 
         `category` 是调用方自己给的分类（如「读取」「执行」「对话」），
         报告里可以按它筛选。留空表示未分类。
+
+        `ts` 是毫秒时间戳，只在导入外部日志时给，用来保留原始发生时间；
+        正常运行时留空，用写入时刻。
         """
         seq = sum(1 for e in self.log.entries if e.type == "llm.call")
         call_id = f"call-{sha256_hex({'p': prompt, 'r': response})[:12]}-{seq}"
@@ -86,7 +90,7 @@ class AuditSession:
         if self.store_payload:
             payload["prompt"] = prompt
             payload["response"] = response
-        self.log.append("llm.call", payload)
+        self.log.append("llm.call", payload, ts=ts)
         self._calls[call_id] = payload
         return call_id
 

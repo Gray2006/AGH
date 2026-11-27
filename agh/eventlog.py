@@ -152,10 +152,15 @@ class EventLog:
                 "多进程/多 worker 请各写各的文件，或改用 SqliteEventLog"
             )
 
-    def append(self, type_: str, payload: dict[str, Any]) -> LogEntry:
+    def append(self, type_: str, payload: dict[str, Any], ts: int | None = None) -> LogEntry:
+        """追加一条事件。
+
+        `ts` 只在**导入外部日志**时显式给——用来保留原始发生时间。
+        正常运行时留空，用时钟。
+        """
         self._check_not_stolen()
         seq = len(self.entries) + 1
-        ts = self._clock()
+        ts = self._clock() if ts is None else int(ts)
         prev = self.last_hash
         entry = LogEntry(
             seq=seq,

@@ -294,3 +294,16 @@ def test_report_shows_full_hashes(tmp_path: Path) -> None:
     assert prompt_hash in html
     # 不再出现「哈希前 16 位 + …」这种截断
     assert f"{prompt_hash[:16]}…" not in html
+
+
+def test_report_carries_timestamp(tmp_path: Path) -> None:
+    path = tmp_path / "run.jsonl"
+    audit = AuditSession(path)
+    audit.call(model="m", prompt="p", response="r", tokens=1, ts=1_763_000_000_000)
+
+    report = build_report(path)
+    assert report["calls"][0]["ts"] == 1_763_000_000_000
+
+    html = render_html(path)
+    assert "时间" in html
+    assert "fmtTime" in html

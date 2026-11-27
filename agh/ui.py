@@ -51,13 +51,14 @@ code { font-family:ui-monospace,Consolas,monospace; font-size:12px; color:var(--
         color:var(--accent); word-break:break-all; user-select:all; }
 /* 固定列宽：哈希列吃掉剩余空间，类别/tokens/状态 保持窄且不折行 */
 #calls table { table-layout:fixed; }
-#calls th:nth-child(1), #calls td:nth-child(1) { width:17%; }
-#calls th:nth-child(2), #calls td:nth-child(2) { width:15%; }
-#calls th:nth-child(3), #calls td:nth-child(3) { width:7%; white-space:nowrap; }
-#calls th:nth-child(4), #calls td:nth-child(4) { width:23%; }
-#calls th:nth-child(5), #calls td:nth-child(5) { width:23%; }
-#calls th:nth-child(6), #calls td:nth-child(6) { width:7%; white-space:nowrap; }
-#calls th:nth-child(7), #calls td:nth-child(7) { width:8%; }
+#calls th:nth-child(1), #calls td:nth-child(1) { width:14%; }
+#calls th:nth-child(2), #calls td:nth-child(2) { width:11%; white-space:nowrap; }
+#calls th:nth-child(3), #calls td:nth-child(3) { width:12%; }
+#calls th:nth-child(4), #calls td:nth-child(4) { width:6%; white-space:nowrap; }
+#calls th:nth-child(5), #calls td:nth-child(5) { width:20%; }
+#calls th:nth-child(6), #calls td:nth-child(6) { width:20%; }
+#calls th:nth-child(7), #calls td:nth-child(7) { width:7%; white-space:nowrap; }
+#calls th:nth-child(8), #calls td:nth-child(8) { width:10%; }
 #verify { margin-top:8px; }
 .btn { background:var(--panel); color:var(--text); border:1px solid var(--line);
        border-radius:8px; padding:5px 12px; font-size:12.5px; cursor:pointer; }
@@ -134,6 +135,14 @@ const text = (tag, value, cls) => {
   return el;
 };
 const short = (s, n) => { s = String(s || ""); return s.length > n ? s.slice(0, n) + "…" : s; };
+const fmtTime = (ms) => {
+  if (!ms) return "—";
+  const d = new Date(Number(ms));
+  if (Number.isNaN(d.getTime())) return "—";
+  const p = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} `
+    + `${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+};
 
 $("title").textContent = DATA.title || "@@L:title@@";
 const badge = document.createElement("span");
@@ -235,7 +244,7 @@ function rowFor(c) {
     d.appendChild(text("pre", `@@L:io@@`));
     wrap.appendChild(d);
   }
-  return [c.call_id, c.model, c.category || "—",
+  return [c.call_id, fmtTime(c.ts), c.model, c.category || "—",
           text("code", c.prompt_sha256 || "—", "hash"),
           text("code", c.response_sha256 || "—", "hash"),
           c.tokens, wrap];
@@ -259,7 +268,7 @@ function renderCalls() {
   const host = $("calls");
   host.replaceChildren();
   host.appendChild(table(
-    ["@@L:th_call_id@@", "@@L:th_model@@", "@@L:th_category@@",
+    ["@@L:th_call_id@@", "@@L:th_time@@", "@@L:th_model@@", "@@L:th_category@@",
      "@@L:th_input@@", "@@L:th_output@@", "tokens", "@@L:th_status@@"],
     rows.map(rowFor)
   ));
@@ -283,7 +292,7 @@ $("flags").appendChild(table(
 ));
 
 $("dl-csv").addEventListener("click", () => {
-  const head = ["call_id","model","category","tokens","prompt_sha256","response_sha256",
+  const head = ["call_id","time","model","category","tokens","prompt_sha256","response_sha256",
                 "flagged","flag_reason","flag_note","anomalies"];
   const flaggedMap = new Map(DATA.flags.map((f) => [f.call_id, f]));
   const esc = (v) => `"${String(v == null ? "" : v).replace(/"/g, '""')}"`;
@@ -291,7 +300,8 @@ $("dl-csv").addEventListener("click", () => {
   for (const c of DATA.calls) {
     const f = flaggedMap.get(c.call_id) || {};
     lines.push([
-      c.call_id, c.model, c.category || "", c.tokens, c.prompt_sha256, c.response_sha256,
+      c.call_id, fmtTime(c.ts), c.model, c.category || "", c.tokens,
+      c.prompt_sha256, c.response_sha256,
       f.call_id ? "yes" : "no", f.reason || "", f.note || "",
       (anomalous.get(c.call_id) || []).join("|"),
     ].map(esc).join(","));
@@ -398,6 +408,7 @@ def build_report(
                     "call_id": payload.get("call_id", ""),
                     "model": payload.get("model", ""),
                     "category": payload.get("category", ""),
+                    "ts": entry.ts,
                     "tokens": payload.get("tokens", 0),
                     "prompt_sha256": payload.get("prompt_sha256", ""),
                     "response_sha256": payload.get("response_sha256", ""),
@@ -499,6 +510,7 @@ _LABELS: dict[str, dict[str, str]] = {
         "io": '输入：\\n${c.prompt}\\n\\n输出：\\n${c.response || ""}',
         "th_model": "模型",
         "th_call_id": "调用 ID",
+        "th_time": "时间",
         "th_category": "类别",
         "all_categories": "全部类别",
         "th_input": "输入哈希",
@@ -592,6 +604,7 @@ tokens 为 0）。它不判断对错，只是提示「这条值得看一眼」�
         "io": 'Input:\\n${c.prompt}\\n\\nOutput:\\n${c.response || ""}',
         "th_model": "model",
         "th_call_id": "call_id",
+        "th_time": "time",
         "th_category": "category",
         "all_categories": "All categories",
         "th_input": "input hash",

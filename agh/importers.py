@@ -28,6 +28,8 @@ DEFAULT_MAP = {
     "tokens": "tokens",
     # 可选：调用方自带的分类（如「读取」「执行」「对话」）
     "category": "category",
+    # 可选：原始发生时间（毫秒时间戳）。给了就不会被改写成导入时刻
+    "ts": "ts",
 }
 
 
@@ -167,6 +169,39 @@ def _extract_generic(
     return model, prompt, response, tokens
 
 
+def _parse_ts(value: Any) -> int | None:
+    """把源数据的各种时间表示统一成毫秒时间戳。
+
+    支持：毫秒整数、秒整数（< 1e11 视为秒）、ISO 8601 字符串、数字字符串。
+    解析不了就返回 None（不猜），导入后就用写入时刻。
+    """
+    if value is None or value == "":
+        return None
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, (int, float)):
+        num = float(value)
+        return int(num * 1000) if num < 1e11 else int(num)
+    if isinstance(value, str):
+        text = value.strip()
+        if not text:
+            return None
+        secs: float | None
+        try:
+            secs = float(text)
+        except ValueError:
+            secs = None
+        if secs is not None:
+            return int(secs * 1000) if secs < 1e11 else int(secs)
+        try:
+            from datetime import datetime
+
+            return int(datetime.fromisoformat(text.replace("Z", "+00:00")).timestamp() * 1000)
+        except ValueError:
+            return None
+    return None
+
+
 def parse_map(pairs: list[str] | None) -> dict[str, str]:
     mapping = dict(DEFAULT_MAP)
     for pair in pairs or []:
@@ -246,9 +281,10 @@ def import_any(
     extract = extractors[detected]
 
     # 先全部解析，再落盘：解析阶段失败不能动已有日志
-    records: list[tuple[str, str, str, int, str, int]] = []
+    records: list[tuple[str, str, str, int, str, int | None, int]] = []
     skipped = 0
     cat_field = field_map.get("category") or ""
+    ts_field = field_map.get("ts") or ""
     for lineno, line in enumerate(lines, 1):
         try:
             row = json.loads(line)
@@ -264,7 +300,8 @@ def import_any(
             continue
         model, prompt, response, tokens = parsed
         category = _flatten(row.get(cat_field)) if cat_field else ""
-        records.append((model, prompt, response, tokens, category, lineno))
+        ts = _parse_ts(row.get(ts_field)) if ts_field else None
+        records.append((model, prompt, response, tokens, category, ts, lineno))
 
     if not records:
         # 一条都没导进来：保留原日志，返回 0 让调用方报错
@@ -289,13 +326,14 @@ def import_any(
     try:
         audit = AuditSession(tmp, label=label)
         with audit:
-            for model, prompt, response, tokens, category, lineno in records:
+            for model, prompt, response, tokens, category, ts, lineno in records:
                 audit.call(
                     model=model,
                     prompt=prompt,
                     response=response,
                     tokens=tokens,
                     category=category,
+                    ts=ts,
                     meta={"source_line": lineno, "source_format": detected},
                 )
         os.replace(tmp, dst)
