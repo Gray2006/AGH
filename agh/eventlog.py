@@ -52,6 +52,28 @@ def _entry_hash(seq: int, ts: int, type_: str, payload: dict, prev_hash: str) ->
 GENESIS = "0" * 64
 
 
+_FIELD_TYPES: dict[str, tuple[type, str]] = {
+    "seq": (int, "整数"),
+    "ts": (int, "整数"),
+    "type": (str, "字符串"),
+    "payload": (dict, "对象"),
+    "prev_hash": (str, "字符串"),
+    "hash": (str, "字符串"),
+}
+
+
+def _check_field(name: str, value: Any) -> None:
+    """字段类型不对时当场说清楚，别留到 verify 报一句自相矛盾的话。
+
+    典型：seq 写成字符串 "1"，verify 比较 "1" != 1 会报「期望 1，得到 1」。
+    """
+    expected, label = _FIELD_TYPES[name]
+    # bool 是 int 的子类，True 当 seq 用没有意义
+    ok = isinstance(value, expected) and not (expected is int and isinstance(value, bool))
+    if not ok:
+        raise TypeError(f"{name} 必须是{label}，得到 {type(value).__name__}（{value!r}）")
+
+
 def iter_entries(path: Path):
     """流式解析 JSONL 日志，逐条 yield LogEntry。解析失败抛 LogTampered。"""
     try:
@@ -73,6 +95,12 @@ def iter_entries(path: Path):
             continue
         try:
             raw = json.loads(line)
+            if not isinstance(raw, dict):
+                raise TypeError(f"每行必须是 JSON 对象，得到 {type(raw).__name__}")
+            for field in _FIELD_TYPES:
+                if field not in raw:
+                    raise TypeError(f"缺少字段 {field}")
+                _check_field(field, raw[field])
             yield LogEntry(
                 seq=raw["seq"],
                 ts=raw["ts"],
@@ -85,6 +113,14 @@ def iter_entries(path: Path):
             raise LogTampered(f"日志格式损坏（第 {lineno} 条）：{exc}") from exc
 
 
+class LogConflict(LogTampered):
+    """同一个日志文件被两个写入者同时追加。
+
+    不静默写下去：两边各自按内存里的 seq 递增，会写出重复序号、把链弄断。
+    宁可当场报错，也不要产出一份「看起来有记录、其实校验不过」的日志。
+    """
+
+
 class EventLog:
     def __init__(
         self,
@@ -94,14 +130,30 @@ class EventLog:
         self.path = Path(path) if path else None
         self._clock = clock or (lambda: int(time.time() * 1000))
         self.entries: list[LogEntry] = []
+        # 上次读/写之后文件应有的字节数，用来发现「别人也在写」
+        self._expected_size: int | None = None
         if self.path and self.path.exists():
             self.entries = self.read()
+            self._expected_size = self.path.stat().st_size
 
     @property
     def last_hash(self) -> str:
         return self.entries[-1].hash if self.entries else GENESIS
 
+    def _check_not_stolen(self) -> None:
+        """文件被别的写入者动过就报错，而不是接着写坏链。"""
+        if self.path is None or self._expected_size is None:
+            return
+        actual = self.path.stat().st_size if self.path.exists() else 0
+        if actual != self._expected_size:
+            raise LogConflict(
+                f"{self.path} 在本次会话之外被改动过（期望 {self._expected_size} 字节，"
+                f"实际 {actual}）。同一个日志文件只能有一个写入者；"
+                "多进程/多 worker 请各写各的文件，或改用 SqliteEventLog"
+            )
+
     def append(self, type_: str, payload: dict[str, Any]) -> LogEntry:
+        self._check_not_stolen()
         seq = len(self.entries) + 1
         ts = self._clock()
         prev = self.last_hash
@@ -131,6 +183,7 @@ class EventLog:
                     )
                     + "\n"
                 )
+            self._expected_size = self.path.stat().st_size
         return entry
 
     def stream(self):

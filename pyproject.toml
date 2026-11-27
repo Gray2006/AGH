@@ -1,6 +1,6 @@
 [project]
 name = "agh-gestalt"
-version = "3.3.6"
+version = "3.3.7"
 description = "Agent Gestalt Hierarchy (AGH): a verifiable audit layer for multi-agent pipelines. Signed provenance, budget ledger, hash-chained log, bit-exact replay."
 readme = "README.md"
 license = { text = "MIT" }

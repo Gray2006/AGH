@@ -147,3 +147,96 @@ def test_cli_reports_unreadable_log_cleanly(tmp_path: Path) -> None:
     path = tmp_path / "gbk.jsonl"
     path.write_bytes('{"seq": 1, "type": "中文"}'.encode("gbk") + b"\n")
     assert main(["audit", "summary", "--log", str(path)]) == 2
+
+
+def _good_entry(tmp_path: Path) -> dict:
+    import json
+
+    from agh.eventlog import EventLog
+
+    path = tmp_path / "_seed.jsonl"
+    log = EventLog(path)
+    log.append("t", {"k": "v"})
+    line = path.read_text(encoding="utf-8").splitlines()[0]
+    return json.loads(line)
+
+
+def _write_entry(tmp_path: Path, name: str, entry: dict) -> Path:
+    import json
+
+    path = tmp_path / name
+    path.write_text(json.dumps(entry, ensure_ascii=False) + "\n", encoding="utf-8")
+    return path
+
+
+def test_wrong_field_type_names_the_field(tmp_path: Path) -> None:
+    """seq 写成字符串时，不能报「期望 1，得到 1」这种自相矛盾的话。"""
+    import pytest
+
+    from agh.eventlog import EventLog, LogTampered
+
+    entry = _good_entry(tmp_path)
+    entry["seq"] = "1"
+    path = _write_entry(tmp_path, "seqstr.jsonl", entry)
+
+    with pytest.raises(LogTampered, match="seq 必须是整数"):
+        EventLog(path)
+
+
+def test_payload_must_be_object(tmp_path: Path) -> None:
+    import pytest
+
+    from agh.eventlog import EventLog, LogTampered
+
+    entry = _good_entry(tmp_path)
+    entry["payload"] = [1, 2, 3]
+    path = _write_entry(tmp_path, "payloadlist.jsonl", entry)
+
+    with pytest.raises(LogTampered, match="payload 必须是对象"):
+        EventLog(path)
+
+
+def test_missing_field_is_named(tmp_path: Path) -> None:
+    import pytest
+
+    from agh.eventlog import EventLog, LogTampered
+
+    entry = _good_entry(tmp_path)
+    del entry["hash"]
+    path = _write_entry(tmp_path, "nohash.jsonl", entry)
+
+    with pytest.raises(LogTampered, match="缺少字段 hash"):
+        EventLog(path)
+
+
+def test_second_writer_is_rejected_instead_of_corrupting(tmp_path: Path) -> None:
+    """两个写入者共用一个文件会写出重复 seq、把链弄断——必须当场报错。"""
+    import pytest
+
+    from agh.audit import AuditSession
+    from agh.eventlog import LogConflict
+
+    path = tmp_path / "shared.jsonl"
+    a = AuditSession(path, label="a")
+    # b 构造时写入自己的 session.start，a 手里的文件大小就过期了
+    AuditSession(path, label="b")
+
+    with pytest.raises(LogConflict, match="只能有一个写入者"):
+        a.call(model="m", prompt="a1", response="r", tokens=1)
+
+
+def test_sequential_sessions_on_same_file_are_fine(tmp_path: Path) -> None:
+    """先后使用（不是同时）是正常用法，不能被冲突检测误伤。"""
+    from agh.audit import AuditSession
+    from agh.eventlog import EventLog
+
+    path = tmp_path / "seq.jsonl"
+    first = AuditSession(path, label="first")
+    first.call(model="m", prompt="p1", response="r", tokens=1)
+
+    second = AuditSession(path, label="second")
+    second.call(model="m", prompt="p2", response="r", tokens=1)
+
+    log = EventLog(path)
+    log.verify()
+    assert [e.seq for e in log.entries] == [1, 2, 3, 4]
