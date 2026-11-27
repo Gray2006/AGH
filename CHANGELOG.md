@@ -2,6 +2,31 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [3.4.0] - 2026-11-27
+
+报告加「类别」维度、页内说明书；修中文表头残留的英文 `call_id` 和模型卡片溢出。
+
+### Added
+
+- **调用分类**：`AuditSession.call(category=...)` 新增 `category` 字段，
+  `agh import` 通过 `--map category=<字段>` 从源数据读。
+  报告新增「类别」列 + 筛选下拉，`summary.categories` 给出分布。
+  字段是可选的，旧日志读出来是空串，向下兼容
+- **页内说明书**：报告顶部可折叠的「使用说明」，讲清徽章含义、每个卡片和列是什么、
+  怎么自己验一遍、以及这个报告**不能**告诉你什么（成本/性能/整链替换）
+- 英文报告同步这两项
+
+### Fixed
+
+- 中文版表头残留英文 `call_id` → 改为「调用 ID」（英文版仍是 `call_id`）
+- 模型名较长时在卡片里折成多行、溢出被裁 → 长文本值改用小字号并允许断词
+
+### Notes
+
+- 4 条新测试：表头本地化、说明书存在且无游离标签、category 从 call 到报告、
+  category 经 import 保留
+- 459 passed + 1 skipped
+
 ## [3.3.9] - 2026-11-27
 
 `agh ui --lang en` 生成英文报告；表头改成更准确的「输入哈希 / 输出哈希」。

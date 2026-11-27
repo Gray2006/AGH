@@ -225,3 +225,59 @@ def test_ui_cli_accepts_lang(tmp_path: Path) -> None:
     code = main(["ui", "--log", str(_log(tmp_path)), "--out", str(out), "--lang", "en", "--no-open"])
     assert code == 0
     assert "AGH Audit Report" in out.read_text(encoding="utf-8")
+
+
+def test_call_id_header_is_localized(tmp_path: Path) -> None:
+    """中文版不该留着英文表头 call_id。"""
+    zh = render_html(_log(tmp_path))
+    assert "调用 ID" in zh
+    en = render_html(_log(tmp_path), lang="en")
+    assert "call_id" in en
+
+
+def test_report_has_help_section(tmp_path: Path) -> None:
+    zh = render_html(_log(tmp_path))
+    assert "使用说明" in zh
+    assert "这个页面是什么" in zh
+    assert "这个报告不能告诉你什么" in zh
+    # 不该有游离的闭合标签
+    assert "你自己验。</p>" not in zh
+
+    en = render_html(_log(tmp_path), lang="en")
+    assert "How to read this report" in en
+    assert "What this report cannot tell you" in en
+
+
+def test_category_flows_from_call_to_report(tmp_path: Path) -> None:
+    path = tmp_path / "run.jsonl"
+    audit = AuditSession(path)
+    audit.call(model="m", prompt="p1", response="r1", tokens=1, category="读取")
+    audit.call(model="m", prompt="p2", response="r2", tokens=1, category="执行")
+    audit.call(model="m", prompt="p3", response="r3", tokens=1)
+
+    report = build_report(path)
+    cats = [c["category"] for c in report["calls"]]
+    assert cats == ["读取", "执行", ""]
+    assert report["summary"]["categories"] == {"读取": 1, "执行": 1}
+
+    html = render_html(path)
+    assert "全部类别" in html
+    assert "读取" in html
+
+
+def test_category_survives_import(tmp_path: Path) -> None:
+    """导入时 category 字段要一路带到日志里。"""
+    import json
+
+    from agh.importers import import_jsonl
+
+    src = tmp_path / "src.jsonl"
+    src.write_text(
+        json.dumps({"model": "m", "prompt": "p", "response": "r", "tokens": 3, "category": "检索"})
+        + "\n",
+        encoding="utf-8",
+    )
+    log = tmp_path / "out.jsonl"
+    import_jsonl(src, log)
+    report = build_report(log)
+    assert report["calls"][0]["category"] == "检索"

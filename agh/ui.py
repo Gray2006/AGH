@@ -31,7 +31,9 @@ h1 { margin:0 0 6px; font-size:20px; font-weight:600; }
          gap:12px; padding:18px 28px; }
 .card { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px 16px; }
 .card .k { color:var(--muted); font-size:12px; }
-.card .v { font-size:22px; font-weight:600; margin-top:4px; }
+.card .v { font-size:22px; font-weight:600; margin-top:4px;
+           overflow-wrap:anywhere; word-break:break-word; }
+.card .v.small { font-size:13px; font-weight:500; line-height:1.5; color:var(--text); }
 section { padding:6px 28px 22px; }
 h2 { font-size:14px; color:var(--muted); font-weight:600; margin:18px 0 10px;
      text-transform:uppercase; letter-spacing:.06em; }
@@ -54,7 +56,16 @@ code { font-family:ui-monospace,Consolas,monospace; font-size:12px; color:var(--
 details { margin-top:6px; }
 summary { cursor:pointer; color:var(--accent); font-size:12px; }
 pre { margin:6px 0 0; padding:10px; background:#0b0d11; border:1px solid var(--line);
-      border-radius:8px; overflow:auto; font-size:12px; color:#cfd6e4; }
+      border-radius:8px; overflow:auto; font-size:12px; color:#cfd6e4;
+      max-height:420px; white-space:pre-wrap; overflow-wrap:anywhere; }
+.help { margin:16px 28px 0; border:1px solid var(--line); border-radius:10px;
+        background:var(--panel); padding:0 16px; }
+.help > summary { padding:12px 0; font-size:13px; color:var(--text); font-weight:600; }
+.help-body { padding:0 0 14px; color:var(--muted); font-size:13px; line-height:1.7; }
+.help-body h3 { margin:14px 0 6px; font-size:12.5px; color:var(--text); font-weight:600; }
+.help-body ul { margin:6px 0; padding-left:20px; }
+.help-body li { margin:3px 0; }
+.help-body code { color:var(--accent); }
 .empty { color:var(--muted); padding:14px 0; }
 .filters { display:flex; gap:10px; align-items:center; margin:0 28px 14px; flex-wrap:wrap; }
 .filters select, .filters input[type=text] { background:var(--panel); color:var(--text);
@@ -72,11 +83,16 @@ footer { padding:14px 28px 28px; color:var(--muted); font-size:12px; border-top:
   <div id="verify"></div>
 </header>
 <div class="cards" id="cards"></div>
+<details class="help">
+  <summary>@@L:help_title@@</summary>
+  <div class="help-body">@@L:help_body@@</div>
+</details>
 <section>
   <h2>@@L:calls@@</h2>
   <div class="filters">
     <button id="dl-csv" class="btn">@@L:dl_csv@@</button>
     <select id="f-model"><option value="">@@L:all_models@@</option></select>
+    <select id="f-cat"><option value="">@@L:all_categories@@</option></select>
     <label><input type="checkbox" id="f-flagged"> @@L:only_flagged@@</label>
     <input type="text" id="f-search" placeholder="@@L:search@@">
     <span class="count" id="f-count"></span>
@@ -120,16 +136,26 @@ if (DATA.truncated) {
 }
 
 const cards = [
-  ["@@L:card_calls@@", DATA.summary.calls],
-  ["Tokens", DATA.summary.tokens],
-  ["@@L:card_flags@@", DATA.summary.flags],
-  ["@@L:card_models@@", (DATA.summary.models || []).join(" / ") || "—"],
+  ["@@L:card_calls@@", DATA.summary.calls, ""],
+  ["Tokens", DATA.summary.tokens, ""],
+  ["@@L:card_flags@@", DATA.summary.flags, ""],
+  ["@@L:card_models@@", (DATA.summary.models || []).join(" / ") || "—", "small"],
 ];
-for (const [k, v] of cards) {
+for (const [k, v, cls] of cards) {
   const c = text("div", "", "card");
   c.appendChild(text("div", k, "k"));
-  c.appendChild(text("div", v, "v"));
+  c.appendChild(text("div", v, cls ? `v ${cls}` : "v"));
   $("cards").appendChild(c);
+}
+
+// 类别下拉：从数据里收集
+const catSelect = $("f-cat");
+const cats = [...new Set(DATA.calls.map((c) => c.category).filter(Boolean))].sort();
+for (const cat of cats) {
+  const opt = document.createElement("option");
+  opt.value = cat;
+  opt.textContent = cat;
+  catSelect.appendChild(opt);
 }
 
 function table(headers, rows) {
@@ -178,18 +204,21 @@ function rowFor(c) {
     d.appendChild(text("pre", `@@L:io@@`));
     wrap.appendChild(d);
   }
-  return [c.call_id, c.model, short(c.prompt_sha256, 16), short(c.response_sha256, 16), c.tokens, wrap];
+  return [c.call_id, c.model, c.category || "—", short(c.prompt_sha256, 16),
+          short(c.response_sha256, 16), c.tokens, wrap];
 }
 
 function renderCalls() {
   const model = modelSelect.value;
+  const category = $("f-cat").value;
   const onlyFlagged = $("f-flagged").checked;
   const q = $("f-search").value.trim().toLowerCase();
   const rows = DATA.calls.filter((c) => {
     if (model && c.model !== model) return false;
+    if (category && (c.category || "") !== category) return false;
     if (onlyFlagged && !flagged.has(c.call_id)) return false;
     if (q) {
-      const hay = `${c.call_id} ${c.model} ${c.prompt_sha256} ${c.response_sha256}`.toLowerCase();
+      const hay = `${c.call_id} ${c.model} ${c.category || ""} ${c.prompt_sha256} ${c.response_sha256}`.toLowerCase();
       if (!hay.includes(q)) return false;
     }
     return true;
@@ -197,19 +226,21 @@ function renderCalls() {
   const host = $("calls");
   host.replaceChildren();
   host.appendChild(table(
-    ["call_id", "@@L:th_model@@", "@@L:th_input@@", "@@L:th_output@@", "tokens", "@@L:th_status@@"],
+    ["@@L:th_call_id@@", "@@L:th_model@@", "@@L:th_category@@",
+     "@@L:th_input@@", "@@L:th_output@@", "tokens", "@@L:th_status@@"],
     rows.map(rowFor)
   ));
   $("f-count").textContent = `@@L:count@@`;
 }
 
 modelSelect.addEventListener("change", renderCalls);
+catSelect.addEventListener("change", renderCalls);
 $("f-flagged").addEventListener("change", renderCalls);
 $("f-search").addEventListener("input", renderCalls);
 renderCalls();
 
 $("flags").appendChild(table(
-  ["call_id", "@@L:th_reason@@", "@@L:th_note@@"],
+  ["@@L:th_call_id@@", "@@L:th_reason@@", "@@L:th_note@@"],
   DATA.flags.map((f) => [f.call_id, f.reason, f.note])
 ));
 
@@ -283,6 +314,15 @@ def _salvage(path: Path) -> list[Any]:
     return entries
 
 
+def _count_categories(calls: list[dict[str, Any]]) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for call in calls:
+        key = str(call.get("category") or "")
+        if key:
+            counts[key] = counts.get(key, 0) + 1
+    return dict(sorted(counts.items(), key=lambda kv: -kv[1]))
+
+
 def build_report(
     log_path: str | Path, *, title: str = "AGH 审计报告", max_calls: int | None = None
 ) -> dict[str, Any]:
@@ -312,6 +352,7 @@ def build_report(
                 {
                     "call_id": payload.get("call_id", ""),
                     "model": payload.get("model", ""),
+                    "category": payload.get("category", ""),
                     "tokens": payload.get("tokens", 0),
                     "prompt_sha256": payload.get("prompt_sha256", ""),
                     "response_sha256": payload.get("response_sha256", ""),
@@ -361,6 +402,7 @@ def build_report(
             "tokens": sum(int(c["tokens"] or 0) for c in calls),
             "flags": len(flags),
             "models": sorted({c["model"] for c in calls if c["model"]}),
+            "categories": _count_categories(calls),
         },
         "footer": "本页面由 agh ui 生成，数据内嵌、不联网。哈希链校验请在命令行运行 agh audit verify。",
     }
@@ -392,6 +434,9 @@ _LABELS: dict[str, dict[str, str]] = {
         "show_raw": "看原文",
         "io": '输入：\\n${c.prompt}\\n\\n输出：\\n${c.response || ""}',
         "th_model": "模型",
+        "th_call_id": "调用 ID",
+        "th_category": "类别",
+        "all_categories": "全部类别",
         "th_input": "输入哈希",
         "th_output": "输出哈希",
         "th_status": "状态",
@@ -400,6 +445,52 @@ _LABELS: dict[str, dict[str, str]] = {
         "th_note": "备注",
         "th_event": "事件",
         "th_summary": "摘要",
+        "help_title": "使用说明（点开看）",
+        "help_body": """
+<h3>这个页面是什么</h3>
+一份自包含的审计报告。数据全部嵌在 HTML 里，不联网、不请求后端，可以直接发给别人。
+页首徽章表示哈希链校验结果：绿色「哈希链校验通过」= 日志从写入那一刻起没有被改过；
+红色则表示某一条内容对不上，徽章下面会给出断链位置。
+
+<h3>页首那几个数字</h3>
+<ul>
+<li><b>调用次数</b>：日志里 llm.call 事件的条数。</li>
+<li><b>Tokens</b>：这些调用记录的 token 用量之和。注意这是日志里记的数，
+不是账单；如果导入时只记了「新算 token」，缓存读的部分不含在内。</li>
+<li><b>标记问题</b>：调用 <code>session.flag()</code> 记录的人工标记数。为 0 只说明
+「没人标过」，不代表「没有问题」。</li>
+<li><b>模型</b>：日志里出现过的模型名，按字母序。同一个模型的不同写法会被算成两个。</li>
+</ul>
+
+<h3>表格各列</h3>
+<ul>
+<li><b>调用 ID</b>：由输入输出的哈希前缀 + 序号生成，用来关联标记。它不含模型名，
+所以同样的输入换模型跑，ID 会重复。</li>
+<li><b>类别</b>：调用方自己标的分类（<code>agh import</code> 或
+<code>session.call(category=...)</code>）。没标的显示「—」。</li>
+<li><b>输入哈希 / 输出哈希</b>：输入输出原文的 SHA-256 前 16 位。报告默认只给哈希，
+不直接展示原文，避免把敏感内容随手发出去。要看原文点行内的「看原文」。</li>
+<li><b>tokens</b>：这次调用记录的 token 数。</li>
+<li><b>状态</b>：正常 / 已标记。</li>
+</ul>
+
+<h3>怎么自己验一遍</h3>
+在命令行跑 <code>agh audit verify --log &lt;日志文件&gt;</code>，
+输出 <code>{"ok": true}</code> 表示哈希链完整。
+报告里的「校验通过」是生成页面时算的，不能替代你自己验。
+
+<h3>这个报告不能告诉你什么</h3>
+<ul>
+<li>哪次调用贵得离谱、哪次响应慢 —— 它只做审计，不做成本/性能分析</li>
+<li>日志是不是被整条替换过 —— 本地哈希链发现不了，需要外部锚定
+（<code>agh anchor</code>）</li>
+<li>记录本身在写入前是否真实 —— 签名只能证明「从某一刻起没被改」</li>
+</ul>
+
+<h3>隐私</h3>
+默认只展示哈希。HTML 里仍然内嵌了原文（为了「看原文」可用），
+发给别人前请确认：<code>agh ui</code> 生成的页面等于完整日志内容。
+""",
         "footer": "本页面由 agh ui 生成，数据内嵌、不联网。哈希链校验请在命令行运行 agh audit verify。",
     },
     "en": {
@@ -427,6 +518,9 @@ _LABELS: dict[str, dict[str, str]] = {
         "show_raw": "Show raw",
         "io": 'Input:\\n${c.prompt}\\n\\nOutput:\\n${c.response || ""}',
         "th_model": "model",
+        "th_call_id": "call_id",
+        "th_category": "category",
+        "all_categories": "All categories",
         "th_input": "input hash",
         "th_output": "output hash",
         "th_status": "status",
@@ -435,6 +529,57 @@ _LABELS: dict[str, dict[str, str]] = {
         "th_note": "note",
         "th_event": "event",
         "th_summary": "summary",
+        "help_title": "How to read this report (click to expand)",
+        "help_body": """
+<h3>What this page is</h3>
+A self-contained audit report. All data is embedded in the HTML — no network, no backend —
+so you can hand it to someone else as a single file.
+The badge at the top shows the hash-chain check: green "Hash chain verified" means the log
+has not been altered since it was written. Red means some entry does not match the chain,
+and the failing position is shown right under the badge.
+
+<h3>The numbers at the top</h3>
+<ul>
+<li><b>Calls</b>: number of <code>llm.call</code> events in the log.</li>
+<li><b>Tokens</b>: sum of the token counts recorded in those calls. This is what the log says,
+not a bill. If the import only recorded freshly computed tokens, cached reads are not included.</li>
+<li><b>Flagged</b>: number of manual <code>session.flag()</code> marks. Zero only means
+"nobody flagged anything", not "nothing is wrong".</li>
+<li><b>Models</b>: model names found in the log, alphabetically. Different spellings of the
+same model are counted as separate entries.</li>
+</ul>
+
+<h3>Columns</h3>
+<ul>
+<li><b>call_id</b>: hash prefix of input/output plus a sequence number; used to attach flags.
+It does not include the model name, so the same input run through a different model reuses the ID.</li>
+<li><b>category</b>: a label supplied by the caller (via <code>agh import</code> or
+<code>session.call(category=...)</code>). Shows "—" when absent.</li>
+<li><b>input hash / output hash</b>: first 16 hex chars of the SHA-256 of the input/output text.
+The report only shows hashes by default so sensitive content is not casually shared.
+Click "Show raw" inside a row to see the text.</li>
+<li><b>tokens</b>: token count recorded for that call.</li>
+<li><b>status</b>: ok / flagged.</li>
+</ul>
+
+<h3>Verifying it yourself</h3>
+Run <code>agh audit verify --log &lt;file&gt;</code> on the command line.
+<code>{"ok": true}</code> means the hash chain is intact. The badge in this page was computed
+when the page was generated; it does not replace your own check.
+
+<h3>What this report cannot tell you</h3>
+<ul>
+<li>Which call was expensive or slow — this is an audit, not cost/performance analytics</li>
+<li>Whether the whole log was replaced — a local hash chain cannot detect that;
+you need external anchoring (<code>agh anchor</code>)</li>
+<li>Whether the record was true before it was written — a signature only proves
+"unchanged since a certain moment"</li>
+</ul>
+
+<h3>Privacy</h3>
+Only hashes are displayed, but the full text is still embedded in the HTML so "Show raw" works.
+Before sharing, remember: this page contains the complete log content.
+""",
         "footer": (
             "Generated by agh ui. Data is embedded; no network calls. "
             "Verify the hash chain with `agh audit verify` on the command line."

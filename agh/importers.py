@@ -26,6 +26,8 @@ DEFAULT_MAP = {
     "prompt": "prompt",
     "response": "response",
     "tokens": "tokens",
+    # 可选：调用方自带的分类（如「读取」「执行」「对话」）
+    "category": "category",
 }
 
 
@@ -244,8 +246,9 @@ def import_any(
     extract = extractors[detected]
 
     # 先全部解析，再落盘：解析阶段失败不能动已有日志
-    records: list[tuple[str, str, str, int, int]] = []
+    records: list[tuple[str, str, str, int, str, int]] = []
     skipped = 0
+    cat_field = field_map.get("category") or ""
     for lineno, line in enumerate(lines, 1):
         try:
             row = json.loads(line)
@@ -260,7 +263,8 @@ def import_any(
             skipped += 1
             continue
         model, prompt, response, tokens = parsed
-        records.append((model, prompt, response, tokens, lineno))
+        category = _flatten(row.get(cat_field)) if cat_field else ""
+        records.append((model, prompt, response, tokens, category, lineno))
 
     if not records:
         # 一条都没导进来：保留原日志，返回 0 让调用方报错
@@ -285,12 +289,13 @@ def import_any(
     try:
         audit = AuditSession(tmp, label=label)
         with audit:
-            for model, prompt, response, tokens, lineno in records:
+            for model, prompt, response, tokens, category, lineno in records:
                 audit.call(
                     model=model,
                     prompt=prompt,
                     response=response,
                     tokens=tokens,
+                    category=category,
                     meta={"source_line": lineno, "source_format": detected},
                 )
         os.replace(tmp, dst)

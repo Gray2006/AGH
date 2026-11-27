@@ -63,14 +63,20 @@ class AuditSession:
         response: str,
         tokens: int = 0,
         latency_ms: int = 0,
+        category: str = "",
         meta: dict[str, Any] | None = None,
     ) -> str:
-        """记一次模型调用，返回 call_id（用于后续 flag）。"""
+        """记一次模型调用，返回 call_id（用于后续 flag）。
+
+        `category` 是调用方自己给的分类（如「读取」「执行」「对话」），
+        报告里可以按它筛选。留空表示未分类。
+        """
         seq = sum(1 for e in self.log.entries if e.type == "llm.call")
         call_id = f"call-{sha256_hex({'p': prompt, 'r': response})[:12]}-{seq}"
         payload: dict[str, Any] = {
             "call_id": call_id,
             "model": model,
+            "category": category,
             "tokens": tokens,
             "latency_ms": latency_ms,
             "prompt_sha256": _sha(prompt),
